@@ -54,8 +54,22 @@ public class World
         }
 
         if (worldTime >= dayLength) {
-            date[0]++;
+            UpdateDate();
             worldTime = 0f;
+        }
+    }
+
+    public void UpdateDate() {
+        date[0]++;
+        
+        if (date[0] >= 30) {
+            date[0] = 0;
+            date[1]++;
+        }
+
+        if (date[1] > 6) {
+            date[1] = 0;
+            date[2]++;
         }
     }
 
