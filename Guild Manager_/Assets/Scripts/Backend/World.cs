@@ -5,7 +5,8 @@ using UnityEngine;
 
 public class World
 {
-    int dayLength = 560;
+    float dayLength = 20f;
+    float nightLength = 20f;
 
     // Day, month, year.
     int[] date;
@@ -53,10 +54,15 @@ public class World
             c.Update(deltaTime);
         }
 
-        if (worldTime >= dayLength) {
+        if (worldTime >= (dayLength + nightLength)) {
             UpdateDate();
             worldTime = 0f;
         }
+    }
+
+    public bool IsDayTime()
+    {
+        return worldTime <= dayLength;
     }
 
     public void UpdateDate() {
