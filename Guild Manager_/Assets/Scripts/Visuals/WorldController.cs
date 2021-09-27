@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class WorldController : MonoBehaviour
 {
+    [SerializeField]
+    int NightTimePercent = 30;
     public static WorldController Instance {get; protected set;}
     public World World {get; protected set;}
 

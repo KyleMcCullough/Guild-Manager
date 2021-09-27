@@ -5,7 +5,10 @@ using UnityEngine;
 
 public class World
 {
-    
+    int dayLength = 560;
+
+    // Day, month, year.
+    int[] date;
     List<Character> characters;
     Tile[,] tiles;
     public int width {get;}
@@ -17,12 +20,14 @@ public class World
     Action<Structure> structureCreatedEvent;
     public Path_TileGraph tileGraph;
     public JobQueue jobQueue;
+    float worldTime = 0;
 
     public World(int width, int height)
     {
         this.width = width;
         this.height = height;
 
+        date = new int[] {1, 1, 153};
         tiles = new Tile[width, height];
         jobQueue = new JobQueue();
         structurePrototypes = new Dictionary<string, Structure>();
@@ -41,9 +46,16 @@ public class World
 
     public void Update(float deltaTime)
     {
+        worldTime += (1 * deltaTime);
+
         foreach (Character c in characters)
         {
             c.Update(deltaTime);
+        }
+
+        if (worldTime >= dayLength) {
+            date[0]++;
+            worldTime = 0f;
         }
     }
 
