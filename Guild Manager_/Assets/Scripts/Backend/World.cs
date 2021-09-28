@@ -5,9 +5,6 @@ using UnityEngine;
 
 public class World
 {
-    float dayLength = 20f;
-    float nightLength = 20f;
-
     // Day, month, year.
     int[] date;
     List<Character> characters;
@@ -28,7 +25,7 @@ public class World
         this.width = width;
         this.height = height;
 
-        date = new int[] {1, 1, 153};
+        date = new int[] {1, 1, 1253};
         tiles = new Tile[width, height];
         jobQueue = new JobQueue();
         structurePrototypes = new Dictionary<string, Structure>();
@@ -53,8 +50,8 @@ public class World
         {
             c.Update(deltaTime);
         }
-
-        if (worldTime >= (dayLength + nightLength)) {
+        
+        if (worldTime >= Settings.DayLength) {
             UpdateDate();
             worldTime = 0f;
         }
@@ -62,7 +59,7 @@ public class World
 
     public bool IsDayTime()
     {
-        return worldTime <= dayLength;
+        return worldTime <= (Settings.DayLength * ( 1 - ((float) Settings.NightRatio / 100)));
     }
 
     public void UpdateDate() {
