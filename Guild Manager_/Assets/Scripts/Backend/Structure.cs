@@ -8,31 +8,38 @@ public class Structure
     public Tile Parent;
     ObjectType type = ObjectType.Empty;
 
-    public ObjectType Type {
-        get {return type; }
+    public ObjectType Type
+    {
+        get { return type; }
 
-        set {
+        set
+        {
             ObjectType previous = type;
             type = value;
 
             // Call callback to refresh tile visually.
-            if (structureChangedEvent != null && previous != type) {
+            if (structureChangedEvent != null && previous != type)
+            {
                 structureChangedEvent(this);
             }
         }
     }
 
     bool isConstructed = false;
-    public bool IsConstructed {
-        get { return isConstructed;}
-        
-        set { 
-            if (value) {
+    public bool IsConstructed
+    {
+        get { return isConstructed; }
+
+        set
+        {
+            if (value)
+            {
                 isConstructed = true;
                 structureChangedEvent(this);
             }
 
-            else {
+            else
+            {
                 isConstructed = false;
             }
         }
@@ -40,26 +47,28 @@ public class Structure
 
     // Multiplyer, a value of 2 is twice as slow as 1. These can be combined with tile movementCost and other modifiers.
     // If the movementCost is 0, then it cannot be passed through.
-    public float movementCost {get; protected set; }
+    public float movementCost { get; protected set; }
     int width;
     int height;
-    public bool linksToNeighbour {get; set;}
-    
+    public bool linksToNeighbour { get; set; }
+
     Func<Tile, bool> positionValidation;
 
-    public Action<Structure> structureChangedEvent {get; protected set;}
+    public Action<Structure> structureChangedEvent { get; protected set; }
 
     public void RegisterObjectChangedDelegate(Action<Structure> callback)
     {
         structureChangedEvent += callback;
     }
 
-    public Structure(){}
-    public Structure(Tile Parent){
+    public Structure() { }
+    public Structure(Tile Parent)
+    {
         this.Parent = Parent;
     }
 
-    public Structure(Tile Parent, ObjectType Type) {
+    public Structure(Tile Parent, ObjectType Type)
+    {
         this.Type = Type;
         this.Parent = Parent;
     }
@@ -78,29 +87,34 @@ public class Structure
         this.width = prototype.width;
         this.height = prototype.height;
 
-        if (this.linksToNeighbour) {
+        if (this.linksToNeighbour)
+        {
 
             Tile tile;
             int x = Parent.x;
             int y = Parent.y;
 
             tile = Parent.world.GetTile(x, y + 1);
-            if (tile != null && tile.structure.Type == this.Type) {
+            if (tile != null && tile.structure.Type == this.Type)
+            {
                 tile.structure.structureChangedEvent(tile.structure);
             }
 
             tile = tile.world.GetTile(x + 1, y);
-            if (tile != null && tile.structure.Type == this.Type) {
+            if (tile != null && tile.structure.Type == this.Type)
+            {
                 tile.structure.structureChangedEvent(tile.structure);
             }
 
             tile = tile.world.GetTile(x, y - 1);
-            if (tile != null && tile.structure.Type == this.Type) {
+            if (tile != null && tile.structure.Type == this.Type)
+            {
                 tile.structure.structureChangedEvent(tile.structure);
             }
 
             tile = tile.world.GetTile(x - 1, y);
-            if (tile != null && tile.structure.Type == this.Type) {
+            if (tile != null && tile.structure.Type == this.Type)
+            {
                 tile.structure.structureChangedEvent(tile.structure);
             }
         }
@@ -112,8 +126,9 @@ public class Structure
         this.IsConstructed = true;
     }
 
-    static public Structure CreatePrototype(ObjectType type, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false) {
-        
+    static public Structure CreatePrototype(ObjectType type, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false)
+    {
+
         Structure obj = new Structure();
         obj.Type = type;
         obj.movementCost = movementCost;
@@ -125,7 +140,8 @@ public class Structure
         return obj;
     }
 
-    public bool IsValidPosition(Tile tile) {
+    public bool IsValidPosition(Tile tile)
+    {
 
         // Makes sure the tile can be built on.
         if (tile.Type != TileType.Dirt) return false;

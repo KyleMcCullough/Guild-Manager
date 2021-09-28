@@ -10,8 +10,9 @@ public class TileSpriteController : MonoBehaviour
     public Sprite emptySprite;
     public Tilemap tilemap;
 
-    World world {
-        get { return WorldController.Instance.World; } 
+    World world
+    {
+        get { return WorldController.Instance.World; }
     }
 
 
@@ -22,8 +23,10 @@ public class TileSpriteController : MonoBehaviour
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
         t.sprite = dirtSprite;
 
-        for (int x = 0; x < world.height; x++) {
-            for (int y = 0; y < world.width; y++) {
+        for (int x = 0; x < world.height; x++)
+        {
+            for (int y = 0; y < world.width; y++)
+            {
                 Tile tile = world.GetTile(x, y);
                 tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
             }
@@ -43,17 +46,20 @@ public class TileSpriteController : MonoBehaviour
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
 
         UnityEngine.Debug.Log(tile.Type);
-        if (tile.Type == TileType.Dirt) {
+        if (tile.Type == TileType.Dirt)
+        {
             t.sprite = dirtSprite;
             tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
-        } 
+        }
 
-        else if (tile.Type == TileType.Empty) {
+        else if (tile.Type == TileType.Empty)
+        {
             t.sprite = emptySprite;
             tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
         }
 
-        else {
+        else
+        {
             Debug.LogError("OnTileTypeChanged - unrecognized tile type.");
         }
     }

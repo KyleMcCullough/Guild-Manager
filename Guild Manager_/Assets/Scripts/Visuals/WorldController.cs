@@ -11,8 +11,8 @@ public class WorldController : MonoBehaviour
     public Color nightColor = new Color(0.25f, 0.25f, 0.6f);
     [SerializeField]
     Light2D GlobalLight;
-    public static WorldController Instance {get; protected set;}
-    public World World {get; protected set;}
+    public static WorldController Instance { get; protected set; }
+    public World World { get; protected set; }
     bool updated = false;
     bool isDay;
 
@@ -26,7 +26,7 @@ public class WorldController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update() 
+    void Update()
     {
 
         World.Update(Time.deltaTime);
@@ -39,7 +39,8 @@ public class WorldController : MonoBehaviour
     // Changes lighting on day/night switch.
     void UpdateDayCycle()
     {
-        if (isDay != World.IsDayTime()) {
+        if (isDay != World.IsDayTime())
+        {
             isDay = World.IsDayTime();
             updated = false;
         }
@@ -47,7 +48,8 @@ public class WorldController : MonoBehaviour
         if (!updated)
         {
             Debug.Log("updating");
-            if (World.IsDayTime()) {
+            if (World.IsDayTime())
+            {
                 updated = true;
                 GlobalLight.color = dayColor;
             }
@@ -59,7 +61,8 @@ public class WorldController : MonoBehaviour
         }
     }
 
-    public Tile GetTileAtCoordinate(Vector3 coord) {
+    public Tile GetTileAtCoordinate(Vector3 coord)
+    {
         return World.GetTile(Mathf.FloorToInt(coord.x), Mathf.FloorToInt(coord.y));
     }
 }

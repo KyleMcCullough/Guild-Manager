@@ -17,7 +17,7 @@ public class MouseController : MonoBehaviour
     public GameObject highlightCursorPrefab;
     public float CameraMoveSpeed = 10f;
     BuildController buildController;
-    
+
 
     // Start is called before the first frame update
     void Start()
@@ -41,7 +41,7 @@ public class MouseController : MonoBehaviour
         // Handles left mouse clicks/drags.
         UpdateTileDragging();
         UpdateCameraMovement();
-        
+
         lastMousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         lastMousePosition.z = 0;
     }
@@ -49,9 +49,9 @@ public class MouseController : MonoBehaviour
     void UpdateCameraMovement()
     {
         // Handles screen draggin with right and middle mouse buttons.
-        if (Input.GetMouseButton(1) || Input.GetMouseButton(2)) 
+        if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
         {
-            Vector3 difference = lastMousePosition - mousePosition; 
+            Vector3 difference = lastMousePosition - mousePosition;
             Camera.main.transform.Translate(difference);
         }
 
@@ -62,23 +62,28 @@ public class MouseController : MonoBehaviour
 
         Vector3 updatedMovement = Vector3.zero;
 
-        if (Input.GetKey(KeyCode.W)) {
+        if (Input.GetKey(KeyCode.W))
+        {
             updatedMovement += new Vector3(0, CameraMoveSpeed, 0) * Time.deltaTime;
         }
 
-        if (Input.GetKey(KeyCode.S)) {
-            updatedMovement += new Vector3(0, - CameraMoveSpeed, 0) * Time.deltaTime;
+        if (Input.GetKey(KeyCode.S))
+        {
+            updatedMovement += new Vector3(0, -CameraMoveSpeed, 0) * Time.deltaTime;
         }
 
-        if (Input.GetKey(KeyCode.A)) {
-            updatedMovement += new Vector3(- CameraMoveSpeed, 0, 0) * Time.deltaTime;
+        if (Input.GetKey(KeyCode.A))
+        {
+            updatedMovement += new Vector3(-CameraMoveSpeed, 0, 0) * Time.deltaTime;
         }
 
-        if (Input.GetKey(KeyCode.D)) {
+        if (Input.GetKey(KeyCode.D))
+        {
             updatedMovement += new Vector3(CameraMoveSpeed, 0, 0) * Time.deltaTime;
         }
 
-        if (Input.GetKey(KeyCode.LeftShift)) {
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
             updatedMovement *= 2;
         }
 
@@ -93,7 +98,8 @@ public class MouseController : MonoBehaviour
         if (EventSystem.current.IsPointerOverGameObject() || Input.GetMouseButtonDown(1)) return;
 
         // Starts drag
-        if (Input.GetMouseButtonDown(0)) {
+        if (Input.GetMouseButtonDown(0))
+        {
             dragStartPosition = mousePosition;
         }
 
@@ -110,7 +116,7 @@ public class MouseController : MonoBehaviour
             {
                 endX = startX;
             }
-            
+
             else
             {
                 endY = startY;
@@ -118,37 +124,44 @@ public class MouseController : MonoBehaviour
         }
 
         // Swaps the positions if start x is before end x.
-        if (endX < startX) {
+        if (endX < startX)
+        {
             int temp = endX;
             endX = startX;
             startX = temp;
         }
 
         // Swaps the positions if start x is before end x.
-        if (endY < startY) {
+        if (endY < startY)
+        {
             int temp = endY;
             endY = startY;
             startY = temp;
         }
-        
+
 
         // Garbage collect old drag preview images.
-        while (dragPreviewArea.Count > 0) {
+        while (dragPreviewArea.Count > 0)
+        {
             GameObject obj = dragPreviewArea[0];
             dragPreviewArea.RemoveAt(0);
             SimplePool.Despawn(obj);
         }
 
-        if (Input.GetMouseButton(0)) {
-            
+        if (Input.GetMouseButton(0))
+        {
+
             // Display preview of drag area.
-            for (int x = startX; x <= endX; x++) {
-                for (int y = startY; y <= endY; y++) {
+            for (int x = startX; x <= endX; x++)
+            {
+                for (int y = startY; y <= endY; y++)
+                {
                     Tile tile = WorldController.Instance.World.GetTile(x, y);
 
-                    if (tile != null) {
+                    if (tile != null)
+                    {
                         GameObject obj = SimplePool.Spawn(highlightCursorPrefab, new Vector3(x, y, 0), Quaternion.identity);
-                        
+
                         obj.transform.SetParent(this.transform, true);
                         dragPreviewArea.Add(obj);
                     }
@@ -158,15 +171,18 @@ public class MouseController : MonoBehaviour
 
 
         // Ends drag
-        if (Input.GetMouseButtonUp(0)) {
-
+        if (Input.GetMouseButtonUp(0))
+        {
             int num = 0;
-            for (int x = startX; x <= endX; x++) {
-                for (int y = startY; y <= endY; y++) {
+            for (int x = startX; x <= endX; x++)
+            {
+                for (int y = startY; y <= endY; y++)
+                {
                     Tile tile = WorldController.Instance.World.GetTile(x, y);
 
                     num++;
-                    if (tile != null) {
+                    if (tile != null)
+                    {
                         buildController.Build(tile);
                     }
                 }

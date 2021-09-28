@@ -11,15 +11,19 @@ public class Tile
     public Structure structure;
     public World world;
 
-    public float movementCost {
-        get {
+    public float movementCost
+    {
+        get
+        {
 
             // Unwalkable.
-            if (type == TileType.Empty) {
+            if (type == TileType.Empty)
+            {
                 return 0;
             }
 
-            if (structure == null || !structure.IsConstructed) {
+            if (structure == null || !structure.IsConstructed)
+            {
                 return 1;
             }
 
@@ -27,16 +31,18 @@ public class Tile
         }
     }
 
-    public TileType Type {
-        get {return type; }
+    public TileType Type
+    {
+        get { return type; }
 
-        set {
-
+        set
+        {
             TileType previous = type;
             type = value;
 
             // Call callback to refresh tile visually.
-            if (tileChangedEvent != null && previous != type) {
+            if (tileChangedEvent != null && previous != type)
+            {
                 tileChangedEvent(this);
             }
         }
@@ -55,24 +61,24 @@ public class Tile
         tileChangedEvent += callback;
     }
 
-public bool IsNeighbour(Tile tile, bool diagonals = false)
+    public bool IsNeighbour(Tile tile, bool diagonals = false)
     {
-        
+
         return (Mathf.Abs((this.x - tile.x) + (this.y - tile.y)) == 1 ||
             (diagonals && Mathf.Abs((this.x - tile.x) * (this.y - tile.y)) == 1));
-        
-        // return Mathf.Abs(tile.x - this.x) + Mathf.Abs(tile.y - this.y) == 1;
     }
 
     //TODO: I don't like this, please help.
-    public Tile[] GetNeighbours(bool diagonals) 
+    public Tile[] GetNeighbours(bool diagonals)
     {
         Tile[] neighbours;
 
-        if (!diagonals) {
+        if (!diagonals)
+        {
             neighbours = new Tile[4];
         }
-        else {
+        else
+        {
             neighbours = new Tile[8];
         }
 
@@ -90,8 +96,8 @@ public bool IsNeighbour(Tile tile, bool diagonals = false)
         n = world.GetTile(x - 1, y);
         neighbours[3] = n;
 
-        if (diagonals) {
-
+        if (diagonals)
+        {
             n = world.GetTile(x + 1, y + 1);
             neighbours[4] = n;
             n = world.GetTile(x + 1, y - 1);

@@ -7,9 +7,10 @@ public class CharacterSpriteController : MonoBehaviour
 
     Dictionary<Character, GameObject> characterGameObjects;
     Dictionary<string, Sprite> characterSprites;
-    
-    World world {
-        get { return WorldController.Instance.World; } 
+
+    World world
+    {
+        get { return WorldController.Instance.World; }
     }
 
     // Start is called before the first frame update
@@ -36,10 +37,11 @@ public class CharacterSpriteController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
-public void OnCharacterCreated(Character character) {
+    public void OnCharacterCreated(Character character)
+    {
         // Creates a game object linked to tile.
         //FIxME: Doesn't consider multi-tile objects or rotated objects.
         Debug.Log("Entered character creation.");
@@ -56,7 +58,7 @@ public void OnCharacterCreated(Character character) {
         SpriteRenderer sprite = obj.AddComponent<SpriteRenderer>();
         sprite.sprite = characterSprites["p1_front"];
         sprite.sortingOrder = 3;
-        
+
         // Applies a transparency for not yet built objects.
         // Color color = sprite.color;
         // color.a = .3f;
@@ -65,11 +67,12 @@ public void OnCharacterCreated(Character character) {
         // Registers callback.
         character.RegisterOnChangedCallback(OnCharacterChanged);
     }
-    
-    private void OnCharacterChanged(Character character) {
 
+    private void OnCharacterChanged(Character character)
+    {
         // Ensures graphics are correct.
-        if (!characterGameObjects.ContainsKey(character)) {
+        if (!characterGameObjects.ContainsKey(character))
+        {
             Debug.LogError("OnCharacterChanged - Trying to change visuals not in our map.");
             return;
         }

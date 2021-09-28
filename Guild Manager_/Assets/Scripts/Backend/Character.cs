@@ -5,23 +5,27 @@ using UnityEngine;
 
 public class Character
 {
-    public float x {
-        get {
+    public float x
+    {
+        get
+        {
             return Mathf.Lerp(currTile.x, nextTile.x, movementPercent);
         }
     }
 
-    public float y {
-        get {
+    public float y
+    {
+        get
+        {
             return Mathf.Lerp(currTile.y, nextTile.y, movementPercent);
         }
     }
 
-    public Tile currTile {get; protected set;}
-    Tile nextTile; 
+    public Tile currTile { get; protected set; }
+    Tile nextTile;
     Path_AStar pathing;
     Tile destTile;
-    float movementPercent; 
+    float movementPercent;
     float speed = 2f;
 
     Action<Character> characterChanged;
@@ -39,7 +43,8 @@ public class Character
             // Gets new job.
             currentJob = currTile.world.jobQueue.Dequeue();
 
-            if (currentJob != null) {
+            if (currentJob != null)
+            {
 
                 //TODO: Check if reachable
 
@@ -55,7 +60,8 @@ public class Character
         // if (pathing != null && pathing.Length() == 1) 
         {
 
-            if (currentJob != null) {
+            if (currentJob != null)
+            {
                 currentJob.DoWork(deltaTime);
             }
         }
@@ -72,7 +78,8 @@ public class Character
     void Update_HandleMovement(float deltatime)
     {
 
-        if (currTile == destTile) {
+        if (currTile == destTile)
+        {
             pathing = null;
             return;
         }
@@ -80,11 +87,13 @@ public class Character
         if (nextTile == null || nextTile == currTile)
         {
             // Get next tile from path finder.
-            if (pathing == null || pathing.Length() == 0) {
+            if (pathing == null || pathing.Length() == 0)
+            {
                 // Generate path to destination tile.
                 pathing = new Path_AStar(currTile.world, currTile, destTile);
 
-                if (pathing.Length() == 0) {
+                if (pathing.Length() == 0)
+                {
                     // Debug.LogWarning("Path_AStar returned no path to destination.");
                     AbandonJob();
                     //TODO: Cancel job if no path is found. or Reqeueue it.
@@ -108,7 +117,7 @@ public class Character
         // Using Euclidean distance for more, but will switch to 
         // something like Manhatten or Chebyshev distance for calculations.
         float distToTravel = Mathf.Sqrt(Mathf.Pow(currTile.x - nextTile.x, 2) + Mathf.Pow(currTile.y - nextTile.y, 2));
-        
+
         // Gets the distance we can travel this update.
         float distThisFrame = speed * deltatime;
 
@@ -138,7 +147,8 @@ public class Character
 
     public void SetDestination(Tile tile)
     {
-        if (currTile.IsNeighbour(tile) == false) {
+        if (currTile.IsNeighbour(tile) == false)
+        {
             Debug.Log("Characer::SetDestination - Desination is not beside current tile.");
         }
 
@@ -158,7 +168,8 @@ public class Character
     void OnJobEnded(Job job)
     {
         // Called whether job was completed or cancelled.
-        if (job != currentJob) {
+        if (job != currentJob)
+        {
             Debug.LogError("Chracter::OnJobEnded - Character being told about job that isn't his.");
             return;
         }
