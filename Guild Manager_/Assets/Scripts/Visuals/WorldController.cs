@@ -13,13 +13,10 @@ public class WorldController : MonoBehaviour
     Light2D GlobalLight;
     public static WorldController Instance { get; protected set; }
     public World World { get; protected set; }
-    bool updated = false;
-    bool isDay;
 
     // Start is called before the first frame update
     void Awake()
     {
-        isDay = true;
         World = new World(100, 100);
         Instance = this;
         Camera.main.transform.position = new Vector3(World.width / 2, World.height / 2, Camera.main.transform.position.z);
@@ -39,26 +36,18 @@ public class WorldController : MonoBehaviour
     // Changes lighting on day/night switch.
     void UpdateDayCycle()
     {
-        if (isDay != World.IsDayTime())
+        Color timeColor;
+        if (World.IsDayTime())
         {
-            isDay = World.IsDayTime();
-            updated = false;
+            timeColor = dayColor;
         }
 
-        if (!updated)
+        else
         {
-            Debug.Log("updating");
-            if (World.IsDayTime())
-            {
-                updated = true;
-                GlobalLight.color = dayColor;
-            }
-            else
-            {
-                updated = true;
-                GlobalLight.color = nightColor;
-            }
+            timeColor = nightColor;
         }
+
+        GlobalLight.color = Color.Lerp(GlobalLight.color, timeColor, 0.0003f);
     }
 
     public Tile GetTileAtCoordinate(Vector3 coord)
