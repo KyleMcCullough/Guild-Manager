@@ -13,7 +13,7 @@ public class BuildController : MonoBehaviour
     TileType buildTile = TileType.Empty;
     public bool buildObjectsMode { get; private set; } = false;
     ObjectType buildObject = ObjectType.Empty;
-    int buildType = 0;
+    public int buildType = 0;
 
 
     // Start is called before the first frame updates
@@ -52,7 +52,7 @@ public class BuildController : MonoBehaviour
 
             WorldController.Instance.World.PlaceStructure(buildObject.ToString(), tile);
 
-            Job job = new Job(tile, (theJob) => sc.OnStructureComplete(tile));
+            Job job = new Job(tile, (theJob) => tile.structure.CompleteStructure());
             WorldController.Instance.World.jobQueue.Enqueue(job);
 
         }
@@ -83,5 +83,11 @@ public class BuildController : MonoBehaviour
     public void SetMode_PutItem(string itemType)
     {
         buildType = 2;
+    }
+
+    public void SetMode_BuildTable()
+    {
+        buildType = 1;
+        buildObject = ObjectType.Table;
     }
 }

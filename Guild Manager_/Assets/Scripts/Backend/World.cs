@@ -40,6 +40,7 @@ public class World
                 tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
             }
         }
+        Load.LoadStructureDetails();
         GeneratePrototypes();
         characters = new List<Character>();
     }
@@ -93,7 +94,8 @@ public class World
     {
         foreach (ObjectType type in Enum.GetValues(typeof(ObjectType)))
         {
-            structurePrototypes.Add(type.ToString(), Structure.CreatePrototype(type, 0, 0, 0, true));
+            StructureData data = Settings.GetStructureData(type.ToString());
+            structurePrototypes.Add(type.ToString(), Structure.CreatePrototype(type, data.movementCost, data.width, data.height, data.linksToNeighbours));
         }
         
     }
@@ -157,7 +159,6 @@ public class World
 
         // InstalledObject obj = InstalledObject.PlaceInstance(installedObjectPrototypes[type], tile);
         bool valid = tile.structure.PlaceStructure(structurePrototypes[type]);
-
         if (!valid) {
             // Failed to place object, probably because something was already there.
             return;

@@ -110,7 +110,7 @@ public class MouseController : MonoBehaviour
 
         //FIXME: May cause issues with some objects.
         // Only allows objects to be dragged on either x or y axis.
-        if (buildController.buildObjectsMode)
+        if (buildController.buildType == 1)
         {
             if (Math.Abs(endY - startY) > Math.Abs(endX - startX))
             {

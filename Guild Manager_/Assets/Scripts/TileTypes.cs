@@ -9,7 +9,8 @@ public enum TileType
 public enum ObjectType 
 {
     Empty,
-    Wood_Wall
+    Wood_Wall,
+    Table
 }
 
 public enum ItemType 

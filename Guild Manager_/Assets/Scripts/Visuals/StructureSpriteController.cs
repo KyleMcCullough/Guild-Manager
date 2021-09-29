@@ -23,7 +23,7 @@ public class StructureSpriteController : MonoBehaviour
 
         structureSprites = new Dictionary<string, Sprite>();
 
-        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/InstalledObjects");
+        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Structures");
 
         // Changes pixels per unit.
         foreach (Sprite sprite in sprites)
@@ -114,10 +114,4 @@ public class StructureSpriteController : MonoBehaviour
             tilemap.SetColor(new Vector3Int(obj.Parent.x, obj.Parent.y, 0), new Color(1f, 1f, 1f, .5f));
         }
     }
-
-    public void OnStructureComplete(Tile tile)
-    {
-        tile.structure.CompleteStructure();
-    }
-
 }
