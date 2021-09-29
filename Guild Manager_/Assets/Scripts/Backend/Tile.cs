@@ -10,6 +10,17 @@ public class Tile
     TileType type = TileType.Dirt;
     public Structure structure;
     public World world;
+    Item item;
+    public Item Item 
+    {
+        get 
+        {
+            if (item == null) {
+                item = new Item(this);
+            }
+            return item;
+        }
+    }
 
     public float movementCost
     {

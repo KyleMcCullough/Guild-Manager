@@ -13,6 +13,7 @@ public class BuildController : MonoBehaviour
     TileType buildTile = TileType.Empty;
     public bool buildObjectsMode { get; private set; } = false;
     ObjectType buildObject = ObjectType.Empty;
+    int buildType = 0;
 
 
     // Start is called before the first frame updates
@@ -29,7 +30,12 @@ public class BuildController : MonoBehaviour
 
     public void Build(Tile tile)
     {
-        if (buildObjectsMode)
+        if (buildType == 0)
+        {
+            tile.Type = buildTile;
+        }
+
+        if (buildType == 1)
         {
             // Continues to next tile if position is not valid for objects.
             if (!WorldController.Instance.World.IsStructurePlacementValid(buildObject.ToString(), tile))
@@ -52,26 +58,30 @@ public class BuildController : MonoBehaviour
         }
         else
         {
-            // Changes a tiles type.
-            tile.Type = buildTile;
+            tile.Item.CreateNewStack(100, ItemType.Wood);
         }
     }
 
     public void SetMode_BuildFloor()
     {
-        buildObjectsMode = false;
+        buildType = 0;
         buildTile = TileType.Dirt;
     }
 
     public void SetMode_BuildVoid()
     {
-        buildObjectsMode = false;
+        buildType = 0;
         buildTile = TileType.Empty;
     }
 
     public void SetMode_BuildWall(string objectType)
     {
-        buildObjectsMode = true;
+        buildType = 1;
         Enum.TryParse<ObjectType>(objectType, out buildObject);
+    }
+
+    public void SetMode_PutItem(string itemType)
+    {
+        buildType = 2;
     }
 }
