@@ -57,11 +57,28 @@ public class Item
         }
     }
 
+    public int TakeFromStack(int amountToTake, ItemType type)
+    {
+        if (this.type == type && amountToTake <= currentStackAmount)
+        {
+            currentStackAmount -= amountToTake;
+            return amountToTake;
+        }
+
+        else if (amountToTake > currentStackAmount)
+        {
+            currentStackAmount = 0;
+            return currentStackAmount;
+        }
+
+        return 0;
+    }
+
     // Tries adding to a stack. Returns the amount that can't be added due to limit.
     int TryAddingToStack(int amountToAdd, ItemType type)
     {
 
-        if (this.Type == ItemType.Empty && this.Parent.structure.Type == ObjectType.Empty) 
+        if (this.Type == type || this.Type == ItemType.Empty && this.Parent.structure.Type == ObjectType.Empty)
         {
             this.Type = type;
         }
@@ -91,24 +108,33 @@ public class Item
     // Loops through neighbours until all the items are placed.
     void SendItemsToNeighbour(int amount, ItemType type)
     {
-        int x = Parent.x;
-        int y = Parent.y;
-
         int index = 1;
         while (amount > 0)
         {
-            int[,] neighbours = {{x, y + index}, {x + index, y}, {x, y - index}, {x - index, y}, {x + index, y + index}, {x + index, y - index}, {x - index, y - index}, {x - index, y + index}};
-            
-            for (int i = 0; i < neighbours.Length / 2; i++)
+
+            for (int x = Parent.x - index; x < Parent.x + 1 + index; x++)
             {
-
-                amount = Parent.world.GetTile(neighbours[i,0], neighbours[i,1]).Item.TryAddingToStack(amount, type);
-
-                if (amount == 0)
+                for (int y = Parent.y - index; y < Parent.y + 1 + index; y++)
                 {
-                    break;
+
+                    if (amount == 0)
+                    {
+                        break;
+                    }
+
+                    try
+                    {
+                        amount = Parent.world.GetTile(x, y).Item.TryAddingToStack(amount, type);
+                    }
+
+                    //FIXME: To be taken out once the borders around the edges that restricts building is implemented.
+                    catch (NullReferenceException)
+                    {
+                        continue;
+                    }
                 }
             }
+
             index++;
         }
     }
