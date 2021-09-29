@@ -6,6 +6,7 @@ using System;
 public class Structure
 {
     public Tile Parent;
+    public string TypeCategory;
     public Structure parentStructure = null;
     public List<int[]> overlappedStructureCoords = new List<int[]>();
     ObjectType type = ObjectType.Empty;
@@ -95,6 +96,7 @@ public class Structure
         this.linksToNeighbour = prototype.linksToNeighbour;
         this.Type = prototype.Type;
         this.movementCost = prototype.movementCost;
+        this.TypeCategory = prototype.TypeCategory;
 
         if (this.linksToNeighbour)
         {
@@ -148,10 +150,11 @@ public class Structure
         this.IsConstructed = true;
     }
 
-    static public Structure CreatePrototype(ObjectType type, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false)
+    static public Structure CreatePrototype(ObjectType type, string TypeCategory, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false)
     {
 
         Structure obj = new Structure();
+        obj.TypeCategory = TypeCategory;
         obj.Type = type;
         obj.movementCost = movementCost;
         obj.width = width;

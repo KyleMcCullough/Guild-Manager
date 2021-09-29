@@ -95,7 +95,7 @@ public class World
         foreach (ObjectType type in Enum.GetValues(typeof(ObjectType)))
         {
             StructureData data = Settings.GetStructureData(type.ToString());
-            structurePrototypes.Add(type.ToString(), Structure.CreatePrototype(type, data.movementCost, data.width, data.height, data.linksToNeighbours));
+            structurePrototypes.Add(type.ToString(), Structure.CreatePrototype(type, Settings.GetCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours));
         }
         
     }

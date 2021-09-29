@@ -20,4 +20,17 @@ public static class Settings
         return new StructureData();
     }
 
+    public static Category GetCategory(int id)
+    {
+        foreach (Category item in structures.categories)
+        {
+            if (item.id == id)
+            {
+                return item;
+            }
+        }
+        UnityEngine.Debug.LogError("No id of '" + id + "' has been found in the Category data array.");
+        return new Category();
+    }
+
 }

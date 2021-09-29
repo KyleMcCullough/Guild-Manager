@@ -1,8 +1,27 @@
 {
+
+    "categories": [
+        {
+            "name": "None",
+            "id": 0
+        },
+
+        {
+            "name": "Wall",
+            "id": 1
+        },
+
+        {
+            "name": "Furniture",
+            "id": 2
+        }
+    ],
+
     "structures" : [
 
         {
             "name": "Empty",
+            "category": 0,
             "movementCost": 1,
             "width": 1,
             "height": 1,
@@ -11,6 +30,7 @@
 
         {
             "name": "Table",
+            "category": 2,
             "movementCost": 1,
             "width": 2,
             "height": 2,
@@ -19,6 +39,7 @@
 
         {
             "name": "Wood_Wall",
+            "category": 1,
             "movementCost": 0,
             "width": 1,
             "height": 1,
