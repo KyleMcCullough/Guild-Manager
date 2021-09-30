@@ -90,4 +90,10 @@ public class BuildController : MonoBehaviour
         buildType = 1;
         buildObject = ObjectType.Table;
     }
+
+    public void SetMode_BuildDoor()
+    {
+        buildType = 1;
+        buildObject = ObjectType.Wood_Door;
+    }
 }

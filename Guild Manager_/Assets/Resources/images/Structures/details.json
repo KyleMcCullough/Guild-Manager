@@ -14,6 +14,11 @@
         {
             "name": "Furniture",
             "id": 2
+        },
+
+        {
+            "name": "Door",
+            "id": 3
         }
     ],
 
@@ -25,7 +30,9 @@
             "movementCost": 1,
             "width": 1,
             "height": 1,
-            "linksToNeighbours": false
+            "linksToNeighbours": false,
+            "relatedParameters": [],
+            "relatedFunctions": []
         },
 
         {
@@ -34,7 +41,9 @@
             "movementCost": 1,
             "width": 2,
             "height": 2,
-            "linksToNeighbours": false
+            "linksToNeighbours": false,
+            "relatedParameters": [],
+            "relatedFunctions": []
         },
 
         {
@@ -43,7 +52,24 @@
             "movementCost": 0,
             "width": 1,
             "height": 1,
-            "linksToNeighbours": true
+            "linksToNeighbours": true,
+            "relatedParameters": [],
+            "relatedFunctions": []
+        },
+
+        {
+            "name": "Wood_Door",
+            "category": 3,
+            "movementCost": 0,
+            "width": 1,
+            "height": 1,
+            "linksToNeighbours": false,
+            "relatedParameters": [
+                "openness", 0,
+                "doorIsOpening", false,
+                "doorOpenTime", 0.25
+            ],
+            "relatedFunctions": ["Update_Door"]
         }
     ]
 }

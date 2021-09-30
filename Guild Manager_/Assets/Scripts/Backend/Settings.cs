@@ -1,4 +1,4 @@
-
+using System.Collections.Generic;
 public static class Settings
 {
     public static int DayLength {get; private set;} = 40;
@@ -30,7 +30,53 @@ public static class Settings
             }
         }
         UnityEngine.Debug.LogError("No id of '" + id + "' has been found in the Category data array.");
-        return new Category();
+        return null;
     }
+
+    public static object CastToCorrectType(string value)
+    {
+        if (bool.TryParse(value, out bool b))
+        {
+            return b;
+        }
+        
+        if (int.TryParse(value, out int i))
+        {
+            return i;
+        }
+
+        if (float.TryParse(value, out float f))
+        {
+            return f;
+        }
+
+        return value;
+    }
+
+    // public static string[] GetRelatedFunctions(string name)
+    // {
+    //     foreach (StructureData item in structures.structures)
+    //     {
+    //         if (item.name == name)
+    //         {
+    //             return item.relatedFunctions;
+    //         }
+    //     }
+    //     UnityEngine.Debug.LogError("No '" + name + "' has been found in the structure data array.");
+    //     return null;
+    // }
+
+    // public static RelatedParameter[] GetRelatedParameters(string name)
+    // {
+    //     foreach (StructureData item in structures.structures)
+    //     {
+    //         if (item.name == name)
+    //         {
+    //             return item.relatedParameters;
+    //         }
+    //     }
+    //     UnityEngine.Debug.LogError("No '" + name + "' has been found in the structure data array.");
+    //     return null;
+    // }
 
 }

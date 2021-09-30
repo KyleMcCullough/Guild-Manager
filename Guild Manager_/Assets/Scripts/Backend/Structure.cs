@@ -5,11 +5,15 @@ using System;
 
 public class Structure
 {
+    #region variables
     public Tile Parent;
     public string TypeCategory;
     public Structure parentStructure = null;
     public List<int[]> overlappedStructureCoords = new List<int[]>();
     ObjectType type = ObjectType.Empty;
+
+    public Dictionary<string, object> optionalParameters = new Dictionary<string, object>();
+    public Action<Structure, float> updateActions = null;
 
     public ObjectType Type
     {
@@ -59,6 +63,7 @@ public class Structure
 
     public Action<Structure> structureChangedEvent { get; protected set; }
 
+    #endregion
     public void RegisterObjectChangedDelegate(Action<Structure> callback)
     {
         structureChangedEvent += callback;
@@ -76,6 +81,14 @@ public class Structure
         this.Parent = Parent;
     }
 
+    public void Update(float deltaTime)
+    {
+        if (this.updateActions != null)
+        {
+            this.updateActions(this, deltaTime);
+        }
+    }
+
     public bool PlaceStructure(Structure prototype)
     {
         if (!this.IsValidPosition(this.Parent))
@@ -91,7 +104,13 @@ public class Structure
             this.ReserveRequiredTiles();
             Debug.Log(overlappedStructureCoords.Count);
         }
+        
+        if (prototype.updateActions != null)
+        {
+            this.AssignActions((Action<Structure, float>) prototype.updateActions.Clone());
+        }
 
+        this.optionalParameters = prototype.optionalParameters;
         this.IsConstructed = false;
         this.linksToNeighbour = prototype.linksToNeighbour;
         this.Type = prototype.Type;
@@ -130,6 +149,18 @@ public class Structure
             }
         }
         return true;
+    }
+
+    public void AssignActions(Action<Structure, float> newActions)
+    {
+        this.updateActions = newActions;
+        this.Parent.world.updatingStructures.Add(this);
+    }
+
+    public void RemoveActions()
+    {
+        this.updateActions = null;
+        this.Parent.world.updatingStructures.Remove(this);
     }
 
     // Reserves tiles for structures with a width or height more then 1.
@@ -187,5 +218,10 @@ public class Structure
             if (tile.structure.Type != ObjectType.Empty || tile.Type != TileType.Dirt || tile.structure.parentStructure != null) return false;
         }
         return true;
+    }
+
+    public bool IsDoor()
+    {
+        return this.TypeCategory == "Door";
     }
 }

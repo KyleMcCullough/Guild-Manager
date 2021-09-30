@@ -1,9 +1,27 @@
+using System.Runtime.Serialization;
+
 [System.Serializable]
 public class StructureData
 {
     public string name;
     public int movementCost, width, height, category;
     public bool linksToNeighbours;
+    public string[] relatedFunctions;
+    // public string[] parameters;
+    public string[] relatedParameters;
+    // public RelatedParameter[] relatedParameters;
+}
+
+[System.Serializable]
+public class RelatedFunction
+{
+    public string name;
+}
+
+[System.Serializable]
+public class RelatedParameter
+{
+    public string[] name;
 }
 
 [System.Serializable]
