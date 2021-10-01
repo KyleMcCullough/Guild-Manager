@@ -1,11 +1,20 @@
+using System.Globalization;
 using System.Collections.Generic;
-public static class Settings
+using System.IO;
+using UnityEngine;
+public static class Data
 {
     public static int DayLength {get; private set;} = 40;
     public static int NightRatio {get; private set;} = 50;
     public static int StackLimit {get; private set;} = 100;
 
-    public static StructureDataArray structures;
+    static StructureDataArray structures;
+
+    public static void LoadData()
+    {
+        string json = File.ReadAllText(Application.dataPath + "/Resources/images/Structures/details.json");
+        Data.structures = JsonUtility.FromJson<StructureDataArray>(json);
+    }
 
     public static StructureData GetStructureData(string name)
     {
@@ -52,31 +61,4 @@ public static class Settings
 
         return value;
     }
-
-    // public static string[] GetRelatedFunctions(string name)
-    // {
-    //     foreach (StructureData item in structures.structures)
-    //     {
-    //         if (item.name == name)
-    //         {
-    //             return item.relatedFunctions;
-    //         }
-    //     }
-    //     UnityEngine.Debug.LogError("No '" + name + "' has been found in the structure data array.");
-    //     return null;
-    // }
-
-    // public static RelatedParameter[] GetRelatedParameters(string name)
-    // {
-    //     foreach (StructureData item in structures.structures)
-    //     {
-    //         if (item.name == name)
-    //         {
-    //             return item.relatedParameters;
-    //         }
-    //     }
-    //     UnityEngine.Debug.LogError("No '" + name + "' has been found in the structure data array.");
-    //     return null;
-    // }
-
 }

@@ -35,7 +35,7 @@ public class Item
 
         if (maxStack == 0)
         {
-            this.maxStack = Settings.StackLimit;
+            this.maxStack = Data.StackLimit;
         }
 
         else

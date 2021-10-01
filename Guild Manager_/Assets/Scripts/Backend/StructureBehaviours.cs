@@ -10,8 +10,20 @@ public static class StructureBehaviours
 
     public static void Update_Door(Structure structure, float deltaTime)
     {
-        Debug.Log("Update_Door");
-        
+        Debug.Log(structure.optionalParameters["openness"]);
+        float openness = Convert.ToSingle(structure.optionalParameters["openness"]);
+        if ((bool) structure.optionalParameters["doorIsOpening"])
+        {
+            openness += deltaTime / (float) structure.optionalParameters["doorOpenTime"];
+        }
+
+        else
+        {
+            openness -= deltaTime / (float) structure.optionalParameters["doorOpenTime"];
+        }
+
+        openness = Mathf.Clamp01(openness);
+        structure.optionalParameters["openness"] = openness;
     }
 
     public static MethodInfo GetMethodInfo(string methodName)

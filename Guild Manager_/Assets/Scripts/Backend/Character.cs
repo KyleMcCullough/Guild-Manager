@@ -113,6 +113,12 @@ public class Character
             if (pathing.Length() == 1) return;
         }
 
+        if (nextTile.structure.IsDoor() && !nextTile.structure.IsDoorOpen())
+        {
+            nextTile.structure.OpenDoor();
+            return;
+        }
+
         // Gets total distance from destination tile.
         // Using Euclidean distance for more, but will switch to 
         // something like Manhatten or Chebyshev distance for calculations.
@@ -131,6 +137,11 @@ public class Character
         {
             //TODO: Get next tile from pathfinding system.
             //      If there are no more tiles, then we have actually arived.
+
+            if (nextTile.structure.IsDoor())
+            {
+                nextTile.structure.CloseDoor();
+            }
 
             currTile = nextTile;
             movementPercent = 0;

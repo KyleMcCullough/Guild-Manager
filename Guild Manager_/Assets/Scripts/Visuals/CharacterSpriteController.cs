@@ -44,7 +44,6 @@ public class CharacterSpriteController : MonoBehaviour
     {
         // Creates a game object linked to tile.
         //FIxME: Doesn't consider multi-tile objects or rotated objects.
-        Debug.Log("Entered character creation.");
 
         GameObject obj = new GameObject();
         obj.name = "Character";
@@ -58,12 +57,7 @@ public class CharacterSpriteController : MonoBehaviour
         SpriteRenderer sprite = obj.AddComponent<SpriteRenderer>();
         sprite.sprite = characterSprites["p1_front"];
         sprite.sortingOrder = 3;
-
-        // Applies a transparency for not yet built objects.
-        // Color color = sprite.color;
-        // color.a = .3f;
-        // sprite.color = color;
-
+        
         // Registers callback.
         character.RegisterOnChangedCallback(OnCharacterChanged);
     }

@@ -220,8 +220,36 @@ public class Structure
         return true;
     }
 
+    #region Door Methods
     public bool IsDoor()
     {
         return this.TypeCategory == "Door";
     }
+
+    public bool IsDoorOpen()
+    {
+        return (float) this.optionalParameters["openness"] == 1;
+    }
+
+    public void OpenDoor()
+    {
+        if (!IsDoor() || (bool) this.optionalParameters["doorIsOpening"] == true)
+        {
+            return;
+        }
+
+        this.optionalParameters["doorIsOpening"] = true;
+    }
+
+    public void CloseDoor()
+    {
+        if (!IsDoor())
+        {
+            return;
+        }
+
+        this.optionalParameters["doorIsOpening"] = false;
+    }
+
+    #endregion
 }

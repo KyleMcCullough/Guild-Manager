@@ -44,7 +44,7 @@ public class World
                 tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
             }
         }
-        Load.LoadStructureDetails();
+        Data.LoadData();
         GeneratePrototypes();
         characters = new List<Character>();
     }
@@ -63,7 +63,7 @@ public class World
             structure.Update(deltaTime);
         }
         
-        if (worldTime >= Settings.DayLength) {
+        if (worldTime >= Data.DayLength) {
             UpdateDate();
             worldTime = 0f;
         }
@@ -71,7 +71,7 @@ public class World
 
     public bool IsDayTime()
     {
-        return worldTime <= (Settings.DayLength * ( 1 - ((float) Settings.NightRatio / 100)));
+        return worldTime <= (Data.DayLength * ( 1 - ((float) Data.NightRatio / 100)));
     }
 
     public void UpdateDate() {
@@ -103,8 +103,8 @@ public class World
     {
         foreach (ObjectType type in Enum.GetValues(typeof(ObjectType)))
         {
-            StructureData data = Settings.GetStructureData(type.ToString());
-            Structure structure = Structure.CreatePrototype(type, Settings.GetCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours);
+            StructureData data = Data.GetStructureData(type.ToString());
+            Structure structure = Structure.CreatePrototype(type, Data.GetCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours);
 
             // Convert the string to the actual method, and load each function into the delegate
             foreach (string func in data.relatedFunctions)
@@ -130,25 +130,11 @@ public class World
 
                 else
                 {
-                    Debug.Log(value + " " + Settings.CastToCorrectType(item) + Settings.CastToCorrectType(item).GetType());
-                    structure.optionalParameters.Add(value, Settings.CastToCorrectType(item));
+                    Debug.Log(value + " " + Data.CastToCorrectType(item) + Data.CastToCorrectType(item).GetType());
+                    structure.optionalParameters.Add(value, Data.CastToCorrectType(item));
                     value = "";
                 }
             }
-
-            // for (int i = 1; i < data.relatedParameters.Length / 2; i += 2)
-            // {
-            //     Debug.Log(data.relatedParameters[i] + " " + Settings.CastToCorrectType(data.relatedParameters[i + 1]) + Settings.CastToCorrectType(data.relatedParameters[i + 1]).GetType());
-            //     structure.optionalParameters.Add(data.relatedParameters[i], Settings.CastToCorrectType(data.relatedParameters[i + 1]));
-            //     Debug.Log("new loop");
-            // }
-
-            // foreach (string item in data.relatedParameters)
-            // {
-            //     object x = Settings.CastToCorrectType(item);
-            //     Debug.Log(x.GetType() + " " + x);
-            //     structure.optionalParameters.Add()
-            // }
             
             structurePrototypes.Add(type.ToString(), structure);
         }

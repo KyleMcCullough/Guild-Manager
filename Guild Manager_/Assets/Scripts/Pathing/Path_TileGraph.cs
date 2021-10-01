@@ -44,7 +44,7 @@ public class Path_TileGraph
             {
 
                 // The neighbour exists and can be walked on. If it is, create an edge.
-                if (neighbours[i] != null && neighbours[i].movementCost > 0) {
+                if (neighbours[i] != null && neighbours[i].movementCost > 0 || neighbours[i] != null && neighbours[i].structure.IsDoor()) {
 
                     // Make sure there is no diagonal clipping. If it is clipping, don't create an edge.
                     if (IsClippingCorner(tile, neighbours[i])) {
