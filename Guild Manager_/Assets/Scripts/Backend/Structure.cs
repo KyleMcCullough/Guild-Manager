@@ -33,6 +33,7 @@ public class Structure
     }
 
     bool isConstructed = false;
+    public bool canCreateRooms = false;
     public bool IsConstructed
     {
         get { return isConstructed; }
@@ -116,6 +117,7 @@ public class Structure
         this.Type = prototype.Type;
         this.movementCost = prototype.movementCost;
         this.TypeCategory = prototype.TypeCategory;
+        this.canCreateRooms = prototype.canCreateRooms;
 
         if (this.linksToNeighbour)
         {
@@ -148,6 +150,16 @@ public class Structure
                 tile.structure.structureChangedEvent(tile.structure);
             }
         }
+
+        // if (this.Parent.Room != null && this.isConstructed && this.canCreateRooms)
+        // {
+        //         int x = Parent.x;
+        //         int y = Parent.y;
+        //         while (true)
+        //         {
+        //         }
+        //     }
+        // }
         return true;
     }
 
@@ -179,9 +191,14 @@ public class Structure
     public void CompleteStructure()
     {
         this.IsConstructed = true;
+
+        if (this.canCreateRooms)
+        {
+            this.Parent.world.UpdateRooms(this);
+        }
     }
 
-    static public Structure CreatePrototype(ObjectType type, string TypeCategory, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false)
+    static public Structure CreatePrototype(ObjectType type, string TypeCategory, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool canCreateRooms = false)
     {
 
         Structure obj = new Structure();
@@ -191,6 +208,7 @@ public class Structure
         obj.width = width;
         obj.height = height;
         obj.linksToNeighbour = linksToNeighbour;
+        obj.canCreateRooms = canCreateRooms;
         obj.positionValidation = obj.IsValidPosition;
 
         return obj;

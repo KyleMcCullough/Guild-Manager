@@ -9,6 +9,7 @@ public class Tile
     Action<Tile> tileChangedEvent;
     TileType type = TileType.Dirt;
     public Structure structure;
+    public Room room = null;
     public World world;
     Item item;
     public Item Item 
@@ -80,7 +81,7 @@ public class Tile
     }
 
     //TODO: I don't like this, please help.
-    public Tile[] GetNeighbours(bool diagonals)
+    public Tile[] GetNeighbours(bool diagonals = false)
     {
         Tile[] neighbours;
 
@@ -122,4 +123,23 @@ public class Tile
         return neighbours;
     }
 
+    public Tile North()
+    {
+        return world.GetTile(x, y + 1);
+    }
+
+    public Tile South()
+    {
+        return world.GetTile(x, y - 1);
+    }
+
+    public Tile East()
+    {
+        return world.GetTile(x + 1, y);
+    }
+
+    public Tile West()
+    {
+        return world.GetTile(x - 1, y);
+    }
 }

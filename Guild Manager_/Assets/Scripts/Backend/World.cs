@@ -21,6 +21,7 @@ public class World
     public JobQueue jobQueue;
     public List<Tile> updatingTiles;
     public List<Structure> updatingStructures;
+    public List<Room> rooms;
     float worldTime = 0;
 
     public World(int width, int height)
@@ -33,6 +34,8 @@ public class World
         jobQueue = new JobQueue();
         structurePrototypes = new Dictionary<string, Structure>();
         updatingStructures = new List<Structure>();
+        rooms = new List<Room>();
+        rooms.Add(new Room());
         updatingTiles = new List<Tile>();
         
 
@@ -42,6 +45,9 @@ public class World
                 tiles[x, y].RegisterTileChangedDelegate(OnTileChanged);
                 tiles[x, y].Item.RegisterItemChanged(OnItemChanged);
                 tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
+                
+                // Sets room default to outside.
+                tiles[x, y].room = GetOutSideRoom();
             }
         }
         Data.LoadData();
@@ -104,7 +110,7 @@ public class World
         foreach (ObjectType type in Enum.GetValues(typeof(ObjectType)))
         {
             StructureData data = Data.GetStructureData(type.ToString());
-            Structure structure = Structure.CreatePrototype(type, Data.GetCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours);
+            Structure structure = Structure.CreatePrototype(type, Data.GetCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours, data.canCreateRooms);
 
             // Convert the string to the actual method, and load each function into the delegate
             foreach (string func in data.relatedFunctions)
@@ -198,7 +204,6 @@ public class World
             return;
         }
 
-        // InstalledObject obj = InstalledObject.PlaceInstance(installedObjectPrototypes[type], tile);
         bool valid = tile.structure.PlaceStructure(structurePrototypes[type]);
         if (!valid) {
             // Failed to place object, probably because something was already there.
@@ -207,13 +212,48 @@ public class World
 
         if (structureChangedEvent != null) {
             structureChangedEvent(tile.structure);
-            InvalidateTileGraph();
+
+            // Regenerates path finding if structure cannot be walked through.
+            if (structurePrototypes[type].movementCost != 1)
+            {
+                InvalidateTileGraph();
+            }
         }
     }
 
+    #region Rooms
     public void InvalidateTileGraph()
     {
         tileGraph = null;
     }
+
+        public Room GetOutSideRoom()
+    {
+        return rooms[0];
+    }
+
+    public void AddRoom(Room room)
+    {
+        Debug.Log("Created new room. ");
+        this.rooms.Add(room);
+    }
+
+    public void DestroyRoom(Room room)
+    {
+        if (room == GetOutSideRoom()) 
+        {
+            Debug.LogError("Tried to delete outside room.");
+            return;
+        }
+
+        rooms.Remove(room);
+        room.UnassignAllTiles();
+    }
+
+    public void UpdateRooms(Structure structure)
+    {
+        Room.FloodFillRoom(structure);
+    }
+    #endregion
 }
 

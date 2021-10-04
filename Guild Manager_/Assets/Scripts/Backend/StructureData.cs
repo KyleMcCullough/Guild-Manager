@@ -5,7 +5,7 @@ public class StructureData
 {
     public string name;
     public int movementCost, width, height, category;
-    public bool linksToNeighbours;
+    public bool linksToNeighbours, canCreateRooms;
     public string[] relatedFunctions;
     // public string[] parameters;
     public string[] relatedParameters;

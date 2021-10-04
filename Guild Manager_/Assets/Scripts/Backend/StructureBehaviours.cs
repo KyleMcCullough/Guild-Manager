@@ -10,7 +10,6 @@ public static class StructureBehaviours
 
     public static void Update_Door(Structure structure, float deltaTime)
     {
-        Debug.Log(structure.optionalParameters["openness"]);
         float openness = Convert.ToSingle(structure.optionalParameters["openness"]);
         if ((bool) structure.optionalParameters["doorIsOpening"])
         {

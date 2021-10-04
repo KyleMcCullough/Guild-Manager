@@ -38,6 +38,11 @@ public class UIController : MonoBehaviour
                 text += tile.structure.Type.ToString().Replace("_", " ");
             }
 
+            if (tile.room != tile.world.GetOutSideRoom())
+            {
+                text += " Interior";
+            }
+
             tileDetails.text = text;
         }
     }

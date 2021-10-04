@@ -7,6 +7,8 @@ public static class Data
     public static int DayLength {get; private set;} = 40;
     public static int NightRatio {get; private set;} = 50;
     public static int StackLimit {get; private set;} = 100;
+    public static Dictionary<string, StructureData> structureData = new Dictionary<string, StructureData>(); 
+
 
     static StructureDataArray structures;
 
@@ -14,6 +16,11 @@ public static class Data
     {
         string json = File.ReadAllText(Application.dataPath + "/Resources/images/Structures/details.json");
         Data.structures = JsonUtility.FromJson<StructureDataArray>(json);
+
+        foreach (StructureData data in Data.structures.structures)
+        {
+            structureData.Add(data.name, data);
+        }
     }
 
     public static StructureData GetStructureData(string name)

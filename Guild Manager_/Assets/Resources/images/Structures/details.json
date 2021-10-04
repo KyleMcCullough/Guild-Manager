@@ -31,6 +31,7 @@
             "width": 1,
             "height": 1,
             "linksToNeighbours": false,
+            "canCreateRooms": false,
             "relatedParameters": [],
             "relatedFunctions": []
         },
@@ -42,6 +43,7 @@
             "width": 2,
             "height": 2,
             "linksToNeighbours": false,
+            "canCreateRooms": false,
             "relatedParameters": [],
             "relatedFunctions": []
         },
@@ -53,6 +55,7 @@
             "width": 1,
             "height": 1,
             "linksToNeighbours": true,
+            "canCreateRooms": true,
             "relatedParameters": [],
             "relatedFunctions": []
         },
@@ -64,6 +67,7 @@
             "width": 1,
             "height": 1,
             "linksToNeighbours": false,
+            "canCreateRooms": true,
             "relatedParameters": [
                 "openness", 0,
                 "doorIsOpening", false,
