@@ -103,22 +103,8 @@ public class Character
                     return;
                 }
 
-                if (destTile.structure.movementCost == 0 || pathing == null)
-                {
-                    foreach (Tile t in destTile.GetNeighbors(true))
-                    {
-                        if (pathing == null || pathing.Length() == 0)
-                        {
-                            pathing = new Path_AStar(currTile.world, currTile, t);
-                        }
-                    }
-                }
-
-                // else
-                // {
-                    // Generate path to destination tile.
-                // pathing = new Path_AStar(currTile.world, currTile, destTile);
-                // }
+                // Generate path to destination tile.
+                pathing = new Path_AStar(currTile.world, currTile, destTile);
                 
                 if (pathing.Length() == 0)
                 {

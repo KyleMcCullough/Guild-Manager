@@ -76,11 +76,12 @@ public class Tile
     public bool IsNeighbour(Tile tile, bool diagonals = false)
     {
 
-        return (Mathf.Abs((this.x - tile.x) + (this.y - tile.y)) == 1 ||
-            (diagonals && Mathf.Abs((this.x - tile.x) * (this.y - tile.y)) == 1));
+		return 
+			Mathf.Abs( this.x - tile.x ) + Mathf.Abs( this.y - tile.y ) == 1 ||  // Check hori/vert adjacency
+			( diagonals && ( Mathf.Abs( this.x - tile.x ) == 1 && Mathf.Abs( this.y - tile.y ) == 1 ) ) // Check diag adjacency
+			;
     }
 
-    //TODO: I don't like this, please help.
     public Tile[] GetNeighbors(bool diagonals = false)
     {
         Tile[] neighbours;
