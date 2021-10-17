@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Threading;
 
 public class Structure
 {
@@ -10,18 +11,18 @@ public class Structure
     public string TypeCategory;
     public Structure parentStructure = null;
     public List<int[]> overlappedStructureCoords = new List<int[]>();
-    ObjectType type = ObjectType.Empty;
+    String type = "Empty";
 
     public Dictionary<string, object> optionalParameters = new Dictionary<string, object>();
     public Action<Structure, float> updateActions = null;
 
-    public ObjectType Type
+    public String Type
     {
         get { return type; }
 
         set
         {
-            ObjectType previous = type;
+            String previous = type;
             type = value;
 
             // Call callback to refresh tile visually.
@@ -43,7 +44,10 @@ public class Structure
             if (value)
             {
                 isConstructed = true;
-                structureChangedEvent(this);
+                if (structureChangedEvent != null)
+                {
+                    structureChangedEvent(this);
+                }
             }
 
             else
@@ -76,10 +80,12 @@ public class Structure
         this.Parent = Parent;
     }
 
-    public Structure(Tile Parent, ObjectType Type)
+    public Structure(Tile Parent, String Type)
     {
         this.Type = Type;
         this.Parent = Parent;
+
+
     }
 
     public void Update(float deltaTime)
@@ -106,6 +112,11 @@ public class Structure
             Debug.Log(overlappedStructureCoords.Count);
         }
         
+        if (this.updateActions != null)
+        {
+            this.RemoveActions();
+        }
+
         if (prototype.updateActions != null)
         {
             this.AssignActions((Action<Structure, float>) prototype.updateActions.Clone());
@@ -114,10 +125,10 @@ public class Structure
         this.optionalParameters = prototype.optionalParameters;
         this.IsConstructed = false;
         this.linksToNeighbour = prototype.linksToNeighbour;
-        this.Type = prototype.Type;
         this.movementCost = prototype.movementCost;
         this.TypeCategory = prototype.TypeCategory;
         this.canCreateRooms = prototype.canCreateRooms;
+        this.Type = prototype.Type;
 
         if (this.linksToNeighbour)
         {
@@ -150,16 +161,6 @@ public class Structure
                 tile.structure.structureChangedEvent(tile.structure);
             }
         }
-
-        // if (this.Parent.Room != null && this.isConstructed && this.canCreateRooms)
-        // {
-        //         int x = Parent.x;
-        //         int y = Parent.y;
-        //         while (true)
-        //         {
-        //         }
-        //     }
-        // }
         return true;
     }
 
@@ -187,6 +188,15 @@ public class Structure
             }
         }
     }
+    
+    void ReleaseRequiredTiles()
+    {
+        foreach (int[] coords in this.overlappedStructureCoords)
+        {
+            this.Parent.world.GetTile(coords[0], coords[1]).structure.parentStructure = null;
+        }
+        this.overlappedStructureCoords = new List<int[]>();
+    }
 
     public void CompleteStructure()
     {
@@ -194,11 +204,49 @@ public class Structure
 
         if (this.canCreateRooms)
         {
-            this.Parent.world.UpdateRooms(this);
+            Thread UpdateRoomThread = new Thread(new ThreadStart(this.Thread_UpdateRooms_Creation));
+            UpdateRoomThread.Start();
+        }
+
+        if (this.movementCost != 1)
+        {
+            Parent.world.InvalidateTileGraph();
         }
     }
 
-    static public Structure CreatePrototype(ObjectType type, string TypeCategory, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool canCreateRooms = false)
+    public void RemoveStructure()
+    {
+        Structure prototype = this.Parent.world.structurePrototypes["Empty"];
+
+        if (this.updateActions != null)
+        {
+            this.RemoveActions();
+        }
+
+        if (this.overlappedStructureCoords.Count > 0)
+        {
+            this.ReleaseRequiredTiles();
+        }
+
+        this.optionalParameters = prototype.optionalParameters;
+        this.linksToNeighbour = prototype.linksToNeighbour;
+        this.Type = prototype.Type;
+        this.movementCost = prototype.movementCost;
+        this.TypeCategory = prototype.TypeCategory;
+        this.canCreateRooms = prototype.canCreateRooms;
+        this.Parent.world.GetOutSideRoom().AssignTile(this.Parent);
+        Debug.Log(this.Parent.world.rooms.IndexOf(this.Parent.room));
+
+        Thread UpdateRoomThread = new Thread(new ThreadStart(this.Thread_UpdateRooms_Deletion));
+        UpdateRoomThread.Start();
+
+        foreach (Tile tile in this.Parent.GetNeighbours())
+        {
+            tile.structure.structureChangedEvent(tile.structure);
+        }
+    }
+    
+    static public Structure CreatePrototype(String type, string TypeCategory, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool canCreateRooms = false)
     {
 
         Structure obj = new Structure();
@@ -223,7 +271,7 @@ public class Structure
                 for (int y = tile.y; y != (tile.y + this.height); y++)
                 {
                     Tile t = tile.world.GetTile(x, y);
-                    if (t.structure.Type != ObjectType.Empty || t.Type != TileType.Dirt || t.structure.parentStructure != null)
+                    if (t.structure.Type != "Empty" || t.Type != TileType.Dirt || t.structure.parentStructure != null)
                     {
                         return false;
                     }
@@ -233,7 +281,7 @@ public class Structure
 
         else
         {
-            if (tile.structure.Type != ObjectType.Empty || tile.Type != TileType.Dirt || tile.structure.parentStructure != null) return false;
+            if (tile.structure.Type != "Empty" || tile.Type != TileType.Dirt || tile.structure.parentStructure != null) return false;
         }
         return true;
     }
@@ -267,6 +315,20 @@ public class Structure
         }
 
         this.optionalParameters["doorIsOpening"] = false;
+    }
+
+    #endregion
+
+    #region MultiThreading Methods
+
+    void Thread_UpdateRooms_Creation()
+    {
+        Room.FloodFillRoom(this);
+    }
+
+    void Thread_UpdateRooms_Deletion()
+    {
+        Room.FloodFill_Remove(this);
     }
 
     #endregion

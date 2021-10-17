@@ -11,7 +11,7 @@ public enum ObjectType
     Empty,
     Wood_Wall,
     Table,
-    Wood_Door
+    Wood_Door,
 }
 
 public enum ItemType 

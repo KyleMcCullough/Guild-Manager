@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +9,7 @@ public static class Data
     public static int NightRatio {get; private set;} = 50;
     public static int StackLimit {get; private set;} = 100;
     public static Dictionary<string, StructureData> structureData = new Dictionary<string, StructureData>(); 
+    public static List<string> ObjectTypes = new List<string>();
 
 
     static StructureDataArray structures;
@@ -20,6 +22,7 @@ public static class Data
         foreach (StructureData data in Data.structures.structures)
         {
             structureData.Add(data.name, data);
+            ObjectTypes.Add(data.name);
         }
     }
 

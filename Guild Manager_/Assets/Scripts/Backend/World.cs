@@ -9,13 +9,12 @@ public class World
     int[] date;
     List<Character> characters;
     Tile[,] tiles;
-    public int width {get;}
-    public int height {get;}
-    public Dictionary<string, Structure> structurePrototypes {get; protected set;}
+    public int width { get; }
+    public int height { get; }
+    public Dictionary<string, Structure> structurePrototypes { get; protected set; }
     Action<Character> characterCreated;
     Action<Tile> tileChangedEvent;
     Action<Structure> structureChangedEvent;
-    Action<Structure> structureCreatedEvent;
     Action<Item> itemChangedEvent;
     public Path_TileGraph tileGraph;
     public JobQueue jobQueue;
@@ -29,7 +28,7 @@ public class World
         this.width = width;
         this.height = height;
 
-        date = new int[] {1, 1, 1253};
+        date = new int[] { 1, 1, 1253 };
         tiles = new Tile[width, height];
         jobQueue = new JobQueue();
         structurePrototypes = new Dictionary<string, Structure>();
@@ -37,15 +36,16 @@ public class World
         rooms = new List<Room>();
         rooms.Add(new Room());
         updatingTiles = new List<Tile>();
-        
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
                 tiles[x, y] = new Tile(x, y, this);
                 tiles[x, y].RegisterTileChangedDelegate(OnTileChanged);
                 tiles[x, y].Item.RegisterItemChanged(OnItemChanged);
                 tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
-                
+
                 // Sets room default to outside.
                 tiles[x, y].room = GetOutSideRoom();
             }
@@ -68,8 +68,9 @@ public class World
         {
             structure.Update(deltaTime);
         }
-        
-        if (worldTime >= Data.DayLength) {
+
+        if (worldTime >= Data.DayLength)
+        {
             UpdateDate();
             worldTime = 0f;
         }
@@ -77,18 +78,21 @@ public class World
 
     public bool IsDayTime()
     {
-        return worldTime <= (Data.DayLength * ( 1 - ((float) Data.NightRatio / 100)));
+        return worldTime <= (Data.DayLength * (1 - ((float)Data.NightRatio / 100)));
     }
 
-    public void UpdateDate() {
+    public void UpdateDate()
+    {
         date[0]++;
-        
-        if (date[0] >= 30) {
+
+        if (date[0] >= 30)
+        {
             date[0] = 0;
             date[1]++;
         }
 
-        if (date[1] > 6) {
+        if (date[1] > 6)
+        {
             date[1] = 0;
             date[2]++;
         }
@@ -105,11 +109,11 @@ public class World
         return c;
     }
 
-    void GeneratePrototypes() 
+    void GeneratePrototypes()
     {
-        foreach (ObjectType type in Enum.GetValues(typeof(ObjectType)))
+        foreach (string type in Data.ObjectTypes)
         {
-            StructureData data = Data.GetStructureData(type.ToString());
+            StructureData data = Data.GetStructureData(type);
             Structure structure = Structure.CreatePrototype(type, Data.GetCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours, data.canCreateRooms);
 
             // Convert the string to the actual method, and load each function into the delegate
@@ -117,16 +121,18 @@ public class World
             {
                 if (func != null)
                 {
-                    structure.updateActions += (Action<Structure, float>) Delegate.CreateDelegate(typeof(Action<Structure, float>), StructureBehaviours.GetMethodInfo(func));
+                    structure.updateActions += (Action<Structure, float>)Delegate.CreateDelegate(typeof(Action<Structure, float>), StructureBehaviours.GetMethodInfo(func));
                 }
             }
 
             if (data.relatedParameters.Length % 2 != 0)
             {
-                Debug.LogError("There are parameters with unmatching values in " + type.ToString());
+                Debug.LogError("There are parameters with no matching values in " + type.ToString());
             }
 
             string value = "";
+
+            // Load parameters into structure.
             foreach (string item in data.relatedParameters)
             {
                 if (value == "")
@@ -136,19 +142,17 @@ public class World
 
                 else
                 {
-                    Debug.Log(value + " " + Data.CastToCorrectType(item) + Data.CastToCorrectType(item).GetType());
                     structure.optionalParameters.Add(value, Data.CastToCorrectType(item));
                     value = "";
                 }
             }
-            
-            structurePrototypes.Add(type.ToString(), structure);
+            structurePrototypes.Add(type, structure);
         }
-        
     }
 
-    public Tile GetTile(int x, int y) {
-        if (x >= height || x < 0 || y >= width || y < 0) {return null;}
+    public Tile GetTile(int x, int y)
+    {
+        if (x >= height || x < 0 || y >= width || y < 0) { return null; }
         return tiles[x, y];
     }
 
@@ -172,52 +176,56 @@ public class World
         InvalidateTileGraph();
     }
 
-    public void RegisterTileChanged(Action<Tile> callback)  {
+    public void RegisterTileChanged(Action<Tile> callback)
+    {
         tileChangedEvent += callback;
     }
 
-    public void UnregisterTileChanged(Action<Tile> callback)  {
+    public void UnregisterTileChanged(Action<Tile> callback)
+    {
         tileChangedEvent -= callback;
     }
 
-    public void RegisterStructureChanged(Action<Structure> callback)  {
+    public void RegisterStructureChanged(Action<Structure> callback)
+    {
         structureChangedEvent += callback;
     }
 
-    public void RegisterCharacterCreated(Action<Character> callback)  {
+    public void RegisterCharacterCreated(Action<Character> callback)
+    {
         characterCreated += callback;
     }
 
-    public void RegisterItemChanged(Action<Item> callback)  {
+    public void RegisterItemChanged(Action<Item> callback)
+    {
         itemChangedEvent += callback;
     }
 
-    public bool IsStructurePlacementValid(string objectType, Tile tile) {
+    public bool IsStructurePlacementValid(string objectType, Tile tile)
+    {
         return structurePrototypes[objectType].IsValidPosition(tile);
     }
 
-    public void PlaceStructure(string type, Tile tile) {
-        
+    public void PlaceStructure(string type, Tile tile)
+    {
+
         //TODO: This assumes 1x1 objects with no rotations.
-        if (!structurePrototypes.ContainsKey(type)) {
+        if (!structurePrototypes.ContainsKey(type))
+        {
             Debug.LogError("Prototype array does not contain prototype for key " + type);
             return;
         }
 
         bool valid = tile.structure.PlaceStructure(structurePrototypes[type]);
-        if (!valid) {
+        if (!valid)
+        {
             // Failed to place object, probably because something was already there.
             return;
         }
 
-        if (structureChangedEvent != null) {
+        if (structureChangedEvent != null)
+        {
             structureChangedEvent(tile.structure);
-
-            // Regenerates path finding if structure cannot be walked through.
-            if (structurePrototypes[type].movementCost != 1)
-            {
-                InvalidateTileGraph();
-            }
         }
     }
 
@@ -227,20 +235,19 @@ public class World
         tileGraph = null;
     }
 
-        public Room GetOutSideRoom()
+    public Room GetOutSideRoom()
     {
         return rooms[0];
     }
 
     public void AddRoom(Room room)
     {
-        Debug.Log("Created new room. ");
         this.rooms.Add(room);
     }
 
     public void DestroyRoom(Room room)
     {
-        if (room == GetOutSideRoom()) 
+        if (room == GetOutSideRoom())
         {
             Debug.LogError("Tried to delete outside room.");
             return;
@@ -250,10 +257,6 @@ public class World
         room.UnassignAllTiles();
     }
 
-    public void UpdateRooms(Structure structure)
-    {
-        Room.FloodFillRoom(structure);
-    }
     #endregion
 }
 

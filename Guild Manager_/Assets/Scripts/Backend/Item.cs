@@ -78,7 +78,7 @@ public class Item
     int TryAddingToStack(int amountToAdd, ItemType type)
     {
 
-        if (this.Type == type || this.Type == ItemType.Empty && this.Parent.structure.Type == ObjectType.Empty)
+        if (this.Type == type || this.Type == ItemType.Empty && this.Parent.structure.Type == "Empty")
         {
             this.Type = type;
         }

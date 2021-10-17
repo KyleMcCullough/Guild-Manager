@@ -57,10 +57,16 @@ public class StructureSpriteController : MonoBehaviour
     public void AssignSprite(Structure obj)
     {
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
+        
+        if (obj.Type == "Empty")
+        {
+            tilemap.SetTile(new Vector3Int(obj.Parent.x,obj.Parent.y,0), null);
+            return;
+        }
 
         if (!obj.linksToNeighbour)
         {
-            t.sprite = structureSprites[obj.Type.ToString() + "_"];
+            t.sprite = structureSprites[obj.Type + "_"];
             tilemap.SetTile(new Vector3Int(obj.Parent.x, obj.Parent.y, 0), t);
             return;
         }

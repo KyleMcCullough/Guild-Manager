@@ -32,7 +32,6 @@ public class WorldController : MonoBehaviour
 
         // TODO: Add pause/unpause, speed controls.
     }
-
     // Changes lighting on day/night switch.
     void UpdateDayCycle()
     {

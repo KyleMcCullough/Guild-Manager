@@ -33,15 +33,12 @@ public class UIController : MonoBehaviour
         {
             string text = $"{tile.x}-{tile.y}, {tile.Type.ToString().Replace("_", " ")}\n";
 
-            if (tile.structure.Type != ObjectType.Empty && tile.structure.IsConstructed)
+            if (tile.structure.IsConstructed)
             {
                 text += tile.structure.Type.ToString().Replace("_", " ");
             }
 
-            if (tile.room != tile.world.GetOutSideRoom())
-            {
-                text += " Interior";
-            }
+            text += tile.world.rooms.IndexOf(tile.room);
 
             tileDetails.text = text;
         }

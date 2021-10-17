@@ -12,21 +12,8 @@ public class BuildController : MonoBehaviour
 
     TileType buildTile = TileType.Empty;
     public bool buildObjectsMode { get; private set; } = false;
-    ObjectType buildObject = ObjectType.Empty;
+    String buildObject = "Empty";
     public int buildType = 0;
-
-
-    // Start is called before the first frame updates
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 
     public void Build(Tile tile)
     {
@@ -35,10 +22,10 @@ public class BuildController : MonoBehaviour
             tile.Type = buildTile;
         }
 
-        if (buildType == 1)
+        else if (buildType == 1)
         {
             // Continues to next tile if position is not valid for objects.
-            if (!WorldController.Instance.World.IsStructurePlacementValid(buildObject.ToString(), tile))
+            if (!WorldController.Instance.World.IsStructurePlacementValid(buildObject, tile))
             {
                 return;
             }
@@ -47,18 +34,28 @@ public class BuildController : MonoBehaviour
 
             // Creates a new job with a queued wall object temporarily reserving the tile until
             // the job is completed or cancelled.
-
-            StructureSpriteController sc = FindObjectOfType<StructureSpriteController>();
-
-            WorldController.Instance.World.PlaceStructure(buildObject.ToString(), tile);
+            WorldController.Instance.World.PlaceStructure(buildObject, tile);
 
             Job job = new Job(tile, (theJob) => tile.structure.CompleteStructure());
             WorldController.Instance.World.jobQueue.Enqueue(job);
 
         }
-        else
+        else if (buildType == 2)
         {
             tile.Item.CreateNewStack(100, ItemType.Wood);
+        }
+
+        else {
+            if (tile.structure.Type == "Empty")
+            {
+                return;
+            }
+
+            WorldController.Instance.World.jobQueue.Enqueue(new Job(tile.world.GetTile(tile.x, tile.y), (theJob) => tile.structure.RemoveStructure(), 0.3f));
+            // WorldController.Instance.World.jobQueue.Enqueue(new Job(tile, (theJob) => {
+            //     tile.structure = new Structure(tile);
+            //     tile.structure.CompleteStructure();
+            // }, 0.3f));
         }
     }
 
@@ -77,7 +74,7 @@ public class BuildController : MonoBehaviour
     public void SetMode_BuildWall(string objectType)
     {
         buildType = 1;
-        Enum.TryParse<ObjectType>(objectType, out buildObject);
+        buildObject = objectType;
     }
 
     public void SetMode_PutItem(string itemType)
@@ -88,12 +85,18 @@ public class BuildController : MonoBehaviour
     public void SetMode_BuildTable()
     {
         buildType = 1;
-        buildObject = ObjectType.Table;
+        buildObject = "Table";
     }
 
     public void SetMode_BuildDoor()
     {
         buildType = 1;
-        buildObject = ObjectType.Wood_Door;
+        buildObject = "Wood_Door";
+    }
+
+    public void Deletion_Mode()
+    {
+        buildType = 3;
+        buildObject = "Empty";
     }
 }

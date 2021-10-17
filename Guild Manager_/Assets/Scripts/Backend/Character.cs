@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -30,6 +31,7 @@ public class Character
 
     Action<Character> characterChanged;
     Job currentJob;
+    static Thread tileGraphThread = null;
 
     public Character(Tile tile)
     {
@@ -54,7 +56,7 @@ public class Character
             }
         }
 
-        if (currTile == destTile)
+        if ((currTile == destTile) || currTile.IsNeighbour(destTile, true))
 
         // Do task adjacent to tile.
         // if (pathing != null && pathing.Length() == 1) 
@@ -78,7 +80,7 @@ public class Character
     void Update_HandleMovement(float deltatime)
     {
 
-        if (currTile == destTile)
+        if ((currTile == destTile) || currTile.IsNeighbour(destTile, true))
         {
             pathing = null;
             return;
@@ -89,9 +91,36 @@ public class Character
             // Get next tile from path finder.
             if (pathing == null || pathing.Length() == 0)
             {
-                // Generate path to destination tile.
-                pathing = new Path_AStar(currTile.world, currTile, destTile);
 
+                // Create a new thread to generate a new tilegraph if possible.
+                if (nextTile.world.tileGraph == null)
+                {
+                    if (tileGraphThread == null)
+                    {
+                        tileGraphThread = new Thread(new ThreadStart(Thread_GenerateNewTileGraph));
+                        tileGraphThread.Start();
+                    }
+
+                    return;
+                }
+
+                if (destTile.structure.movementCost == 0)
+                {
+                    foreach (Tile t in destTile.GetNeighbours(true))
+                    {
+                        if (pathing == null || pathing.Length() == 0)
+                        {
+                            pathing = new Path_AStar(currTile.world, currTile, t);
+                        }
+                    }
+                }
+
+                // else
+                // {
+                    // Generate path to destination tile.
+                // pathing = new Path_AStar(currTile.world, currTile, destTile);
+                // }
+                
                 if (pathing.Length() == 0)
                 {
                     // Debug.LogWarning("Path_AStar returned no path to destination.");
@@ -104,11 +133,6 @@ public class Character
 
             // Get next tile from pathing.
             nextTile = pathing.Dequeue();
-
-            if (nextTile == currTile)
-            {
-                //Debug.LogWarning("Path_AStar returned current tile.");
-            }
 
             if (pathing.Length() == 1) return;
         }
@@ -164,6 +188,12 @@ public class Character
         }
 
         destTile = tile;
+    }
+
+    static void Thread_GenerateNewTileGraph()
+    {
+        WorldController.Instance.World.tileGraph = new Path_TileGraph(WorldController.Instance.World);
+        tileGraphThread = null;
     }
 
     public void RegisterOnChangedCallback(Action<Character> callback)

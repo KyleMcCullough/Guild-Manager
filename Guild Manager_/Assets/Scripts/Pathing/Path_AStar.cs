@@ -136,11 +136,11 @@ public class Path_AStar
         Stack<Tile> total_path = new Stack<Tile>();
         total_path.Push(current.data);
 
-        // current = Came_From[current];
+        current = Came_From[current];
         while (Came_From.ContainsKey(current))
         {
-            current = Came_From[current];
             total_path.Push(current.data);
+            current = Came_From[current];
         }
 
         // At this point, total_path is a stack with the correct path.
