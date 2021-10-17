@@ -45,7 +45,7 @@ public class ItemSpriteController : MonoBehaviour
         //TODO: Apply random rotation to item sprites to make it better visually.
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
         t.sprite = itemSprites[item.Type.ToString()];
-        tilemap.SetTile(new Vector3Int(item.Parent.x, item.Parent.y, 0), t);
+        tilemap.SetTile(new Vector3Int(item.parent.x, item.parent.y, 0), t);
 
         // else {
         //     Debug.LogError("OnTileTypeChanged - unrecognized tile type.");

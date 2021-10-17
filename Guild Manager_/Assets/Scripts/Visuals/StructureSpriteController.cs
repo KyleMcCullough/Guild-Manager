@@ -47,7 +47,7 @@ public class StructureSpriteController : MonoBehaviour
 
         AssignSprite(structure);
         // t.sprite = GetSprite(structure);
-        // tilemap.SetTile(new Vector3Int(structure.Parent.x, structure.Parent.y, 0), t);
+        // tilemap.SetTile(new Vector3Int(structure.parent.x, structure.parent.y, 0), t);
 
         // else {
         //     Debug.LogError("OnTileTypeChanged - unrecognized tile type.");
@@ -60,14 +60,14 @@ public class StructureSpriteController : MonoBehaviour
         
         if (obj.Type == "Empty")
         {
-            tilemap.SetTile(new Vector3Int(obj.Parent.x,obj.Parent.y,0), null);
+            tilemap.SetTile(new Vector3Int(obj.parent.x,obj.parent.y,0), null);
             return;
         }
 
         if (!obj.linksToNeighbour)
         {
             t.sprite = structureSprites[obj.Type + "_"];
-            tilemap.SetTile(new Vector3Int(obj.Parent.x, obj.Parent.y, 0), t);
+            tilemap.SetTile(new Vector3Int(obj.parent.x, obj.parent.y, 0), t);
             return;
         }
 
@@ -76,8 +76,8 @@ public class StructureSpriteController : MonoBehaviour
         // Check for neighbours North, East, South, West.
         Tile tile;
 
-        int x = obj.Parent.x;
-        int y = obj.Parent.y;
+        int x = obj.parent.x;
+        int y = obj.parent.y;
 
         tile = world.GetTile(x, y + 1);
         if (tile != null && tile.structure != null && tile.structure.Type == obj.Type)
@@ -111,13 +111,13 @@ public class StructureSpriteController : MonoBehaviour
 
         t.sprite = structureSprites[spriteName];
 
-        tilemap.SetTile(new Vector3Int(obj.Parent.x, obj.Parent.y, 0), t);
+        tilemap.SetTile(new Vector3Int(obj.parent.x, obj.parent.y, 0), t);
 
         // Sets opacity if it is not constructed yet.
         if (!obj.IsConstructed)
         {
-            tilemap.SetTileFlags(new Vector3Int(obj.Parent.x, obj.Parent.y, 0), TileFlags.None);
-            tilemap.SetColor(new Vector3Int(obj.Parent.x, obj.Parent.y, 0), new Color(1f, 1f, 1f, .5f));
+            tilemap.SetTileFlags(new Vector3Int(obj.parent.x, obj.parent.y, 0), TileFlags.None);
+            tilemap.SetColor(new Vector3Int(obj.parent.x, obj.parent.y, 0), new Color(1f, 1f, 1f, .5f));
         }
     }
 }

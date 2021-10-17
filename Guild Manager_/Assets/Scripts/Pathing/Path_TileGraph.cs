@@ -38,7 +38,7 @@ public class Path_TileGraph
 
             // Get list of all neighbours for the tile. If the tile can be 
             // walked on, create an edge to it.
-            Tile[] neighbours = tile.GetNeighbours(true);
+            Tile[] neighbours = tile.GetNeighbors(true);
 
             for (int i = 0; i < neighbours.Length; i++)
             {

@@ -5,7 +5,7 @@ using System;
 
 public class Item
 {
-    public Tile Parent;
+    public Tile parent;
     public Action<Item> ItemChangedEvent { get; protected set; }
     int maxStack;
     int currentStackAmount = 0;
@@ -31,7 +31,7 @@ public class Item
 
     public Item(Tile parent, int maxStack = 0)
     {
-        this.Parent = parent;
+        this.parent = parent;
 
         if (maxStack == 0)
         {
@@ -78,7 +78,7 @@ public class Item
     int TryAddingToStack(int amountToAdd, ItemType type)
     {
 
-        if (this.Type == type || this.Type == ItemType.Empty && this.Parent.structure.Type == "Empty")
+        if (this.Type == type || this.Type == ItemType.Empty && this.parent.structure.Type == "Empty")
         {
             this.Type = type;
         }
@@ -112,9 +112,9 @@ public class Item
         while (amount > 0)
         {
 
-            for (int x = Parent.x - index; x < Parent.x + 1 + index; x++)
+            for (int x = parent.x - index; x < parent.x + 1 + index; x++)
             {
-                for (int y = Parent.y - index; y < Parent.y + 1 + index; y++)
+                for (int y = parent.y - index; y < parent.y + 1 + index; y++)
                 {
 
                     if (amount == 0)
@@ -124,7 +124,7 @@ public class Item
 
                     try
                     {
-                        amount = Parent.world.GetTile(x, y).Item.TryAddingToStack(amount, type);
+                        amount = parent.world.GetTile(x, y).Item.TryAddingToStack(amount, type);
                     }
 
                     //FIXME: To be taken out once the borders around the edges that restricts building is implemented.

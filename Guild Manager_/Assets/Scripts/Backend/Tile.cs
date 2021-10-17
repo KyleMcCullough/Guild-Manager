@@ -81,7 +81,7 @@ public class Tile
     }
 
     //TODO: I don't like this, please help.
-    public Tile[] GetNeighbours(bool diagonals = false)
+    public Tile[] GetNeighbors(bool diagonals = false)
     {
         Tile[] neighbours;
 

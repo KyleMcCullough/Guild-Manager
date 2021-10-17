@@ -100,13 +100,12 @@ public class Character
                         tileGraphThread = new Thread(new ThreadStart(Thread_GenerateNewTileGraph));
                         tileGraphThread.Start();
                     }
-
                     return;
                 }
 
-                if (destTile.structure.movementCost == 0)
+                if (destTile.structure.movementCost == 0 || pathing == null)
                 {
-                    foreach (Tile t in destTile.GetNeighbours(true))
+                    foreach (Tile t in destTile.GetNeighbors(true))
                     {
                         if (pathing == null || pathing.Length() == 0)
                         {
@@ -123,7 +122,7 @@ public class Character
                 
                 if (pathing.Length() == 0)
                 {
-                    // Debug.LogWarning("Path_AStar returned no path to destination.");
+                    Debug.LogWarning("Path_AStar returned no path to destination.");
                     AbandonJob();
                     //TODO: Cancel job if no path is found. or Reqeueue it.
                     pathing = null;

@@ -7,10 +7,10 @@ using System.Threading;
 public class Structure
 {
     #region variables
-    public Tile Parent;
+    public Tile parent;
     public string TypeCategory;
     public Structure parentStructure = null;
-    public List<int[]> overlappedStructureCoords = new List<int[]>();
+    public List<Tile> overlappedStructureTiles;
     String type = "Empty";
 
     public Dictionary<string, object> optionalParameters = new Dictionary<string, object>();
@@ -75,17 +75,15 @@ public class Structure
     }
 
     public Structure() { }
-    public Structure(Tile Parent)
+    public Structure(Tile parent)
     {
-        this.Parent = Parent;
+        this.parent = parent;
     }
 
-    public Structure(Tile Parent, String Type)
+    public Structure(Tile parent, String Type)
     {
         this.Type = Type;
-        this.Parent = Parent;
-
-
+        this.parent = parent;
     }
 
     public void Update(float deltaTime)
@@ -98,7 +96,7 @@ public class Structure
 
     public bool PlaceStructure(Structure prototype)
     {
-        if (!this.IsValidPosition(this.Parent))
+        if (!this.IsValidPosition(this.parent))
         {
             return false;
         }
@@ -106,12 +104,12 @@ public class Structure
         this.width = prototype.width;
         this.height = prototype.height;
 
-        if (this.width > 1 && this.overlappedStructureCoords.Count == 0 || this.height > 1 && this.overlappedStructureCoords.Count == 0)
+        if (this.width > 1 || this.height > 1)
         {
             this.ReserveRequiredTiles();
-            Debug.Log(overlappedStructureCoords.Count);
+            Debug.Log(overlappedStructureTiles.Count);
         }
-        
+
         if (this.updateActions != null)
         {
             this.RemoveActions();
@@ -119,7 +117,7 @@ public class Structure
 
         if (prototype.updateActions != null)
         {
-            this.AssignActions((Action<Structure, float>) prototype.updateActions.Clone());
+            this.AssignActions((Action<Structure, float>)prototype.updateActions.Clone());
         }
 
         this.optionalParameters = prototype.optionalParameters;
@@ -132,33 +130,12 @@ public class Structure
 
         if (this.linksToNeighbour)
         {
-
-            Tile tile;
-            int x = Parent.x;
-            int y = Parent.y;
-
-            tile = Parent.world.GetTile(x, y + 1);
-            if (tile != null && tile.structure.Type == this.Type)
+            foreach (Tile tile in this.parent.GetNeighbors())
             {
-                tile.structure.structureChangedEvent(tile.structure);
-            }
-
-            tile = tile.world.GetTile(x + 1, y);
-            if (tile != null && tile.structure.Type == this.Type)
-            {
-                tile.structure.structureChangedEvent(tile.structure);
-            }
-
-            tile = tile.world.GetTile(x, y - 1);
-            if (tile != null && tile.structure.Type == this.Type)
-            {
-                tile.structure.structureChangedEvent(tile.structure);
-            }
-
-            tile = tile.world.GetTile(x - 1, y);
-            if (tile != null && tile.structure.Type == this.Type)
-            {
-                tile.structure.structureChangedEvent(tile.structure);
+                if (tile != null && tile.structure.Type == this.Type)
+                {
+                    tile.structure.structureChangedEvent(tile.structure);
+                }
             }
         }
         return true;
@@ -167,35 +144,38 @@ public class Structure
     public void AssignActions(Action<Structure, float> newActions)
     {
         this.updateActions = newActions;
-        this.Parent.world.updatingStructures.Add(this);
+        this.parent.world.updatingStructures.Add(this);
     }
 
     public void RemoveActions()
     {
         this.updateActions = null;
-        this.Parent.world.updatingStructures.Remove(this);
+        this.parent.world.updatingStructures.Remove(this);
     }
 
     // Reserves tiles for structures with a width or height more then 1.
     void ReserveRequiredTiles()
     {
-        for (int x = Parent.x; x != (Parent.x + this.width); x++)
+        this.overlappedStructureTiles = new List<Tile>();
+        for (int x = parent.x; x != (parent.x + this.width); x++)
         {
-            for (int y = Parent.y; y != (Parent.y + this.height); y++)
+            for (int y = parent.y; y != (parent.y + this.height); y++)
             {
-                this.overlappedStructureCoords.Add(new int[] { x, y });
-                Parent.world.GetTile(x, y).structure.parentStructure = this;
+                this.overlappedStructureTiles.Add(this.parent.world.GetTile(x, y));
+                parent.world.GetTile(x, y).structure.parentStructure = this;
             }
         }
     }
-    
+
     void ReleaseRequiredTiles()
     {
-        foreach (int[] coords in this.overlappedStructureCoords)
+        if (this.overlappedStructureTiles == null || this.overlappedStructureTiles.Count == 0) return;
+
+        foreach (Tile tile in this.overlappedStructureTiles)
         {
-            this.Parent.world.GetTile(coords[0], coords[1]).structure.parentStructure = null;
+            tile.structure.parentStructure = null;
         }
-        this.overlappedStructureCoords = new List<int[]>();
+        this.overlappedStructureTiles = null;
     }
 
     public void CompleteStructure()
@@ -210,20 +190,20 @@ public class Structure
 
         if (this.movementCost != 1)
         {
-            Parent.world.InvalidateTileGraph();
+            parent.world.InvalidateTileGraph();
         }
     }
 
     public void RemoveStructure()
     {
-        Structure prototype = this.Parent.world.structurePrototypes["Empty"];
+        Structure prototype = this.parent.world.structurePrototypes["Empty"];
 
         if (this.updateActions != null)
         {
             this.RemoveActions();
         }
 
-        if (this.overlappedStructureCoords.Count > 0)
+        if (this.overlappedStructureTiles != null && this.overlappedStructureTiles.Count > 0)
         {
             this.ReleaseRequiredTiles();
         }
@@ -234,18 +214,18 @@ public class Structure
         this.movementCost = prototype.movementCost;
         this.TypeCategory = prototype.TypeCategory;
         this.canCreateRooms = prototype.canCreateRooms;
-        this.Parent.world.GetOutSideRoom().AssignTile(this.Parent);
-        Debug.Log(this.Parent.world.rooms.IndexOf(this.Parent.room));
+        this.parent.world.GetOutSideRoom().AssignTile(this.parent);
+        Debug.Log(this.parent.world.rooms.IndexOf(this.parent.room));
 
         Thread UpdateRoomThread = new Thread(new ThreadStart(this.Thread_UpdateRooms_Deletion));
         UpdateRoomThread.Start();
 
-        foreach (Tile tile in this.Parent.GetNeighbours())
+        foreach (Tile tile in this.parent.GetNeighbors())
         {
             tile.structure.structureChangedEvent(tile.structure);
         }
     }
-    
+
     static public Structure CreatePrototype(String type, string TypeCategory, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool canCreateRooms = false)
     {
 
@@ -294,12 +274,12 @@ public class Structure
 
     public bool IsDoorOpen()
     {
-        return (float) this.optionalParameters["openness"] == 1;
+        return (float)this.optionalParameters["openness"] == 1;
     }
 
     public void OpenDoor()
     {
-        if (!IsDoor() || (bool) this.optionalParameters["doorIsOpening"] == true)
+        if (!IsDoor() || (bool)this.optionalParameters["doorIsOpening"] == true)
         {
             return;
         }

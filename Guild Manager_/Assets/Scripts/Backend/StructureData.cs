@@ -7,9 +7,7 @@ public class StructureData
     public int movementCost, width, height, category;
     public bool linksToNeighbours, canCreateRooms;
     public string[] relatedFunctions;
-    // public string[] parameters;
     public string[] relatedParameters;
-    // public RelatedParameter[] relatedParameters;
 }
 
 [System.Serializable]
