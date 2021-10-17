@@ -1,10 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Rendering.Universal;
 
 public class WorldController : MonoBehaviour
 {
+    int currentSpeed = 1;
+    bool paused = false;
+
     [SerializeField]
     public Color dayColor = new Color(1.0f, 1.0f, 1.0f);
     [SerializeField]
@@ -25,13 +29,13 @@ public class WorldController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        UpdateSpeed();
+        if (paused) return;
 
-        World.Update(Time.deltaTime);
+        World.Update(Time.deltaTime * currentSpeed);
         UpdateDayCycle();
-
-
-        // TODO: Add pause/unpause, speed controls.
     }
+
     // Changes lighting on day/night switch.
     void UpdateDayCycle()
     {
@@ -52,5 +56,36 @@ public class WorldController : MonoBehaviour
     public Tile GetTileAtCoordinate(Vector3 coord)
     {
         return World.GetTile(Mathf.FloorToInt(coord.x), Mathf.FloorToInt(coord.y));
+    }
+
+    void UpdateSpeed()
+    {
+        if (Input.GetKeyDown("space"))
+        {
+            if (paused)
+            {
+                paused = false;
+            }
+
+            else
+            {
+                paused = true;
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            currentSpeed = 1;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            currentSpeed = 3;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            currentSpeed = 6;
+        }
     }
 }
