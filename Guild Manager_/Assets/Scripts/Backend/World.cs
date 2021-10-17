@@ -18,6 +18,7 @@ public class World
     Action<Item> itemChangedEvent;
     public Path_TileGraph tileGraph;
     public JobQueue jobQueue;
+    public List<Job> unreachableJobs;
     public List<Tile> updatingTiles;
     public List<Structure> updatingStructures;
     public List<Room> rooms;
@@ -31,6 +32,7 @@ public class World
         date = new int[] { 1, 1, 1253 };
         tiles = new Tile[width, height];
         jobQueue = new JobQueue();
+        unreachableJobs = new List<Job>();
         structurePrototypes = new Dictionary<string, Structure>();
         updatingStructures = new List<Structure>();
         rooms = new List<Room>();

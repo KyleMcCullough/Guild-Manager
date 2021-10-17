@@ -82,6 +82,7 @@ public class Tile
 			;
     }
 
+    #region Neighbor Methods
     public Tile[] GetNeighbors(bool diagonals = false)
     {
         Tile[] neighbours;
@@ -124,6 +125,87 @@ public class Tile
         return neighbours;
     }
 
+    // Gets closest available neighbor.
+    public Tile GetClosestNeighborToGivenTile(Tile dest)
+    {
+        Tile t = null;
+
+        if (this.x > dest.x)
+        {
+            t = dest.East();
+            if (!t.structure.canCreateRooms || t.structure.canCreateRooms && !t.structure.IsConstructed)
+            {
+                return t;
+            }
+        }
+
+        if (this.x <= dest.x)
+        {
+            t = dest.West();
+            if (!t.structure.canCreateRooms || t.structure.canCreateRooms && !t.structure.IsConstructed)
+            {
+                return t;
+            }
+        }
+
+        if (this.y > dest.y)
+        {
+            t = dest.North();
+            if (!t.structure.canCreateRooms || t.structure.canCreateRooms && !t.structure.IsConstructed)
+            {
+                return t;
+            }
+        }
+
+        if (this.y < dest.y)
+        {
+            t = dest.South();
+            if (!t.structure.canCreateRooms || t.structure.canCreateRooms && !t.structure.IsConstructed)
+            {
+                return t;
+            }
+        }
+
+        if (this.x > dest.x && this.y > dest.y)
+        {
+            t = dest.SouthWest();
+            if (!t.structure.canCreateRooms || t.structure.canCreateRooms && !t.structure.IsConstructed)
+            {
+                return t;
+            }
+        }
+
+        if (this.x <= dest.x && this.y <= dest.y)
+        {
+            t = dest.NorthWest();
+            if (!t.structure.canCreateRooms || t.structure.canCreateRooms && !t.structure.IsConstructed)
+            {
+                return t;
+            }
+        }
+
+        if (this.x > dest.x && this.y < dest.y)
+        {
+            t = dest.SouthEast();
+            if (!t.structure.canCreateRooms || t.structure.canCreateRooms && !t.structure.IsConstructed)
+            {
+                return t;
+            }
+        }
+
+        if (this.x <= dest.x && this.y >= dest.y)
+        {
+            t = dest.NorthEast();
+            if (!t.structure.canCreateRooms || t.structure.canCreateRooms && !t.structure.IsConstructed)
+            {
+                return t;
+            }
+        }
+
+        return null;
+
+    }
+
     public Tile North()
     {
         return world.GetTile(x, y + 1);
@@ -143,4 +225,26 @@ public class Tile
     {
         return world.GetTile(x - 1, y);
     }
+
+    public Tile NorthEast()
+    {
+        return world.GetTile(x - 1, y + 1);
+    }
+
+    public Tile NorthWest()
+    {
+        return world.GetTile(x - 1, y + 1);
+    }
+
+    public Tile SouthEast()
+    {
+        return world.GetTile(x + 1, y - 1);
+    }
+
+    public Tile SouthWest()
+    {
+        return world.GetTile(x - 1, y - 1);
+    }
+
+    #endregion
 }

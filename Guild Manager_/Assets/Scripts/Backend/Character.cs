@@ -32,6 +32,7 @@ public class Character
     Action<Character> characterChanged;
     Job currentJob;
     static Thread tileGraphThread = null;
+    public static bool pathingIsRefreshed = false;
 
     public Character(Tile tile)
     {
@@ -47,9 +48,6 @@ public class Character
 
             if (currentJob != null)
             {
-
-                //TODO: Check if reachable
-
                 destTile = currentJob.tile;
                 currentJob.RegisterJobCancelCallback(OnJobEnded);
                 currentJob.RegisterJobCompleteCallback(OnJobEnded);
@@ -57,11 +55,7 @@ public class Character
         }
 
         if ((currTile == destTile) || currTile.IsNeighbour(destTile, true))
-
-        // Do task adjacent to tile.
-        // if (pathing != null && pathing.Length() == 1) 
         {
-
             if (currentJob != null)
             {
                 currentJob.DoWork(deltaTime);
@@ -73,7 +67,11 @@ public class Character
     {
         nextTile = destTile = currTile;
         pathing = null;
-        currTile.world.jobQueue.Enqueue(currentJob);
+
+        // Add unreachable job to List. Will be added back once the tilegraph is refreshed to try again.
+        currentJob.UnregisterJobCancelCallback(OnJobEnded);
+        currentJob.UnregisterJobCompleteCallback(OnJobEnded);
+        currTile.world.unreachableJobs.Add(currentJob);
         currentJob = null;
     }
 
@@ -103,15 +101,32 @@ public class Character
                     return;
                 }
 
+                // Tile cannot be walked on, walked neighbors for available tiles and navigate to the best available one.
+                if (destTile.structure.canCreateRooms && destTile.structure.IsConstructed)
+                {
+                    Tile likelyBestTile = currTile.GetClosestNeighborToGivenTile(destTile);
+
+                    if (likelyBestTile == null)
+                    {
+                        AbandonJob();
+                        return;
+                    }
+
+                    pathing = new Path_AStar(currTile.world, currTile, likelyBestTile);
+                }
+
                 // Generate path to destination tile.
-                pathing = new Path_AStar(currTile.world, currTile, destTile);
+                else
+                {
+                    pathing = new Path_AStar(currTile.world, currTile, destTile);
+                }
                 
+
                 if (pathing.Length() == 0)
                 {
                     Debug.LogWarning("Path_AStar returned no path to destination.");
                     AbandonJob();
                     //TODO: Cancel job if no path is found. or Reqeueue it.
-                    pathing = null;
                     return;
                 }
             }
@@ -159,6 +174,18 @@ public class Character
 
     public void Update(float deltaTime)
     {
+
+        // If there is a new pathing mesh, change all non-reachable jobs to canBeReached to check if it is now reachable.
+        if (pathingIsRefreshed)
+        {
+            pathingIsRefreshed = false;
+            foreach (Job job in currTile.world.unreachableJobs)
+            {
+                currTile.world.jobQueue.Enqueue(job);
+            }
+            currTile.world.unreachableJobs = new List<Job>();
+        }
+
         Update_DoJob(deltaTime);
         Update_HandleMovement(deltaTime);
 

@@ -102,6 +102,16 @@ public class Path_AStar
             }
         }
 
+
+
+        // foreach (Tile t in goal.data.GetNeighbors())
+        // {
+        //     if (!t.structure.canCreateRooms)
+        //     {
+        //         reconstruct_path(Came_From, nodes[t]);
+        //     }
+        // }
+
         // If we have reached here, there is no path.
         return;
     }

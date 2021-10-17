@@ -192,6 +192,8 @@ public class Structure
         {
             parent.world.InvalidateTileGraph();
         }
+
+        Character.pathingIsRefreshed = true;
     }
 
     public void RemoveStructure()
@@ -224,6 +226,8 @@ public class Structure
         {
             tile.structure.structureChangedEvent(tile.structure);
         }
+
+        Character.pathingIsRefreshed = true;
     }
 
     static public Structure CreatePrototype(String type, string TypeCategory, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool canCreateRooms = false)
