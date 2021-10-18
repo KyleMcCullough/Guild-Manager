@@ -8,6 +8,14 @@ public class StructureData
     public bool linksToNeighbours, canCreateRooms;
     public string[] relatedFunctions;
     public string[] relatedParameters;
+    public BuildingRequirements[] buildingRequirements;
+}
+
+[System.Serializable]
+public class BuildingRequirements
+{
+    public string material;
+    public int amount;
 }
 
 [System.Serializable]

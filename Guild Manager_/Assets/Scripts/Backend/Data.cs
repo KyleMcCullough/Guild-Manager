@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +11,7 @@ public static class Data
     public static Dictionary<string, StructureData> structureData = new Dictionary<string, StructureData>();
     public static Dictionary<string, TileData> tileData = new Dictionary<string, TileData>();
     public static Dictionary<string, ItemData> itemData = new Dictionary<string, ItemData>();
-    public static List<string> ObjectTypes = new List<string>();
+    public static List<string> structureTypes = new List<string>();
     public static List<string> tileTypes = new List<string>();
     public static List<string> itemTypes = new List<string>();
 
@@ -26,8 +27,10 @@ public static class Data
         foreach (StructureData data in Data.structures.structures)
         {
             structureData.Add(data.name, data);
-            ObjectTypes.Add(data.name);
+            structureTypes.Add(data.name);
         }
+
+        GetBuildingRequirements("Wood_Door");
 
         json = File.ReadAllText(Application.dataPath + "/Resources/images/Tiles/details.json");
         Data.tiles = JsonUtility.FromJson<TileDataArray>(json);
@@ -114,5 +117,17 @@ public static class Data
 
         Debug.LogError("CheckIfTileIsWalkable - An invalid type was given.");
         return false;
+    }
+
+    public static BuildingRequirements[] GetBuildingRequirements(string type)
+    {
+
+        if (structureTypes.Contains(type))
+        {
+            return structureData[type].buildingRequirements;
+        }
+
+        Debug.LogError("GetBuildingRequirements - An invalid type was given.");
+        return null;
     }
 }

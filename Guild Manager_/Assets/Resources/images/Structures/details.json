@@ -33,7 +33,8 @@
             "linksToNeighbours": false,
             "canCreateRooms": false,
             "relatedParameters": [],
-            "relatedFunctions": []
+            "relatedFunctions": [],
+            "buildingRequirements": []
         },
 
         {
@@ -45,7 +46,8 @@
             "linksToNeighbours": false,
             "canCreateRooms": false,
             "relatedParameters": [],
-            "relatedFunctions": []
+            "relatedFunctions": [],
+            "buildingRequirements": []
         },
 
         {
@@ -57,7 +59,8 @@
             "linksToNeighbours": true,
             "canCreateRooms": true,
             "relatedParameters": [],
-            "relatedFunctions": []
+            "relatedFunctions": [],
+            "buildingRequirements": [{"material": "Wood", "amount": 50}]
         },
 
         {
@@ -73,7 +76,8 @@
                 "doorIsOpening", false,
                 "doorOpenTime", 0.25
             ],
-            "relatedFunctions": ["Update_Door"]
+            "relatedFunctions": ["Update_Door"],
+            "buildingRequirements": [{"material": "Wood", "amount": 125}]
         }
     ]
 }

@@ -115,7 +115,7 @@ public class World
 
     void GeneratePrototypes()
     {
-        foreach (string type in Data.ObjectTypes)
+        foreach (string type in Data.structureTypes)
         {
             StructureData data = Data.GetStructureData(type);
             Structure structure = Structure.CreatePrototype(type, Data.GetCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours, data.canCreateRooms);

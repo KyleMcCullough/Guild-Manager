@@ -10,10 +10,12 @@ public class Job
 
     Action<Job> jobFinished;
     Action<Job> jobCancelled;
+    BuildingRequirements[] requiredMaterials;
 
-    public Job(Tile tile, Action<Job> jobFinished, float jobTime = 0.1f) {
+    public Job(Tile tile, Action<Job> jobFinished, BuildingRequirements[] requiredMaterials = null, float jobTime = 0.1f) {
         this.tile = tile;
         this.jobFinished += jobFinished;
+        this.requiredMaterials = requiredMaterials;
         this.jobTime = jobTime;
     }
 
