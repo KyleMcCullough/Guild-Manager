@@ -244,11 +244,11 @@ GameObject:
   - component: {fileID: 109443272}
   - component: {fileID: 109443271}
   - component: {fileID: 109443274}
-  - component: {fileID: 109443275}
   - component: {fileID: 109443276}
-  - component: {fileID: 109443277}
-  - component: {fileID: 109443278}
   - component: {fileID: 109443279}
+  - component: {fileID: 109443277}
+  - component: {fileID: 109443275}
+  - component: {fileID: 109443278}
   m_Layer: 0
   m_Name: Controllers
   m_TagString: Untagged
@@ -268,8 +268,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b98791b661df812499e67e145a24746e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dirtSprite: {fileID: 21300000, guid: 8892e21eadfa9604c8e7325b33b437bf, type: 3}
-  emptySprite: {fileID: 21300000, guid: b7f13010fe17af64190b354543464d4d, type: 3}
   tilemap: {fileID: 475596875}
 --- !u!114 &109443272
 MonoBehaviour:

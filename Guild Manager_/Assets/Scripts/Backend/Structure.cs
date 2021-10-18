@@ -11,7 +11,7 @@ public class Structure
     public string TypeCategory;
     public Structure parentStructure = null;
     public List<Tile> overlappedStructureTiles;
-    String type = "Empty";
+    String type = ObjectType.Empty;
 
     public Dictionary<string, object> optionalParameters = new Dictionary<string, object>();
     public Action<Structure, float> updateActions = null;
@@ -198,7 +198,7 @@ public class Structure
 
     public void RemoveStructure()
     {
-        Structure prototype = this.parent.world.structurePrototypes["Empty"];
+        Structure prototype = this.parent.world.structurePrototypes[ObjectType.Empty];
 
         if (this.updateActions != null)
         {
@@ -255,7 +255,7 @@ public class Structure
                 for (int y = tile.y; y != (tile.y + this.height); y++)
                 {
                     Tile t = tile.world.GetTile(x, y);
-                    if (t.structure.Type != "Empty" || t.Type != TileType.Dirt || t.structure.parentStructure != null)
+                    if (!Data.CheckIfTileIsWalkable(tile.Type) || t.structure.parentStructure != null)
                     {
                         return false;
                     }
@@ -265,7 +265,7 @@ public class Structure
 
         else
         {
-            if (tile.structure.Type != "Empty" || tile.Type != TileType.Dirt || tile.structure.parentStructure != null) return false;
+            if (!Data.CheckIfTileIsWalkable(tile.Type) || tile.structure.parentStructure != null) return false;
         }
         return true;
     }

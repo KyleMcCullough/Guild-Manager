@@ -31,7 +31,7 @@ public class UIController : MonoBehaviour
 
         if (tile != null)
         {
-            string text = $"{tile.x}-{tile.y}, {tile.Type.ToString().Replace("_", " ")}\n";
+            string text = $"{tile.x}-{tile.y}, {tile.Type.Replace("_", " ")}\n";
 
             if (tile.structure.IsConstructed)
             {

@@ -7,7 +7,7 @@ public class Tile
 {
     public int x, y;
     Action<Tile> tileChangedEvent;
-    TileType type = TileType.Dirt;
+    string type = "";
     public Structure structure;
     public Room room = null;
     public World world;
@@ -29,7 +29,7 @@ public class Tile
         {
 
             // Unwalkable.
-            if (type == TileType.Empty)
+            if (!Data.tileData[this.type].walkable)
             {
                 return 0;
             }
@@ -43,13 +43,13 @@ public class Tile
         }
     }
 
-    public TileType Type
+    public string Type
     {
         get { return type; }
 
         set
         {
-            TileType previous = type;
+            string previous = type;
             type = value;
 
             // Call callback to refresh tile visually.

@@ -142,7 +142,11 @@ public class Room
         }
 
         source.parent.room = null;
-        oldRoom.tiles.Remove(source.parent);
+        
+        if (oldRoom.tiles != null)
+        {
+            oldRoom.tiles.Remove(source.parent);
+        }
 
         // If this piece of furniture was added to an existing room
         // (which should always be true assuming with consider "outside" to be a big room)

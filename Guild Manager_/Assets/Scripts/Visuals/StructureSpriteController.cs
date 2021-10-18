@@ -41,24 +41,16 @@ public class StructureSpriteController : MonoBehaviour
         // TileBase mapTile = tilemap.GetTile(new Vector3Int(tile.x, tile.y, 0);
 
         // Trys to get the tile object from the tile data. Continues if it can sucessfully find and assign it.
-        // if (tileGameObjects.TryGetValue(tile, out GameObject tileObject)) {
 
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-
         AssignSprite(structure);
-        // t.sprite = GetSprite(structure);
-        // tilemap.SetTile(new Vector3Int(structure.parent.x, structure.parent.y, 0), t);
-
-        // else {
-        //     Debug.LogError("OnTileTypeChanged - unrecognized tile type.");
-        // }
     }
 
     public void AssignSprite(Structure obj)
     {
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
         
-        if (obj.Type == "Empty")
+        if (obj.Type == ObjectType.Empty)
         {
             tilemap.SetTile(new Vector3Int(obj.parent.x,obj.parent.y,0), null);
             return;

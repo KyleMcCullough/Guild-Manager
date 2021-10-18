@@ -10,9 +10,9 @@ public class BuildController : MonoBehaviour
 
 
 
-    TileType buildTile = TileType.Empty;
+    string buildTile = "Dirt";
     public bool buildObjectsMode { get; private set; } = false;
-    String buildObject = "Empty";
+    String buildObject = ObjectType.Empty;
     public int buildType = 0;
 
     public void Build(Tile tile)
@@ -42,33 +42,29 @@ public class BuildController : MonoBehaviour
         }
         else if (buildType == 2)
         {
-            tile.Item.CreateNewStack(100, ItemType.Wood);
+            tile.Item.CreateNewStack(75, "Wood");
         }
 
         else {
-            if (tile.structure.Type == "Empty")
+            if (tile.structure.Type == ObjectType.Empty)
             {
                 return;
             }
 
             WorldController.Instance.World.jobQueue.Enqueue(new Job(tile.world.GetTile(tile.x, tile.y), (theJob) => tile.structure.RemoveStructure(), 0.3f));
-            // WorldController.Instance.World.jobQueue.Enqueue(new Job(tile, (theJob) => {
-            //     tile.structure = new Structure(tile);
-            //     tile.structure.CompleteStructure();
-            // }, 0.3f));
         }
     }
 
     public void SetMode_BuildFloor()
     {
         buildType = 0;
-        buildTile = TileType.Dirt;
+        buildTile = "Grass";
     }
 
     public void SetMode_BuildVoid()
     {
         buildType = 0;
-        buildTile = TileType.Empty;
+        buildTile = "Dirt";
     }
 
     public void SetMode_BuildWall(string objectType)
@@ -97,6 +93,6 @@ public class BuildController : MonoBehaviour
     public void Deletion_Mode()
     {
         buildType = 3;
-        buildObject = "Empty";
+        buildObject = ObjectType.Empty;
     }
 }

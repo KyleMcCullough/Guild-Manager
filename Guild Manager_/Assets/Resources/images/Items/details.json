@@ -1,0 +1,17 @@
+{
+
+    "categories": [
+        {
+            "name": "Nature",
+            "id": 0
+        }
+    ],
+
+    "items" : [
+        {
+            "name": "Wood",
+            "category": 0,
+            "maxStackSize": 75
+        }
+    ]
+}

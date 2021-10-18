@@ -26,7 +26,6 @@ public class WorldController : MonoBehaviour
         Camera.main.transform.position = new Vector3(World.width / 2, World.height / 2, Camera.main.transform.position.z);
     }
 
-    // Update is called once per frame
     void Update()
     {
         UpdateSpeed();

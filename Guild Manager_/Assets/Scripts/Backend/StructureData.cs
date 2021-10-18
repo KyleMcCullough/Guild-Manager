@@ -36,3 +36,32 @@ public class StructureDataArray
     public StructureData[] structures;
     public Category[] categories;
 }
+
+[System.Serializable]
+public class TileData
+{
+    public string name;
+    public int movementCost, category;
+    public bool linksToNeighbours, walkable;
+}
+
+[System.Serializable]
+public class TileDataArray
+{
+    public TileData[] tiles;
+    public Category[] categories;
+}
+
+[System.Serializable]
+public class ItemData
+{
+    public string name;
+    public int category, maxStackSize;
+}
+
+[System.Serializable]
+public class ItemDataArray
+{
+    public ItemData[] items;
+    public Category[] categories;
+}

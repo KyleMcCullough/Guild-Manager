@@ -7,19 +7,20 @@ public class Item
 {
     public Tile parent;
     public Action<Item> ItemChangedEvent { get; protected set; }
-    int maxStack;
+    int maxStack = 0;
     int currentStackAmount = 0;
-    ItemType type = ItemType.Empty;
+    string type = ItemType.Empty;
 
-
-    public ItemType Type
+    public string Type
     {
         get { return type; }
 
         set
         {
-            ItemType previous = type;
+            string previous = type;
             type = value;
+
+            this.maxStack = Data.GetStackLimit(this.Type);
 
             // Call callback to refresh tile visually.
             if (ItemChangedEvent != null && previous != type)
@@ -29,19 +30,9 @@ public class Item
         }
     }
 
-    public Item(Tile parent, int maxStack = 0)
+    public Item(Tile parent)
     {
         this.parent = parent;
-
-        if (maxStack == 0)
-        {
-            this.maxStack = Data.StackLimit;
-        }
-
-        else
-        {
-            this.maxStack = maxStack;
-        }
     }
 
     public void RegisterItemChanged(Action<Item> callback)
@@ -49,15 +40,16 @@ public class Item
         ItemChangedEvent += callback;
     }
 
-    public void CreateNewStack(int amountToAdd, ItemType type)
+    public void CreateNewStack(int amountToAdd, string type)
     {
-        if (TryAddingToStack(amountToAdd, type) > 0)
+        int leftOver = TryAddingToStack(amountToAdd, type);
+        if (leftOver > 0)
         {
-            SendItemsToNeighbour(amountToAdd, type);
+            SendItemsToNeighbour(leftOver, type);
         }
     }
 
-    public int TakeFromStack(int amountToTake, ItemType type)
+    public int TakeFromStack(int amountToTake, string type)
     {
         if (this.type == type && amountToTake <= currentStackAmount)
         {
@@ -75,10 +67,10 @@ public class Item
     }
 
     // Tries adding to a stack. Returns the amount that can't be added due to limit.
-    int TryAddingToStack(int amountToAdd, ItemType type)
+    int TryAddingToStack(int amountToAdd, string type)
     {
 
-        if (this.Type == type || this.Type == ItemType.Empty && this.parent.structure.Type == "Empty")
+        if (this.Type == type || this.Type == ItemType.Empty && this.parent.structure.Type == ObjectType.Empty)
         {
             this.Type = type;
         }
@@ -106,7 +98,7 @@ public class Item
     }
 
     // Loops through neighbours until all the items are placed.
-    void SendItemsToNeighbour(int amount, ItemType type)
+    void SendItemsToNeighbour(int amount, string type)
     {
         int index = 1;
         while (amount > 0)

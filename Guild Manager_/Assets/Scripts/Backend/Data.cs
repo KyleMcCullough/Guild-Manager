@@ -7,12 +7,16 @@ public static class Data
 {
     public static int DayLength {get; private set;} = 40;
     public static int NightRatio {get; private set;} = 50;
-    public static int StackLimit {get; private set;} = 100;
-    public static Dictionary<string, StructureData> structureData = new Dictionary<string, StructureData>(); 
+    public static Dictionary<string, StructureData> structureData = new Dictionary<string, StructureData>();
+    public static Dictionary<string, TileData> tileData = new Dictionary<string, TileData>();
+    public static Dictionary<string, ItemData> itemData = new Dictionary<string, ItemData>();
     public static List<string> ObjectTypes = new List<string>();
-
+    public static List<string> tileTypes = new List<string>();
+    public static List<string> itemTypes = new List<string>();
 
     static StructureDataArray structures;
+    static TileDataArray tiles;
+    static ItemDataArray items;
 
     public static void LoadData()
     {
@@ -23,6 +27,24 @@ public static class Data
         {
             structureData.Add(data.name, data);
             ObjectTypes.Add(data.name);
+        }
+
+        json = File.ReadAllText(Application.dataPath + "/Resources/images/Tiles/details.json");
+        Data.tiles = JsonUtility.FromJson<TileDataArray>(json);
+
+        foreach (TileData data in Data.tiles.tiles)
+        {
+            tileData.Add(data.name, data);
+            tileTypes.Add(data.name);
+        }
+
+        json = File.ReadAllText(Application.dataPath + "/Resources/images/Items/details.json");
+        Data.items = JsonUtility.FromJson<ItemDataArray>(json);
+
+        foreach (ItemData data in Data.items.items)
+        {
+            itemData.Add(data.name, data);
+            itemTypes.Add(data.name);
         }
     }
 
@@ -70,5 +92,27 @@ public static class Data
         }
 
         return value;
+    }
+
+    public static int GetStackLimit(string type)
+    {
+        if (itemTypes.Contains(type))
+        {
+            return itemData[type].maxStackSize;
+        }
+
+        Debug.LogError("GetStackLimit - An invalid type was given.");
+        return -1;
+    }
+
+    public static bool CheckIfTileIsWalkable(string type)
+    {
+        if (tileTypes.Contains(type))
+        {
+            return tileData[type].walkable;
+        }
+
+        Debug.LogError("CheckIfTileIsWalkable - An invalid type was given.");
+        return false;
     }
 }

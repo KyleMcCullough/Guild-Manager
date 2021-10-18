@@ -1,0 +1,27 @@
+{
+
+    "categories": [
+        {
+            "name": "Nature",
+            "id": 0
+        }
+    ],
+
+    "tiles" : [
+        {
+            "name": "Grass",
+            "category": 0,
+            "linksToNeighbours": true,
+            "movementCost": 1,
+            "walkable": true
+        },
+
+        {
+            "name": "Dirt",
+            "category": 0,
+            "linksToNeighbours": true,
+            "movementCost": 1,
+            "walkable": true
+        }
+    ]
+}

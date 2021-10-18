@@ -40,15 +40,11 @@ public class ItemSpriteController : MonoBehaviour
         // TileBase mapTile = tilemap.GetTile(new Vector3Int(tile.x, tile.y, 0);
 
         // Trys to get the tile object from the tile data. Continues if it can sucessfully find and assign it.
-        // if (tileGameObjects.TryGetValue(tile, out GameObject tileObject)) {
 
         //TODO: Apply random rotation to item sprites to make it better visually.
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-        t.sprite = itemSprites[item.Type.ToString()];
-        tilemap.SetTile(new Vector3Int(item.parent.x, item.parent.y, 0), t);
+        t.sprite = itemSprites[item.Type];
 
-        // else {
-        //     Debug.LogError("OnTileTypeChanged - unrecognized tile type.");
-        // }
+        tilemap.SetTile(new Vector3Int(item.parent.x, item.parent.y, 0), t);
     }
 }

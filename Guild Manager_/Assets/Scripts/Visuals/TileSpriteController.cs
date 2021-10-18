@@ -5,10 +5,8 @@ using UnityEngine.Tilemaps;
 
 public class TileSpriteController : MonoBehaviour
 {
-
-    public Sprite dirtSprite;
-    public Sprite emptySprite;
     public Tilemap tilemap;
+    public Dictionary<string, Sprite> tileSprites;
 
     World world
     {
@@ -19,20 +17,18 @@ public class TileSpriteController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        tileSprites = new Dictionary<string, Sprite>();
+        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Tiles");
 
-        UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-        t.sprite = dirtSprite;
-
-        for (int x = 0; x < world.height; x++)
+        foreach (Sprite sprite in sprites)
         {
-            for (int y = 0; y < world.width; y++)
-            {
-                Tile tile = world.GetTile(x, y);
-                tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
-            }
+            Sprite s = Sprite.Create(sprite.texture, new Rect(0, 0, sprite.texture.width, sprite.texture.height), new Vector2(0f, 0f), 32f);
+            tileSprites[sprite.name] = s;
         }
+
         // Registers callback.
         world.RegisterTileChanged(OnTileChanged);
+        RefreshAllTiles();
     }
 
     void OnTileChanged(Tile tile)
@@ -44,23 +40,74 @@ public class TileSpriteController : MonoBehaviour
         // if (tileGameObjects.TryGetValue(tile, out GameObject tileObject)) {
 
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
+        AssignSprite(tile);
+    }
+    public void AssignSprite(Tile obj)
+    {
+        UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
 
-        UnityEngine.Debug.Log(tile.Type);
-        if (tile.Type == TileType.Dirt)
+        if (!Data.tileData[obj.Type].linksToNeighbours)
         {
-            t.sprite = dirtSprite;
-            tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
+            t.sprite = tileSprites[obj.Type + "_"];
+            tilemap.SetTile(new Vector3Int(obj.x, obj.y, 0), t);
+            return;
         }
 
-        else if (tile.Type == TileType.Empty)
+        string spriteName = obj.Type + "_";
+
+        // Check for neighbours North, East, South, West.
+        Tile tile;
+
+        int x = obj.x;
+        int y = obj.y;
+
+        tile = world.GetTile(x, y + 1);
+        if (tile != null && tile.structure != null && tile.structure.Type == obj.Type)
         {
-            t.sprite = emptySprite;
-            tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
+            spriteName += "N";
         }
 
-        else
+        tile = world.GetTile(x + 1, y);
+        if (tile != null && tile.structure != null && tile.structure.Type == obj.Type)
         {
-            Debug.LogError("OnTileTypeChanged - unrecognized tile type.");
+            spriteName += "E";
+        }
+
+        tile = world.GetTile(x, y - 1);
+        if (tile != null && tile.structure != null && tile.structure.Type == obj.Type)
+        {
+            spriteName += "S";
+        }
+
+        tile = world.GetTile(x - 1, y);
+        if (tile != null && tile.structure != null && tile.structure.Type == obj.Type)
+        {
+            spriteName += "W";
+        }
+
+        if (!tileSprites.ContainsKey(spriteName))
+        {
+            Debug.LogWarning("GetSprite - no sprite with name " + spriteName + " is found.");
+            t.sprite = tileSprites[obj.Type.ToString() + "_"];
+        }
+
+        t.sprite = tileSprites[spriteName];
+        tilemap.SetTile(new Vector3Int(obj.x, obj.y, 0), t);
+    }
+
+    void RefreshAllTiles()
+    {
+
+        for (int x = 0; x < world.height; x++)
+        {
+            for (int y = 0; y < world.width; y++)
+            {
+                Tile tile = world.GetTile(x, y);
+                UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
+                t.sprite = tileSprites[tile.Type + "_"];
+
+                tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
+            }
         }
     }
 }

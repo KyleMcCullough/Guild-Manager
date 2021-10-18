@@ -43,10 +43,12 @@ public class World
         {
             for (int y = 0; y < height; y++)
             {
+                //FIXME: Hardcoded tile type for testing. Replace with world generation.
                 tiles[x, y] = new Tile(x, y, this);
                 tiles[x, y].RegisterTileChangedDelegate(OnTileChanged);
                 tiles[x, y].Item.RegisterItemChanged(OnItemChanged);
                 tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
+                tiles[x, y].Type = "Grass";
 
                 // Sets room default to outside.
                 tiles[x, y].room = GetOutSideRoom();
