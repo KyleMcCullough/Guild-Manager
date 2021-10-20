@@ -22,6 +22,12 @@ public class Character
         }
     }
 
+    #region Character variables
+    Inventory inventory = new Inventory();
+
+    #endregion
+
+    #region Pathing variables
     public Tile currTile { get; protected set; }
     Tile nextTile;
     Path_AStar pathing;
@@ -30,9 +36,14 @@ public class Character
     float speed = 2f;
 
     Action<Character> characterChanged;
+    Job parentJob;
     Job currentJob;
     static Thread tileGraphThread = null;
     public static bool pathingIsRefreshed = false;
+    
+    public static bool itemsAreRefreshed = false;
+
+    #endregion
 
     public Character(Tile tile)
     {
@@ -44,10 +55,70 @@ public class Character
         if (currentJob == null)
         {
             // Gets new job.
-            currentJob = currTile.world.jobQueue.Dequeue();
-
-            if (currentJob != null)
+            if (parentJob == null)
             {
+                currentJob = currTile.world.jobQueue.Dequeue();
+            }
+
+            if (currentJob != null || parentJob != null)
+            {
+
+                if (this.parentJob != null || currentJob != null && currentJob.requiredMaterials != null)
+                {
+
+                    // If this is a new job, assign it to parent.
+                    if (this.parentJob == null)
+                    {
+                        this.parentJob = currentJob;
+                        this.currentJob = null;
+                    }
+
+                    // If the job has all required materials, build it.
+                    if (parentJob.requiredMaterials.Count == 0)
+                    {
+                        this.currentJob = parentJob;
+                        this.parentJob = null;
+                    }
+
+                    // If the character's inventory is full, or has all the required materials, haul to the construction site.
+                    else if (inventory.isFull && inventory.ContainsRequiredMaterials(parentJob.requiredMaterials) > 0 || inventory.ContainsRequiredMaterials(parentJob.requiredMaterials) == parentJob.requiredMaterials.Count)
+                    {
+                        this.currentJob = new Job(this.parentJob.tile, (theJob) => this.HaulToConstructionComplete(), null);
+                    }
+
+                    else
+                    {
+                        Tile searchedTile = null;
+                        
+                        // Checks each requirement and scan the world to see if the item exists.
+                        foreach (BuildingRequirements requirement in this.parentJob.requiredMaterials)
+                        {
+                            Debug.Log(requirement.material + " " + inventory.GetCountOfItemInInventory(requirement.material) + " " + requirement.amount);
+                            
+                            if (inventory.GetCountOfItemInInventory(requirement.material) >= requirement.amount)
+                            {
+                                Debug.Log("amount already in inventory.");
+                                continue;
+                            }
+
+                            searchedTile = Item.SearchForItem(requirement.material, this.currTile);
+
+                            // This means that the required material is reachable.
+                            if (searchedTile != null) break;
+                        }
+
+                        // If none of the required items can be found, abandon it.
+                        if (searchedTile == null)
+                        {
+                            Debug.Log("No material found, cancelling job.");
+                            AbandonJob();
+                            return;
+                        }
+
+                        this.currentJob = new Job(searchedTile, (theJob) => this.HaulingOnComplete(), null);
+                    }
+                }
+
                 destTile = currentJob.tile;
                 currentJob.RegisterJobCancelCallback(OnJobEnded);
                 currentJob.RegisterJobCompleteCallback(OnJobEnded);
@@ -69,10 +140,21 @@ public class Character
         pathing = null;
 
         // Add unreachable job to List. Will be added back once the tilegraph is refreshed to try again.
-        currentJob.UnregisterJobCancelCallback(OnJobEnded);
-        currentJob.UnregisterJobCompleteCallback(OnJobEnded);
-        currTile.world.unreachableJobs.Add(currentJob);
-        currentJob = null;
+        if (currentJob != null && parentJob == null)
+        {
+            currentJob.UnregisterJobCancelCallback(OnJobEnded);
+            currentJob.UnregisterJobCompleteCallback(OnJobEnded);
+            currTile.world.unreachableJobs.Add(currentJob);
+            currentJob = null;
+        }
+
+        // If there is a parent job assigned, add the parentJob to the list and delete the current job. It will be regenerated later.
+        else if (parentJob != null)
+        {
+            currTile.world.unreachableJobs.Add(parentJob);
+            currentJob = null;
+            parentJob = null;
+        }
     }
 
     void Update_HandleMovement(float deltatime)
@@ -175,10 +257,12 @@ public class Character
     public void Update(float deltaTime)
     {
 
-        // If there is a new pathing mesh, change all non-reachable jobs to canBeReached to check if it is now reachable.
-        if (pathingIsRefreshed)
+        // If there is a new pathing mesh or items, change all non-reachable jobs to canBeReached to check if it is now reachable.
+        if (pathingIsRefreshed || itemsAreRefreshed)
         {
             pathingIsRefreshed = false;
+            itemsAreRefreshed = false;
+
             foreach (Job job in currTile.world.unreachableJobs)
             {
                 currTile.world.jobQueue.Enqueue(job);
@@ -202,6 +286,24 @@ public class Character
         destTile = tile;
     }
 
+    public void HaulingOnComplete()
+    {
+        this.inventory.AddItemFromTile(destTile.item);
+    }
+
+    public void HaulToConstructionComplete()
+    {
+        foreach (Item item in this.inventory.items.ToArray())
+        {
+            if (this.parentJob.IsRequiredType(item.Type))
+            {
+                Debug.Log(this.inventory.items.Count);
+                item.CurrentStackAmount = this.parentJob.GiveMaterial(item.Type, item.CurrentStackAmount);
+                Debug.Log(this.inventory.items.Count);
+            }
+        }
+    }
+
     static void Thread_GenerateNewTileGraph()
     {
         WorldController.Instance.World.tileGraph = new Path_TileGraph(WorldController.Instance.World);
@@ -220,6 +322,8 @@ public class Character
 
     void OnJobEnded(Job job)
     {
+
+        Debug.Log("Ending job.");
         // Called whether job was completed or cancelled.
         if (job != currentJob)
         {

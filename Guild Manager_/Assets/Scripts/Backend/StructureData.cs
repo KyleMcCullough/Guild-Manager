@@ -14,6 +14,12 @@ public class StructureData
 [System.Serializable]
 public class BuildingRequirements
 {
+    public BuildingRequirements(string material, int amount)
+    {
+        this.material = material;
+        this.amount = amount;
+    }
+    
     public string material;
     public int amount;
 }

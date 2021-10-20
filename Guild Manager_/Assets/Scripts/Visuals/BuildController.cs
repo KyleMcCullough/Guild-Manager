@@ -40,7 +40,7 @@ public class BuildController : MonoBehaviour
         }
         else if (buildType == 2)
         {
-            tile.Item.CreateNewStack(75, "Wood");
+            tile.item = new Item(tile, "Wood", 50);
         }
 
         else {

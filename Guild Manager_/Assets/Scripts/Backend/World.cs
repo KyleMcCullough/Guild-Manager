@@ -15,7 +15,7 @@ public class World
     Action<Character> characterCreated;
     Action<Tile> tileChangedEvent;
     Action<Structure> structureChangedEvent;
-    Action<Item> itemChangedEvent;
+    public Action<Item> itemChangedEvent;
     public Path_TileGraph tileGraph;
     public JobQueue jobQueue;
     public List<Job> unreachableJobs;
@@ -46,7 +46,6 @@ public class World
                 //FIXME: Hardcoded tile type for testing. Replace with world generation.
                 tiles[x, y] = new Tile(x, y, this);
                 tiles[x, y].RegisterTileChangedDelegate(OnTileChanged);
-                tiles[x, y].Item.RegisterItemChanged(OnItemChanged);
                 tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
                 tiles[x, y].Type = "Grass";
 

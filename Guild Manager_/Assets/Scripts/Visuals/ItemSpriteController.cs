@@ -42,6 +42,12 @@ public class ItemSpriteController : MonoBehaviour
         // Trys to get the tile object from the tile data. Continues if it can sucessfully find and assign it.
 
         //TODO: Apply random rotation to item sprites to make it better visually.
+        if (item.Type == ObjectType.Empty)
+        {
+            tilemap.SetTile(new Vector3Int(item.parent.x, item.parent.y,0), null);
+            return;
+        }
+
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
         t.sprite = itemSprites[item.Type];
 

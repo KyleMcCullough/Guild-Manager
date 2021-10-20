@@ -5,11 +5,38 @@ using System;
 
 public class Item
 {
-    public Tile parent;
-    public Action<Item> ItemChangedEvent { get; protected set; }
-    int maxStack = 0;
+    public Tile parent = null;
+    public Action<Item> ItemChangedEvent { get; protected set; } = null;
+    public Inventory relatedInventory = null;
+    public int maxStack
+    {
+        get
+        {
+            return Data.GetStackLimit(type);
+        }
+    }
     int currentStackAmount = 0;
-    string type = ItemType.Empty;
+
+    public int CurrentStackAmount
+    {
+        get {return currentStackAmount; }
+        set
+        {
+
+            // If there are no contents to the item stack, destroy it.
+            if (value == 0)
+            {
+                this.Type = ItemType.Empty;
+                this.DeleteItem();
+            }
+
+            else
+            {
+                currentStackAmount = value;
+            }
+        }
+    }
+    public string type = ItemType.Empty;
 
     public string Type
     {
@@ -19,8 +46,6 @@ public class Item
         {
             string previous = type;
             type = value;
-
-            this.maxStack = Data.GetStackLimit(this.Type);
 
             // Call callback to refresh tile visually.
             if (ItemChangedEvent != null && previous != type)
@@ -33,44 +58,67 @@ public class Item
     public Item(Tile parent)
     {
         this.parent = parent;
+        ItemChangedEvent += this.parent.world.itemChangedEvent;
     }
 
-    public void RegisterItemChanged(Action<Item> callback)
+    public Item(Tile parent, string type, int currentStackAmount)
     {
-        ItemChangedEvent += callback;
+        AssignParent(parent, currentStackAmount, type);
+        this.Type = type;
+        this.currentStackAmount = currentStackAmount;
     }
 
-    public void CreateNewStack(int amountToAdd, string type)
+    public Item(string type, int currentStackAmount, Inventory relatedInventory)
     {
-        int leftOver = TryAddingToStack(amountToAdd, type);
-        if (leftOver > 0)
-        {
-            SendItemsToNeighbour(leftOver, type);
-        }
+        this.Type = type;
+        this.currentStackAmount = currentStackAmount;
+        this.relatedInventory = relatedInventory;
+        this.ItemChangedEvent = null;
     }
 
-    public int TakeFromStack(int amountToTake, string type)
+    // Assigns parent and registers item changed callback from it.
+    public void AssignParent(Tile tile, int amount, string type)
     {
-        if (this.type == type && amountToTake <= currentStackAmount)
+        if(tile.item != null)
         {
-            currentStackAmount -= amountToTake;
-            return amountToTake;
+            if (tile.item.maxStack == tile.item.currentStackAmount)
+            {
+                SendItemsToNeighbour(amount, type, tile);
+            }
+
+            else
+
+            {
+                amount = TryAddingToStack(amount, type, tile);
+
+                if (amount > 0)
+                {
+                    SendItemsToNeighbour(amount, type, tile);
+                }
+            }
+            return;
         }
 
-        else if (amountToTake > currentStackAmount)
+        else
         {
-            currentStackAmount = 0;
-            return currentStackAmount;
+            this.parent = tile;
+            this.parent.item = this;
         }
 
-        return 0;
+        Character.itemsAreRefreshed = true;
+        this.relatedInventory = null;
+
+        if (ItemChangedEvent == null)
+        {
+            ItemChangedEvent += this.parent.world.itemChangedEvent;
+        }
     }
 
     // Tries adding to a stack. Returns the amount that can't be added due to limit.
-    int TryAddingToStack(int amountToAdd, string type)
+    int TryAddingToStack(int amountToAdd, string type, Tile tile)
     {
 
-        if (this.Type == type || this.Type == ItemType.Empty && this.parent.structure.Type == ObjectType.Empty)
+        if (this.Type == type || this.Type == ItemType.Empty && (tile.structure == null || !tile.structure.canCreateRooms))
         {
             this.Type = type;
         }
@@ -80,33 +128,34 @@ public class Item
             return amountToAdd;
         }
 
-        if (amountToAdd > maxStack)
+        if (this.currentStackAmount == this.maxStack)
         {
             return amountToAdd;
         }
 
-        if (amountToAdd + currentStackAmount <= maxStack)
+        if (amountToAdd + CurrentStackAmount <= maxStack)
         {
-            currentStackAmount += amountToAdd;
+            CurrentStackAmount += amountToAdd;
             return 0;
         }
 
-        int remaining = maxStack - currentStackAmount;
-        currentStackAmount += remaining;
+        int remaining = maxStack - CurrentStackAmount;
+        CurrentStackAmount += remaining;
 
         return amountToAdd - remaining;
     }
 
-    // Loops through neighbours until all the items are placed.
-    void SendItemsToNeighbour(int amount, string type)
+    // Loops through neighbors until all the items are placed.
+    void SendItemsToNeighbour(int amount, string type, Tile tile)
     {
         int index = 1;
         while (amount > 0)
         {
 
-            for (int x = parent.x - index; x < parent.x + 1 + index; x++)
+            Debug.Log(tile.x + " " + tile.y);
+            for (int x = tile.x - index; x < tile.x + 1 + index; x++)
             {
-                for (int y = parent.y - index; y < parent.y + 1 + index; y++)
+                for (int y = tile.y - index; y < tile.y + 1 + index; y++)
                 {
 
                     if (amount == 0)
@@ -116,12 +165,23 @@ public class Item
 
                     try
                     {
-                        amount = parent.world.GetTile(x, y).Item.TryAddingToStack(amount, type);
+                        Tile t = tile.world.GetTile(x, y);
+
+                        if (t.item == null || t.item.Type == type && t.item.CurrentStackAmount != t.item.maxStack)
+                        {
+                            if (t.item == null)
+                            {
+                                t.item = new Item(t);
+                            }
+
+                            amount = t.item.TryAddingToStack(amount, type, t);
+                        }
                     }
 
                     //FIXME: To be taken out once the borders around the edges that restricts building is implemented.
                     catch (NullReferenceException)
                     {
+                        Debug.Log("SendItemsToNeighbour - Hit edge.");
                         continue;
                     }
                 }
@@ -129,5 +189,69 @@ public class Item
 
             index++;
         }
+    }
+
+    public void DeleteItem()
+    {
+        if (this.relatedInventory != null)
+        {
+            this.relatedInventory.DeleteItem(this);
+        }
+
+        if (this.parent != null)
+        {
+            this.parent.item = null;
+            this.parent = null;
+        }
+    }
+
+    public static Tile SearchForItem(string type, Tile tile)
+    {
+        List<Tile> checkedTiles = new List<Tile>();
+        Queue<Tile> tilesToCheck = new Queue<Tile>();
+        
+        tilesToCheck.Enqueue(tile);
+
+        while (tilesToCheck.Count > 0)
+        {
+            Tile t = null;
+            while (tilesToCheck.Count > 0)
+            {
+                t = tilesToCheck.Dequeue();
+
+                if (checkedTiles.Contains(t)) continue;
+
+                break;
+            }
+            
+            if (t == null) return null;
+
+            checkedTiles.Add(t);
+
+            if (t.item != null && t.item.Type == type) return t;
+
+                Tile[] ns = t.GetNeighbors();
+                foreach (Tile t2 in ns)
+                {
+                    if (checkedTiles.Contains(t2))
+                    {
+                        continue;
+                    }
+
+                    if (t2 == null)
+                    {
+                        return null;
+                    }
+
+                    // We know t2 is not null nor is it an empty tile, so just make sure it
+                    // hasn't already been processed and isn't a "wall" type tile.
+                    if (t2.structure == null || t2.structure.canCreateRooms == false || t2.structure.canCreateRooms && !t2.structure.IsConstructed)
+                    {
+                        tilesToCheck.Enqueue(t2);
+                    }
+                }
+        }
+
+        return null;
     }
 }

@@ -11,17 +11,7 @@ public class Tile
     public Structure structure;
     public Room room = null;
     public World world;
-    Item item;
-    public Item Item 
-    {
-        get 
-        {
-            if (item == null) {
-                item = new Item(this);
-            }
-            return item;
-        }
-    }
+    public Item item = null;
 
     public float movementCost
     {
@@ -71,6 +61,35 @@ public class Tile
     public void RegisterTileChangedDelegate(Action<Tile> callback)
     {
         tileChangedEvent += callback;
+    }
+
+    public Tile FindNearestItem(string item)
+    {
+        int radius = 1;
+
+        if (this.item != null && this.item.Type == item)
+        {
+            return this;
+        }
+
+        for (int x = this.x - radius; x < this.x + radius; x++)
+        {
+            for (int y = this.y - radius; y < this.x + radius; y++)
+            {
+                Tile t = world.GetTile(x, y);
+                if (!t.structure.canCreateRooms && item != null && t.item.Type == item)
+                {
+                    // Tries to create a path to see if it can be reached.
+                    if (new Path_AStar(world, this, t).Length() != 0) return t;
+                }
+            }
+
+            radius ++;
+        }
+
+        // This means the required item is not on the map.
+        Debug.Log("FindNearestItem - " + item + " is not on the map or cannot be found.");
+        return null;
     }
 
     public bool IsNeighbour(Tile tile, bool diagonals = false)

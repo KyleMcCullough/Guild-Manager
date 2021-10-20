@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class Job
 {
@@ -10,13 +11,23 @@ public class Job
 
     Action<Job> jobFinished;
     Action<Job> jobCancelled;
-    BuildingRequirements[] requiredMaterials;
+    public List<BuildingRequirements> requiredMaterials;
 
-    public Job(Tile tile, Action<Job> jobFinished, BuildingRequirements[] requiredMaterials = null, float jobTime = 0.1f) {
+    public Job(Tile tile, Action<Job> jobFinished, List<BuildingRequirements> requiredMaterials = null, float jobTime = 0.1f) {
         this.tile = tile;
         this.jobFinished += jobFinished;
-        this.requiredMaterials = requiredMaterials;
         this.jobTime = jobTime;
+
+        if (requiredMaterials != null)
+        {
+            // Hard copies building requirements.
+            this.requiredMaterials = requiredMaterials.ConvertAll(material => new BuildingRequirements(material.material, material.amount));
+        }
+
+        else
+        {
+            this.requiredMaterials = null;
+        }
     }
 
     public void RegisterJobCompleteCallback(Action<Job> callback) {
@@ -41,6 +52,50 @@ public class Job
         if (jobTime <= 0 && jobFinished != null) {
             jobFinished(this);
         }
+    }
+
+    public int GiveMaterial(string material, int amount)
+    {
+        foreach (BuildingRequirements requirement in this.requiredMaterials)
+        {
+            if (requirement.material == material)
+            {
+                if (amount > requirement.amount)
+                {
+                    amount = amount - requirement.amount;
+                    requirement.amount = 0;
+                }
+
+                else
+                {
+                    int difference = requirement.amount - amount;
+                    requirement.amount -= amount;
+
+                    amount = difference;
+                }
+
+                if (requirement.amount == 0)
+                {
+                    this.requiredMaterials.Remove(requirement);
+                }
+
+                return amount;
+            }
+        }
+
+        return amount;
+    }
+
+    public bool IsRequiredType(string type)
+    {
+        foreach (BuildingRequirements requirement in this.requiredMaterials.ToArray())
+        {
+            if (requirement.material == type)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void CancelJob() {

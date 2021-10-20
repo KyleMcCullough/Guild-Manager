@@ -12,6 +12,12 @@
             "name": "Wood",
             "category": 0,
             "maxStackSize": 75
+        },
+
+        {
+            "name": "Empty",
+            "category": 0,
+            "maxStackSize": 0
         }
     ]
 }

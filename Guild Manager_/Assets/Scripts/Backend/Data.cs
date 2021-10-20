@@ -8,6 +8,7 @@ public static class Data
 {
     public static int DayLength {get; private set;} = 40;
     public static int NightRatio {get; private set;} = 50;
+    public static int MaxInventory {get; private set;} = 5;
     public static Dictionary<string, StructureData> structureData = new Dictionary<string, StructureData>();
     public static Dictionary<string, TileData> tileData = new Dictionary<string, TileData>();
     public static Dictionary<string, ItemData> itemData = new Dictionary<string, ItemData>();
@@ -119,12 +120,12 @@ public static class Data
         return false;
     }
 
-    public static BuildingRequirements[] GetBuildingRequirements(string type)
+    public static List<BuildingRequirements> GetBuildingRequirements(string type)
     {
 
         if (structureTypes.Contains(type))
         {
-            return structureData[type].buildingRequirements;
+            return new List<BuildingRequirements>(structureData[type].buildingRequirements);
         }
 
         Debug.LogError("GetBuildingRequirements - An invalid type was given.");
