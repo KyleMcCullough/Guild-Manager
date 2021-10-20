@@ -107,7 +107,6 @@ public class Structure
         if (this.width > 1 || this.height > 1)
         {
             this.ReserveRequiredTiles();
-            Debug.Log(overlappedStructureTiles.Count);
         }
 
         if (this.updateActions != null)

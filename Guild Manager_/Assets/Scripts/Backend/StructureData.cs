@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 public class StructureData
 {
     public string name;
-    public int movementCost, width, height, category;
+    public int movementCost, width, height, category, placementMode;
     public bool linksToNeighbours, canCreateRooms;
     public string[] relatedFunctions;
     public string[] relatedParameters;
@@ -19,7 +19,7 @@ public class BuildingRequirements
         this.material = material;
         this.amount = amount;
     }
-    
+
     public string material;
     public int amount;
 }

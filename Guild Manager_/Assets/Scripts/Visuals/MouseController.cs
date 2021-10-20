@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,7 +16,7 @@ public class MouseController : MonoBehaviour
     public GameObject highlightCursorPrefab;
     public float CameraMoveSpeed = 10f;
     BuildController buildController;
-
+    bool allowDragging = true;
 
     // Start is called before the first frame update
     void Start()
@@ -35,11 +34,34 @@ public class MouseController : MonoBehaviour
         // Gets currently selected tile.
         // Update cursor position.
         Tile tileUnderMouse = WorldController.Instance.GetTileAtCoordinate(mousePosition);
-        //HighlightTile(tileUnderMouse);
 
+        // Enables/Disables dragging depending on placement mode.
+        if (buildController.buildType == 1 && Data.structureData[buildController.buildObject].placementMode == 1)
+        {
+            this.allowDragging = false;
+        }
+        
+        else
+        {
+            this.allowDragging = true;
+        }
 
-        // Handles left mouse clicks/drags.
-        UpdateTileDragging();
+        if (!this.allowDragging && Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
+        {
+            Tile tile = WorldController.Instance.GetTileAtCoordinate(mousePosition);
+
+            if (tile != null)
+            {
+                buildController.Build(tile);
+            }
+        }
+
+        else
+        {
+            // Handles left mouse clicks/drags.
+            UpdateTileDragging();
+        }
+
         UpdateCameraMovement();
 
         lastMousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -95,7 +117,7 @@ public class MouseController : MonoBehaviour
     {
 
         // Checks if we are over a UI element.
-        if (EventSystem.current.IsPointerOverGameObject() || Input.GetMouseButtonDown(1)) return;
+        if (EventSystem.current.IsPointerOverGameObject() || Input.GetMouseButtonDown(1) || !allowDragging) return;
 
         // Starts drag
         if (Input.GetMouseButtonDown(0))
@@ -110,7 +132,7 @@ public class MouseController : MonoBehaviour
 
         //FIXME: May cause issues with some objects.
         // Only allows objects to be dragged on either x or y axis.
-        if (buildController.buildType == 1)
+        if (buildController.buildType == 1 && Data.structureData[buildController.buildObject].placementMode == 2)
         {
             if (Math.Abs(endY - startY) > Math.Abs(endX - startX))
             {
@@ -148,7 +170,7 @@ public class MouseController : MonoBehaviour
             SimplePool.Despawn(obj);
         }
 
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(0) && this.allowDragging)
         {
 
             // Display preview of drag area.
@@ -171,7 +193,7 @@ public class MouseController : MonoBehaviour
 
 
         // Ends drag
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(0) && this.allowDragging)
         {
             int num = 0;
             for (int x = startX; x <= endX; x++)

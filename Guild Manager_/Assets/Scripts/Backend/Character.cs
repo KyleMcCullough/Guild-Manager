@@ -322,8 +322,7 @@ public class Character
 
     void OnJobEnded(Job job)
     {
-
-        Debug.Log("Ending job.");
+        
         // Called whether job was completed or cancelled.
         if (job != currentJob)
         {

@@ -12,7 +12,7 @@ public class BuildController : MonoBehaviour
 
     string buildTile = "Dirt";
     public bool buildObjectsMode { get; private set; } = false;
-    String buildObject = ObjectType.Empty;
+    public string buildObject = ObjectType.Empty;
     public int buildType = 0;
 
     public void Build(Tile tile)

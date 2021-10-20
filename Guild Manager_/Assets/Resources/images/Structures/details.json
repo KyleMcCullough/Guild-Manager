@@ -32,6 +32,7 @@
             "height": 1,
             "linksToNeighbours": false,
             "canCreateRooms": false,
+            "placementMode": 3,
             "relatedParameters": [],
             "relatedFunctions": [],
             "buildingRequirements": []
@@ -45,6 +46,7 @@
             "height": 2,
             "linksToNeighbours": false,
             "canCreateRooms": false,
+            "placementMode": 1,
             "relatedParameters": [],
             "relatedFunctions": [],
             "buildingRequirements": []
@@ -58,6 +60,7 @@
             "height": 1,
             "linksToNeighbours": true,
             "canCreateRooms": true,
+            "placementMode": 2,
             "relatedParameters": [],
             "relatedFunctions": [],
             "buildingRequirements": [{"material": "Wood", "amount": 50}]
@@ -71,6 +74,7 @@
             "height": 1,
             "linksToNeighbours": false,
             "canCreateRooms": true,
+            "placementMode": 1,
             "relatedParameters": [
                 "openness", 0,
                 "doorIsOpening", false,
