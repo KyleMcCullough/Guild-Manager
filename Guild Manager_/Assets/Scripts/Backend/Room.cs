@@ -143,7 +143,7 @@ public class Room
 
         source.parent.room = null;
         
-        if (oldRoom.tiles != null)
+        if (oldRoom != null && oldRoom.tiles != null)
         {
             oldRoom.tiles.Remove(source.parent);
         }

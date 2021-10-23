@@ -63,6 +63,11 @@ public class Character
             if (currentJob != null || parentJob != null)
             {
 
+                // if (!currentJob.tile.structure.hasJob || currentJob.tile.structure.parentStructure != null && !currentJob.tile.structure.parentStructure.hasJob)
+                // {
+                //     return;
+                // }
+
                 if (this.parentJob != null || currentJob != null && currentJob.requiredMaterials != null)
                 {
 
@@ -80,8 +85,9 @@ public class Character
                         this.parentJob = null;
                     }
 
+                    
                     // If the character's inventory is full, or has all the required materials, haul to the construction site.
-                    else if (inventory.isFull && inventory.ContainsRequiredMaterials(parentJob.requiredMaterials) > 0 || inventory.ContainsRequiredMaterials(parentJob.requiredMaterials) == parentJob.requiredMaterials.Count)
+                    else if (inventory.isFull || inventory.ContainsRequiredMaterials(parentJob.requiredMaterials))
                     {
                         this.currentJob = new Job(this.parentJob.tile, (theJob) => this.HaulToConstructionComplete(), null);
                     }
@@ -89,11 +95,10 @@ public class Character
                     else
                     {
                         Tile searchedTile = null;
-                        
+
                         // Checks each requirement and scan the world to see if the item exists.
                         foreach (BuildingRequirements requirement in this.parentJob.requiredMaterials)
                         {
-                            Debug.Log(requirement.material + " " + inventory.GetCountOfItemInInventory(requirement.material) + " " + requirement.amount);
                             
                             if (inventory.GetCountOfItemInInventory(requirement.material) >= requirement.amount)
                             {
@@ -110,7 +115,6 @@ public class Character
                         // If none of the required items can be found, abandon it.
                         if (searchedTile == null)
                         {
-                            Debug.Log("No material found, cancelling job.");
                             AbandonJob();
                             return;
                         }
@@ -208,7 +212,6 @@ public class Character
                 {
                     Debug.LogWarning("Path_AStar returned no path to destination.");
                     AbandonJob();
-                    //TODO: Cancel job if no path is found. or Reqeueue it.
                     return;
                 }
             }
@@ -241,9 +244,8 @@ public class Character
         // If movementPercent is equal to or above 1, we reached the destination.
         if (movementPercent >= 1)
         {
-            //TODO: Get next tile from pathfinding system.
-            //      If there are no more tiles, then we have actually arived.
-
+            
+            // If there are no more tiles, then we have actually arrived.
             if (nextTile.structure.IsDoor())
             {
                 nextTile.structure.CloseDoor();
@@ -297,9 +299,7 @@ public class Character
         {
             if (this.parentJob.IsRequiredType(item.Type))
             {
-                Debug.Log(this.inventory.items.Count);
                 item.CurrentStackAmount = this.parentJob.GiveMaterial(item.Type, item.CurrentStackAmount);
-                Debug.Log(this.inventory.items.Count);
             }
         }
     }
@@ -322,7 +322,7 @@ public class Character
 
     void OnJobEnded(Job job)
     {
-        
+
         // Called whether job was completed or cancelled.
         if (job != currentJob)
         {

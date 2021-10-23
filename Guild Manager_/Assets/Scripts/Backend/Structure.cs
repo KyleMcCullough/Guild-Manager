@@ -10,6 +10,7 @@ public class Structure
     public Tile parent;
     public string TypeCategory;
     public Structure parentStructure = null;
+    public Facing facingDirection = Facing.East;
     public List<Tile> overlappedStructureTiles;
     String type = ObjectType.Empty;
 
@@ -60,11 +61,11 @@ public class Structure
     // Multiplyer, a value of 2 is twice as slow as 1. These can be combined with tile movementCost and other modifiers.
     // If the movementCost is 0, then it cannot be passed through.
     public float movementCost { get; protected set; }
-    int width = 1;
-    int height = 1;
+    public int width = 1;
+    public int height = 1;
     public bool linksToNeighbour { get; set; }
 
-    Func<Tile, bool> positionValidation;
+    // Func<Tile, bool> positionValidation;
 
     public Action<Structure> structureChangedEvent { get; protected set; }
 
@@ -94,15 +95,16 @@ public class Structure
         }
     }
 
-    public bool PlaceStructure(Structure prototype)
+    public bool PlaceStructure(Structure prototype, int width, int height, Facing buildDirection)
     {
-        if (!this.IsValidPosition(this.parent))
+        if (!this.IsValidPosition(this.parent, buildDirection, width, height))
         {
             return false;
         }
 
-        this.width = prototype.width;
-        this.height = prototype.height;
+        this.width = width;
+        this.height = height;
+        this.facingDirection = buildDirection;
 
         if (this.width > 1 || this.height > 1)
         {
@@ -156,12 +158,42 @@ public class Structure
     void ReserveRequiredTiles()
     {
         this.overlappedStructureTiles = new List<Tile>();
-        for (int x = parent.x; x != (parent.x + this.width); x++)
+
+        int xPos = parent.x;
+        int yPos = parent.y;
+
+        switch (facingDirection)
         {
-            for (int y = parent.y; y != (parent.y + this.height); y++)
+
+            case Facing.South:
             {
-                this.overlappedStructureTiles.Add(this.parent.world.GetTile(x, y));
-                parent.world.GetTile(x, y).structure.parentStructure = this;
+                yPos = parent.y - (this.height - 1);
+                break;
+            }
+
+            case Facing.West:
+            {
+                xPos = parent.x - (this.width - 1);
+                break;
+            }
+            
+            default:
+            {
+                break;
+            }
+        }
+
+        for (int x = 0; x < this.width; x++)
+        {
+            for (int y = 0; y < this.height; y++)
+            {
+                if (xPos + x == this.parent.x && yPos + y == this.parent.y)
+                {
+                    continue;
+                }
+
+                this.overlappedStructureTiles.Add(this.parent.world.GetTile(xPos + x, yPos + y));
+                parent.world.GetTile(xPos + x, yPos + y).structure.parentStructure = this;
             }
         }
     }
@@ -197,16 +229,19 @@ public class Structure
 
     public void RemoveStructure()
     {
+
+        // If this tile is part of a parent structure, call the remove structure on it and return.
+        if (this.parentStructure != null)
+        {
+            this.parentStructure.RemoveStructure();
+            return;
+        }
+
         Structure prototype = this.parent.world.structurePrototypes[ObjectType.Empty];
 
         if (this.updateActions != null)
         {
             this.RemoveActions();
-        }
-
-        if (this.overlappedStructureTiles != null && this.overlappedStructureTiles.Count > 0)
-        {
-            this.ReleaseRequiredTiles();
         }
 
         this.optionalParameters = prototype.optionalParameters;
@@ -216,10 +251,14 @@ public class Structure
         this.TypeCategory = prototype.TypeCategory;
         this.canCreateRooms = prototype.canCreateRooms;
         this.parent.world.GetOutSideRoom().AssignTile(this.parent);
-        Debug.Log(this.parent.world.rooms.IndexOf(this.parent.room));
 
         Thread UpdateRoomThread = new Thread(new ThreadStart(this.Thread_UpdateRooms_Deletion));
         UpdateRoomThread.Start();
+
+        if (this.overlappedStructureTiles != null && this.overlappedStructureTiles.Count > 0)
+        {
+            this.ReleaseRequiredTiles();
+        }
 
         foreach (Tile tile in this.parent.GetNeighbors())
         {
@@ -240,21 +279,47 @@ public class Structure
         obj.height = height;
         obj.linksToNeighbour = linksToNeighbour;
         obj.canCreateRooms = canCreateRooms;
-        obj.positionValidation = obj.IsValidPosition;
+        // obj.positionValidation = obj.IsValidPosition;
 
         return obj;
     }
 
-    public bool IsValidPosition(Tile tile)
+    public bool IsValidPosition(Tile tile, Facing direction, int width, int height)
     {
-        if (this.width > 1 || this.height > 1)
+
+        if (width > 1 || height > 1)
         {
-            for (int x = tile.x; x != (tile.x + this.width); x++)
+            int xPos = tile.x;
+            int yPos = tile.y;
+
+            switch (direction)
             {
-                for (int y = tile.y; y != (tile.y + this.height); y++)
+
+                case Facing.South:
+                {
+                    yPos = tile.y - (height - 1);
+                    break;
+                }
+
+                case Facing.West:
+                {
+                    xPos = tile.x - (width - 1);
+                    break;
+                }
+                
+                default:
+                {
+                    break;
+                }
+            }
+
+            for (int x = xPos; x < (xPos + width); x++)
+            {
+                for (int y = yPos; y < (yPos + height); y++)
                 {
                     Tile t = tile.world.GetTile(x, y);
-                    if (!Data.CheckIfTileIsWalkable(tile.Type) || t.structure.parentStructure != null)
+                    Debug.Log(t.x + "" + t.y);
+                    if (!Data.CheckIfTileIsWalkable(tile.Type) || t.structure.parentStructure != null || t.structure.overlappedStructureTiles != null)
                     {
                         return false;
                     }
@@ -264,7 +329,7 @@ public class Structure
 
         else
         {
-            if (!Data.CheckIfTileIsWalkable(tile.Type) || tile.structure.parentStructure != null) return false;
+            if (!Data.CheckIfTileIsWalkable(tile.Type) || tile.structure.parentStructure != null || tile.structure.overlappedStructureTiles != null) return false;
         }
         return true;
     }
@@ -315,4 +380,15 @@ public class Structure
     }
 
     #endregion
+
+    public void SwitchParentStructure(Structure structure)
+    {
+        if (structure.parentStructure == null) return;
+
+        this.overlappedStructureTiles = structure.parentStructure.overlappedStructureTiles;
+        this.overlappedStructureTiles.Add(structure.parent);
+
+        structure.parentStructure = this;
+        structure.overlappedStructureTiles = null;
+    }
 }

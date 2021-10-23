@@ -18,7 +18,6 @@ public class Path_AStar
 
         Dictionary<Tile, Path_Node<Tile>> nodes = world.tileGraph.nodes;
 
-        //TODO: Make builder stand beside tile.
         if (!nodes.ContainsKey(tileStart))
         {
             Debug.LogError("Path_AStar: The starting tile is not in the list of nodes.");
@@ -70,7 +69,6 @@ public class Path_AStar
             if (current == goal)
             {
                 reconstruct_path(Came_From, current);
-                //TODO: Return reconstructed path.
                 return;
             }
 

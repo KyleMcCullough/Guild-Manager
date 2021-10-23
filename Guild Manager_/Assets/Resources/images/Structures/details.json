@@ -33,6 +33,7 @@
             "linksToNeighbours": false,
             "canCreateRooms": false,
             "placementMode": 3,
+            "rotates": false,
             "relatedParameters": [],
             "relatedFunctions": [],
             "buildingRequirements": []
@@ -42,11 +43,12 @@
             "name": "Table",
             "category": 2,
             "movementCost": 1,
-            "width": 2,
-            "height": 2,
+            "width": 3,
+            "height": 1,
             "linksToNeighbours": false,
             "canCreateRooms": false,
             "placementMode": 1,
+            "rotates": true,
             "relatedParameters": [],
             "relatedFunctions": [],
             "buildingRequirements": []
@@ -75,6 +77,7 @@
             "linksToNeighbours": false,
             "canCreateRooms": true,
             "placementMode": 1,
+            "rotates": false,
             "relatedParameters": [
                 "openness", 0,
                 "doorIsOpening", false,

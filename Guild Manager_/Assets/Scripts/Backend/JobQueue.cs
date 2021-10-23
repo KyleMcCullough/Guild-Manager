@@ -14,7 +14,8 @@ public class JobQueue
         jobQueue = new Queue<Job>();
     }
 
-    public void Enqueue(Job job) {
+    public void Enqueue(Job job) 
+    {
         
         if (jobQueue.Contains(job))
         {

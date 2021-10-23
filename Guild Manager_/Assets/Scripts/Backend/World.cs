@@ -204,22 +204,21 @@ public class World
         itemChangedEvent += callback;
     }
 
-    public bool IsStructurePlacementValid(string objectType, Tile tile)
+    public bool IsStructurePlacementValid(string objectType, Tile tile, Facing buildDirection, int width, int height)
     {
-        return structurePrototypes[objectType].IsValidPosition(tile);
+        return structurePrototypes[objectType].IsValidPosition(tile, buildDirection, width, height);
     }
 
-    public void PlaceStructure(string type, Tile tile)
+    public void PlaceStructure(string type, Tile tile, int width, int height, Facing buildDirection)
     {
 
-        //TODO: This assumes 1x1 objects with no rotations.
         if (!structurePrototypes.ContainsKey(type))
         {
             Debug.LogError("Prototype array does not contain prototype for key " + type);
             return;
         }
 
-        bool valid = tile.structure.PlaceStructure(structurePrototypes[type]);
+        bool valid = tile.structure.PlaceStructure(structurePrototypes[type], width, height, buildDirection);
         if (!valid)
         {
             // Failed to place object, probably because something was already there.

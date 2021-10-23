@@ -37,19 +37,32 @@ public class StructureSpriteController : MonoBehaviour
 
     void OnStructureChanged(Structure structure)
     {
-
-        // TileBase mapTile = tilemap.GetTile(new Vector3Int(tile.x, tile.y, 0);
-
-        // Trys to get the tile object from the tile data. Continues if it can sucessfully find and assign it.
-
-        UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
+        // Tries to get the tile object from the tile data. Continues if it can sucessfully find and assign it.
         AssignSprite(structure);
     }
 
     public void AssignSprite(Structure obj)
     {
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-        
+
+        // Quaternion rotation = Quaternion.Euler(0f, 0f, 0f);
+
+        //TODO: Will need seperate sprites for horizontal vs vertical ones. 
+
+        string trailing = obj.facingDirection.ToString();
+        int posX = obj.parent.x;
+        int posY = obj.parent.y;
+
+        if (obj.facingDirection == Facing.South)
+        {
+            posY -= (obj.height - 1);
+        }
+
+        else if (obj.facingDirection == Facing.West)
+        {
+            posX -= (obj.width - 1);
+        }
+
         if (obj.Type == ObjectType.Empty)
         {
             tilemap.SetTile(new Vector3Int(obj.parent.x,obj.parent.y,0), null);
@@ -58,8 +71,19 @@ public class StructureSpriteController : MonoBehaviour
 
         if (!obj.linksToNeighbour)
         {
-            t.sprite = structureSprites[obj.Type + "_"];
-            tilemap.SetTile(new Vector3Int(obj.parent.x, obj.parent.y, 0), t);
+            if (Data.GetStructureData(obj.Type).rotates)
+            {
+                t.sprite = structureSprites[obj.Type + "_" + trailing];
+            }
+
+            else
+            {
+                t.sprite = structureSprites[obj.Type + "_"];
+            }
+            
+
+            tilemap.SetTile(new Vector3Int(posX, posY, 0), t);
+            // tilemap.SetTransformMatrix(new Vector3Int(obj.parent.x, obj.parent.y, 0), Matrix4x4.TRS(Vector3.zero, rotation, Vector3.one));
             return;
         }
 
@@ -102,7 +126,6 @@ public class StructureSpriteController : MonoBehaviour
         }
 
         t.sprite = structureSprites[spriteName];
-
         tilemap.SetTile(new Vector3Int(obj.parent.x, obj.parent.y, 0), t);
 
         // Sets opacity if it is not constructed yet.
