@@ -55,7 +55,7 @@ public class StructureDataArray
 public class TileData
 {
     public string name;
-    public int movementCost, category;
+    public int movementCost, category, fertility;
     public bool linksToNeighbours, walkable;
 }
 

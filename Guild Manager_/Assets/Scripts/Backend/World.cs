@@ -39,22 +39,9 @@ public class World
         rooms.Add(new Room());
         updatingTiles = new List<Tile>();
 
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                //FIXME: Hardcoded tile type for testing. Replace with world generation.
-                tiles[x, y] = new Tile(x, y, this);
-                tiles[x, y].RegisterTileChangedDelegate(OnTileChanged);
-                tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
-                tiles[x, y].Type = "Grass";
-
-                // Sets room default to outside.
-                tiles[x, y].room = GetOutSideRoom();
-            }
-        }
         Data.LoadData();
         GeneratePrototypes();
+        GenerateWorld(UnityEngine.Random.Range(1, 10000000).GetHashCode());
         characters = new List<Character>();
     }
 
@@ -112,12 +99,97 @@ public class World
         return c;
     }
 
+    public void GenerateWorld(int seed)
+    {
+        UnityEngine.Random.InitState(seed);
+
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+
+                tiles[x, y] = new Tile(x, y, this);
+                tiles[x, y].RegisterTileChangedDelegate(OnTileChanged);
+                tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
+
+                // Sets room default to outside.
+                tiles[x, y].room = GetOutSideRoom();
+
+                float height = NoiseCreator.GetNoiseAt(x, y, seed);
+
+                switch (height)
+                {
+                    case float n when n > .85f:
+                    {
+                        tiles[x, y].Type = "Deep_Water";
+                        break;
+                    }
+
+                    case float n when n > .78f:
+                    {
+                        tiles[x, y].Type = "Shallow_Water";
+                        break;
+                    }
+
+                    case float n when n > .2f:
+                    {
+                        tiles[x, y].Type = "Grass";
+                        break;
+                    }
+
+                    default:
+                    {
+                        tiles[x, y].Type = "Dirt";
+                        break;
+                    }
+                }
+
+                if (!Data.CheckIfTileIsFertile(tiles[x, y].Type)) continue;
+
+                height = NoiseCreator.GetNoiseAt(x * 2, y * 2, seed);
+
+                switch (height)
+                {
+                    case float n when n > .8f:
+                    {
+                        if (UnityEngine.Random.value > .5f)
+                        {
+                            Structure prototype = structurePrototypes["Tree"];
+                            tiles[x, y].structure.PlaceStructure(prototype, prototype.width, prototype.height, Facing.East);
+                        }
+                        break;
+                    }
+
+                    case float n when n > .45f:
+                    {
+                        if (UnityEngine.Random.value > .95f)
+                        {
+                            Structure prototype = structurePrototypes["Bush"];
+                            tiles[x, y].structure.PlaceStructure(prototype, prototype.width, prototype.height, Facing.East);
+                        }
+                        break;
+                    } 
+
+                    default:
+                    {
+                        if (UnityEngine.Random.value > .95f)
+                        {
+                            Structure prototype = structurePrototypes["Tree"];
+                            tiles[x, y].structure.PlaceStructure(prototype, prototype.width, prototype.height, Facing.East);
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     void GeneratePrototypes()
     {
         foreach (string type in Data.structureTypes)
         {
             StructureData data = Data.GetStructureData(type);
-            Structure structure = Structure.CreatePrototype(type, Data.GetCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours, data.canCreateRooms);
+            Structure structure = Structure.CreatePrototype(type, Data.GetItemCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours, data.canCreateRooms);
 
             // Convert the string to the actual method, and load each function into the delegate
             foreach (string func in data.relatedFunctions)

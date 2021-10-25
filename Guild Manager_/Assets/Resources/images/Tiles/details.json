@@ -4,6 +4,11 @@
         {
             "name": "Nature",
             "id": 0
+        },
+
+        {
+            "name": "Water",
+            "id": 1
         }
     ],
 
@@ -13,7 +18,8 @@
             "category": 0,
             "linksToNeighbours": true,
             "movementCost": 1,
-            "walkable": true
+            "walkable": true,
+            "fertility": 1
         },
 
         {
@@ -21,7 +27,26 @@
             "category": 0,
             "linksToNeighbours": true,
             "movementCost": 1,
-            "walkable": true
+            "walkable": true,
+            "fertility": 0.5
+        },
+
+        {
+            "name": "Shallow_Water",
+            "category": 1,
+            "linksToNeighbours": true,
+            "movementCost": 0.5,
+            "walkable": true,
+            "fertility": 0
+        },
+
+        {
+            "name": "Deep_Water",
+            "category": 1,
+            "linksToNeighbours": true,
+            "movementCost": 1,
+            "walkable": false,
+            "fertility": 0
         }
     ]
 }

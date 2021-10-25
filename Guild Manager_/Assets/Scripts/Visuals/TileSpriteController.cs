@@ -53,7 +53,7 @@ public class TileSpriteController : MonoBehaviour
             return;
         }
 
-        string spriteName = obj.Type + "_";
+        string spriteName = obj.Type;
 
         // Check for neighbours North, East, South, West.
         Tile tile;
@@ -88,14 +88,14 @@ public class TileSpriteController : MonoBehaviour
         if (!tileSprites.ContainsKey(spriteName))
         {
             Debug.LogWarning("GetSprite - no sprite with name " + spriteName + " is found.");
-            t.sprite = tileSprites[obj.Type.ToString() + "_"];
+            t.sprite = tileSprites[obj.Type.ToString()];
         }
 
         t.sprite = tileSprites[spriteName];
         tilemap.SetTile(new Vector3Int(obj.x, obj.y, 0), t);
     }
 
-    void RefreshAllTiles()
+    public void RefreshAllTiles()
     {
 
         for (int x = 0; x < world.height; x++)
@@ -104,7 +104,7 @@ public class TileSpriteController : MonoBehaviour
             {
                 Tile tile = world.GetTile(x, y);
                 UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-                t.sprite = tileSprites[tile.Type + "_"];
+                t.sprite = tileSprites[tile.Type];
 
                 tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
             }

@@ -85,6 +85,36 @@
             ],
             "relatedFunctions": ["Update_Door"],
             "buildingRequirements": [{"material": "Wood", "amount": 125}]
+        },
+
+        {
+            "name": "Tree",
+            "category": 0,
+            "movementCost": 1,
+            "width": 1,
+            "height": 1,
+            "linksToNeighbours": false,
+            "canCreateRooms": false,
+            "placementMode": 1,
+            "rotates": false,
+            "relatedParameters": [],
+            "relatedFunctions": [],
+            "buildingRequirements": []
+        },
+
+        {
+            "name": "Bush",
+            "category": 0,
+            "movementCost": 1,
+            "width": 1,
+            "height": 1,
+            "linksToNeighbours": false,
+            "canCreateRooms": false,
+            "placementMode": 1,
+            "rotates": false,
+            "relatedParameters": [],
+            "relatedFunctions": [],
+            "buildingRequirements": []
         }
     ]
 }

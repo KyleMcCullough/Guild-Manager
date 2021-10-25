@@ -65,7 +65,7 @@ public static class Data
         return new StructureData();
     }
 
-    public static Category GetCategory(int id)
+    public static Category GetItemCategory(int id)
     {
         foreach (Category item in structures.categories)
         {
@@ -117,6 +117,16 @@ public static class Data
         }
 
         Debug.LogError("CheckIfTileIsWalkable - An invalid type was given.");
+        return false;
+    }
+
+    public static bool CheckIfTileIsFertile(string type)
+    {
+        if (tileTypes.Contains(type))
+        {
+            return tileData[type].fertility > 0;
+        }
+
         return false;
     }
 

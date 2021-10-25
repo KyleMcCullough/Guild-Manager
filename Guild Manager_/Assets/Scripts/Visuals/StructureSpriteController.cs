@@ -33,6 +33,7 @@ public class StructureSpriteController : MonoBehaviour
         }
 
         world.RegisterStructureChanged(OnStructureChanged);
+        RefreshAllStructures();
     }
 
     void OnStructureChanged(Structure structure)
@@ -133,6 +134,32 @@ public class StructureSpriteController : MonoBehaviour
         {
             tilemap.SetTileFlags(new Vector3Int(obj.parent.x, obj.parent.y, 0), TileFlags.None);
             tilemap.SetColor(new Vector3Int(obj.parent.x, obj.parent.y, 0), new Color(1f, 1f, 1f, .5f));
+        }
+    }
+
+    public void RefreshAllStructures()
+    {
+
+        for (int x = 0; x < world.height; x++)
+        {
+            for (int y = 0; y < world.width; y++)
+            {
+                Structure structure = world.GetTile(x, y).structure;
+
+                if (structure == null) continue;
+
+                UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
+
+                if (structure.Type == ObjectType.Empty)
+                {
+                    tilemap.SetTile(new Vector3Int(structure.parent.x, structure.parent.y, 0), null);
+                    continue;
+                }
+
+                t.sprite = structureSprites[structure.Type + "_"];
+
+                tilemap.SetTile(new Vector3Int(structure.parent.x, structure.parent.y, 0), t);
+            }
         }
     }
 }

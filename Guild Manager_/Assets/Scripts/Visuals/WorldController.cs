@@ -57,6 +57,14 @@ public class WorldController : MonoBehaviour
         return World.GetTile(Mathf.FloorToInt(coord.x), Mathf.FloorToInt(coord.y));
     }
 
+    public void RegenerateWorld()
+    {
+        World.GenerateWorld(UnityEngine.Random.Range(1, 10000000).GetHashCode());
+        StructureSpriteController structureSpriteController = GetComponent<StructureSpriteController>();
+
+        structureSpriteController.RefreshAllStructures();
+    }
+
     void UpdateSpeed()
     {
         if (Input.GetKeyDown("space"))
