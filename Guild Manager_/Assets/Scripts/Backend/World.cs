@@ -90,7 +90,15 @@ public class World
 
     public Character CreateCharacter(Tile tile)
     {
-        Character c = new Character(tile);
+
+        Tile t = Tile.GetSafePlaceForPlayerSpawning(tile);
+
+        if (t == null)
+        {
+            t = tile;
+        }
+
+        Character c = new Character(t);
         characters.Add(c);
 
         if (characterCreated != null)
@@ -140,10 +148,7 @@ public class World
 
                     default:
                     {
-                        if (UnityEngine.Random.value > .5f)
-                        {
                         tiles[x, y].Type = "Dirt";
-                        }
                         break;
                     }
                 }
@@ -193,6 +198,8 @@ public class World
         this.tileGraph = new Path_TileGraph(this, false);
         int attempts = 0;
 
+        //TODO: Think about adding bridges to world generation for paths.
+        
         // Continue until the path is finished or it errors out.
         while (true)
         {
@@ -212,19 +219,8 @@ public class World
             
             Tile endingTile = GetTile(width - 1, UnityEngine.Random.Range(0, width));
 
-            if (startingTile.movementCost != 0 && !Data.CheckIfTileIsWater(startingTile.Type) && !startingTile.structure.canCreateRooms)
+            if (startingTile.Type != ObjectType.Empty && startingTile.movementCost != 0 && !Data.CheckIfTileIsWater(startingTile.Type) && !startingTile.structure.canCreateRooms)
             {
-
-                // Make sure the ending tile is a reasonable distance away.
-                while (true)
-                {
-                    if (Mathf.Abs(endingTile.x - startingTile.x) > 10 &&  Mathf.Abs(endingTile.y - startingTile.y) > 10)
-                    {
-                        break;
-                    }
-
-                    endingTile = GetTile(width - 1, UnityEngine.Random.Range(0, width));
-                }
 
                 Path_AStar pathing = new Path_AStar(this, startingTile, endingTile);
 
@@ -242,7 +238,7 @@ public class World
                             t.structure.PlaceStructure(prototype, prototype.width, prototype.height, Facing.East);
                         }
 
-                        if (t.x == width - 1 || t.y == height - 1)
+                        if (t.x == width - 1 && endingTile.x == t.x || t.y == height - 1 && endingTile.y == t.y)
                         {
                             break;
                         }

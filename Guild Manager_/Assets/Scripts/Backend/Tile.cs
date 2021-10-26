@@ -7,7 +7,7 @@ public class Tile
 {
     public int x, y;
     Action<Tile> tileChangedEvent;
-    string type = "";
+    string type = ObjectType.Empty;
     public Structure structure;
     public Room room = null;
     public World world;
@@ -19,7 +19,7 @@ public class Tile
         {
 
             // Unwalkable.
-            if (!Data.tileData[this.type].walkable)
+            if (!Data.CheckIfTileIsWalkable(this.Type))
             {
                 return 0;
             }
@@ -223,6 +223,45 @@ public class Tile
 
         return null;
 
+    }
+
+    public static Tile GetSafePlaceForPlayerSpawning(Tile starting)
+    {
+        List<Tile> checkedTiles = new List<Tile>();
+        Queue<Tile> tilesToCheck = new Queue<Tile>();
+
+        tilesToCheck.Enqueue(starting);
+
+        while (tilesToCheck.Count > 0)
+        {
+            Tile t = tilesToCheck.Dequeue();
+            checkedTiles.Add(t);
+
+            if (Data.CheckIfTileIsWalkable(t.Type)) return t;
+
+            Tile[] ns = t.GetNeighbors();
+            foreach (Tile t2 in ns)
+            {
+                if (checkedTiles.Contains(t2))
+                {
+                    continue;
+                }
+
+                if (t2 == null)
+                {
+                    return null;
+                }
+
+                // We know t2 is not null nor is it an empty tile, so just make sure it
+                // hasn't already been processed and isn't a "wall" type tile.
+                if (!checkedTiles.Contains(t2))
+                {
+                    tilesToCheck.Enqueue(t2);
+                }
+            }
+        }
+
+        return null;
     }
 
     public Tile North()

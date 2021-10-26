@@ -21,11 +21,9 @@ public class Path_TileGraph
                 
                 Tile tile = world.GetTile(x, y);
 
-                // if (tile.movementCost > 0) {
                 Path_Node<Tile> node = new Path_Node<Tile>();
                 node.data = tile;
                 nodes.Add(tile, node);
-                // }
             }
         }
 

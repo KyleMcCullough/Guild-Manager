@@ -61,6 +61,7 @@ public static class Data
                 return item;
             }
         }
+
         UnityEngine.Debug.LogError("No '" + name + "' has been found in the structure data array.");
         return new StructureData();
     }
@@ -116,7 +117,7 @@ public static class Data
             return tileData[type].walkable;
         }
 
-        Debug.LogError("CheckIfTileIsWalkable - An invalid type was given.");
+        Debug.LogError("CheckIfTileIsWalkable - An invalid type '" + type + "' was given.");
         return false;
     }
 
