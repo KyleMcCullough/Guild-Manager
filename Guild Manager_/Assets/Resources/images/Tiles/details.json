@@ -47,6 +47,15 @@
             "movementCost": 1,
             "walkable": false,
             "fertility": 0
+        },
+
+        {
+            "name": "Path",
+            "category": 0,
+            "linksToNeighbours": true,
+            "movementCost": 1,
+            "walkable": true,
+            "fertility": 0
         }
     ]
 }

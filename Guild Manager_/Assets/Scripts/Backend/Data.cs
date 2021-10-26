@@ -130,6 +130,16 @@ public static class Data
         return false;
     }
 
+    public static bool CheckIfTileIsWater(string type)
+    {
+        if (tileTypes.Contains(type))
+        {
+            return tileData[type].category == 1;
+        }
+
+        return false;
+    }
+
     public static List<BuildingRequirements> GetBuildingRequirements(string type)
     {
 

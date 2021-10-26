@@ -83,7 +83,9 @@ public class Path_AStar
                     continue;
                 }
 
-                float movement_cost_to_neighbour = neighbour.data.movementCost * distance_detween(current, neighbour);
+                float movement_cost_to_neighbour;
+
+                movement_cost_to_neighbour = neighbour.data.movementCost * distance_detween(current, neighbour);
 
                 float tentative_g_score = g_score[current] + movement_cost_to_neighbour;
 
@@ -99,16 +101,6 @@ public class Path_AStar
                 }
             }
         }
-
-
-
-        // foreach (Tile t in goal.data.GetNeighbors())
-        // {
-        //     if (!t.structure.canCreateRooms)
-        //     {
-        //         reconstruct_path(Came_From, nodes[t]);
-        //     }
-        // }
 
         // If we have reached here, there is no path.
         return;

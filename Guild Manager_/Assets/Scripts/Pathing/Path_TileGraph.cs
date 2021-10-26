@@ -9,7 +9,7 @@ public class Path_TileGraph
 {
 
     public Dictionary<Tile, Path_Node<Tile>> nodes;
-    public Path_TileGraph(World world) {
+    public Path_TileGraph(World world, bool allowWater = true) {
         
         nodes = new Dictionary<Tile, Path_Node<Tile>>();
 
@@ -44,7 +44,8 @@ public class Path_TileGraph
             {
 
                 // The neighbour exists and can be walked on. If it is, create an edge.
-                if (neighbours[i] != null && neighbours[i].movementCost > 0 || neighbours[i] != null && neighbours[i].structure.IsDoor()) {
+                if (allowWater && neighbours[i] != null && neighbours[i].movementCost > 0 || neighbours[i] != null && neighbours[i].structure.IsDoor()
+                || !allowWater && neighbours[i] != null && !Data.CheckIfTileIsWater(neighbours[i].Type) && neighbours[i].movementCost > 0 || neighbours[i] != null && neighbours[i].structure.IsDoor()) {
 
                     // Make sure there is no diagonal clipping. If it is clipping, don't create an edge.
                     if (IsClippingCorner(tile, neighbours[i])) {

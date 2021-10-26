@@ -41,7 +41,7 @@ public class World
 
         Data.LoadData();
         GeneratePrototypes();
-        GenerateWorld(UnityEngine.Random.Range(1, 10000000).GetHashCode());
+        GenerateWorld(UnityEngine.Random.Range(1, 10000).GetHashCode());
         characters = new List<Character>();
     }
 
@@ -117,6 +117,7 @@ public class World
 
                 float height = NoiseCreator.GetNoiseAt(x, y, seed);
 
+                // Assigns tiles
                 switch (height)
                 {
                     case float n when n > .85f:
@@ -139,15 +140,20 @@ public class World
 
                     default:
                     {
+                        if (UnityEngine.Random.value > .5f)
+                        {
                         tiles[x, y].Type = "Dirt";
+                        }
                         break;
                     }
                 }
 
+                // Returns if the tile cannot be planted on.
                 if (!Data.CheckIfTileIsFertile(tiles[x, y].Type)) continue;
 
                 height = NoiseCreator.GetNoiseAt(x * 2, y * 2, seed);
 
+                // Assigns plants to fertile tiles.
                 switch (height)
                 {
                     case float n when n > .8f:
@@ -182,6 +188,78 @@ public class World
                 }
             }
         }
+
+        // Generate a tilegraph with water tiles excluded for generating the path.
+        this.tileGraph = new Path_TileGraph(this, false);
+        int attempts = 0;
+
+        // Continue until the path is finished or it errors out.
+        while (true)
+        {
+            attempts++;
+            int value = UnityEngine.Random.Range(0, width);
+            Tile startingTile;
+
+            if (UnityEngine.Random.value > .5f)
+            {
+                startingTile = GetTile(value, 0);
+            }
+
+            else
+            {
+                startingTile = GetTile(0, value);
+            }
+            
+            Tile endingTile = GetTile(width - 1, UnityEngine.Random.Range(0, width));
+
+            if (startingTile.movementCost != 0 && !Data.CheckIfTileIsWater(startingTile.Type) && !startingTile.structure.canCreateRooms)
+            {
+
+                // Make sure the ending tile is a reasonable distance away.
+                while (true)
+                {
+                    if (Mathf.Abs(endingTile.x - startingTile.x) > 10 &&  Mathf.Abs(endingTile.y - startingTile.y) > 10)
+                    {
+                        break;
+                    }
+
+                    endingTile = GetTile(width - 1, UnityEngine.Random.Range(0, width));
+                }
+
+                Path_AStar pathing = new Path_AStar(this, startingTile, endingTile);
+
+                if (pathing.Length() > 70)
+                {
+                    startingTile.Type = "Path";
+                    while (pathing.Length() > 0)
+                    {
+                        Tile t = pathing.Dequeue();
+                        t.Type = "Path";
+
+                        if (t.structure.Type != ObjectType.Empty)
+                        {
+                            Structure prototype = structurePrototypes["Empty"];
+                            t.structure.PlaceStructure(prototype, prototype.width, prototype.height, Facing.East);
+                        }
+
+                        if (t.x == width - 1 || t.y == height - 1)
+                        {
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            //TODO: How will we deal with seeds when a path cannot be created?
+            if (attempts > 20)
+            {
+                Debug.LogError("GenerateWorld - Failed path generation " + attempts + " times.");
+                break;
+            }
+        }
+
+        this.tileGraph = new Path_TileGraph(this);
     }
 
     void GeneratePrototypes()
