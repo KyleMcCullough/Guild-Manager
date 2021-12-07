@@ -67,7 +67,7 @@
             "relatedParameters": [],
             "relatedFunctions": [],
             "buildingRequirement": [{"material": "Wood", "amount": 50}],
-            "itemsToDropOnDestroy": [{"material": "Wood", "amount": 25}]
+            "itemsToDropOnDestroy": [{"material": "Wood", "amount": 0}]
         },
 
         {

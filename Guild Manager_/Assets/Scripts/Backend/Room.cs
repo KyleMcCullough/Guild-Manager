@@ -5,10 +5,16 @@ public class Room
 {
     float temperature;
     List<Tile> tiles;
+    IDictionary<string, int> itemsInRoom;
+    public JobQueue jobQueue;
+    public List<Job> unreachableJobs;
 
     public Room()
     {
         this.tiles = new List<Tile>();
+        this.itemsInRoom = new Dictionary<string, int>();
+        this.jobQueue = new JobQueue();
+        this.unreachableJobs = new List<Job>();
     }
 
     #region Assignment/Deletion functions
@@ -31,6 +37,71 @@ public class Room
         }
         t.room = this;
         tiles.Add(t);
+    }
+
+    public void AssignItemToRoom(string type, int amount)
+    {
+        if (amount == 0) return;
+
+        if (itemsInRoom == null)
+        {
+            itemsInRoom = new Dictionary<string, int>();
+        }
+        
+        if (itemsInRoom.ContainsKey(type))
+        {
+            itemsInRoom[type] = itemsInRoom[type] + amount;
+        }
+
+        else
+        {
+            itemsInRoom.Add(type, amount);
+        }
+
+        // PrintDictionary();
+    }
+
+    public void RemoveItemFromRoom(string type, int amount)
+    {
+        if (itemsInRoom == null)
+        {
+            itemsInRoom = new Dictionary<string, int>();
+        }
+        
+        if (itemsInRoom.ContainsKey(type))
+        {
+            itemsInRoom[type] = itemsInRoom[type] - amount;
+        
+            if (itemsInRoom[type] <= 0)
+            {
+                itemsInRoom.Remove(type);
+            }
+        }
+
+        // PrintDictionary();
+    }
+
+    public bool ContainsItem(string type)
+    {
+        return itemsInRoom.ContainsKey(type);
+    }
+
+    public void ResetUnreachableJobs()
+    {
+        foreach (Job job in unreachableJobs)
+        {
+            jobQueue.Enqueue(job);
+        }
+
+        unreachableJobs = new List<Job>();
+    }
+
+    void PrintDictionary()
+    {
+        foreach (KeyValuePair<string, int> line in itemsInRoom)
+        {
+            Debug.Log(line.Key + " " + line.Value);
+        }
     }
 
     public void UnassignAllTiles()
@@ -76,6 +147,14 @@ public class Room
                 if (oldRoom != null && oldRoom.tiles.Count > 0)
                 {
                     oldRoom.UnassignAllTiles();
+
+
+                Room outsideRoom = source.parent.world.GetOutSideRoom();
+                foreach (var entry in oldRoom.itemsInRoom)
+                {
+                    outsideRoom.AssignItemToRoom(entry.Key, entry.Value);
+                }
+
                     source.parent.world.DestroyRoom(oldRoom);
                 }
             }
@@ -102,10 +181,17 @@ public class Room
             foreach (Room room in rooms)
             {
                 if (room == oldRoom) continue;
+                
                 foreach (Tile t in room.tiles.ToArray())
                 {
                     oldRoom.AssignTile(t);
                 }
+
+                foreach (var entry in room.itemsInRoom)
+                {
+                    oldRoom.AssignItemToRoom(entry.Key, entry.Value);
+                }
+
                 source.parent.world.DestroyRoom(room);
             }
 
@@ -163,6 +249,11 @@ public class Room
             //     oldRoom.tiles.Remove(source.parent);
             // }
 
+            foreach (var entry in oldRoom.itemsInRoom)
+            {
+                source.parent.room.AssignItemToRoom(entry.Key, entry.Value);
+            }
+
             if (oldRoom != null && oldRoom.tiles.Count > 0)
             {
                 Debug.LogError("'oldRoom' still has tiles assigned to it. This is clearly wrong.");
@@ -215,5 +306,124 @@ public class Room
         // Tell the world that a new room has been formed.
         tile.world.AddRoom(newRoom);
     }
+    
+    public static Room GetNextRoom(Tile tile, List<Room> excludedRooms)
+    {
+
+        // There is only an outside room.
+        if (tile.world.rooms.Count == 1)
+        {
+            return null;
+        }
+
+        List<Tile> checkedTiles = new List<Tile>();
+        Queue<Tile> tilesToCheck = new Queue<Tile>();
+        
+        tilesToCheck.Enqueue(tile);
+
+        while (tilesToCheck.Count > 0)
+        {
+            Tile t = null;
+            while (tilesToCheck.Count > 0)
+            {
+                t = tilesToCheck.Dequeue();
+
+                if (checkedTiles.Contains(t)) continue;
+
+                break;
+            }
+            
+            if (t == null) return null;
+
+            checkedTiles.Add(t);
+
+            if (t.room != null && t.room != tile.room && !excludedRooms.Contains(t.room)) return t.room;
+
+            Tile[] ns = t.GetNeighbors();
+            foreach (Tile t2 in ns)
+            {
+                if (checkedTiles.Contains(t2))
+                {
+                    continue;
+                }
+
+                if (t2 == null)
+                {
+                    return null;
+                }
+
+                // We know t2 is not null nor is it an empty tile, so just make sure it
+                // hasn't already been processed and isn't a "wall" type tile.
+                if (t2.structure == null || t2.structure.canCreateRooms == false || t2.structure.canCreateRooms && !t2.structure.IsConstructed || t2.structure.IsDoor())
+                {
+                    tilesToCheck.Enqueue(t2);
+                }
+            }
+        }
+
+        return null;
+    }
+    
+    public static Job GetNextAvailableJob(Tile tile)
+    {
+        // There is only an outside room.
+        if (tile.world.rooms.Count == 1)
+        {
+            return tile.world.GetOutSideRoom().jobQueue.Dequeue();
+        }
+
+        List<Tile> checkedTiles = new List<Tile>();
+        List<Room> checkedRooms = new List<Room>();
+        Queue<Tile> tilesToCheck = new Queue<Tile>();
+        
+        tilesToCheck.Enqueue(tile);
+
+        while (checkedRooms.Count < tile.world.rooms.Count)
+        {
+            Tile t = null;
+            while (tilesToCheck.Count > 0)
+            {
+                t = tilesToCheck.Dequeue();
+
+                if (checkedTiles.Contains(t)) continue;
+
+                break;
+            }
+
+            checkedTiles.Add(t);
+
+            if (t.room != null && !checkedRooms.Contains(t.room))
+            {
+                checkedRooms.Add(t.room);
+                Job job = t.room.jobQueue.Dequeue();
+
+                if (job != null) return job;
+            }
+
+            Tile[] ns = t.GetNeighbors();
+            foreach (Tile t2 in ns)
+            {
+                if (checkedTiles.Contains(t2))
+                {
+                    continue;
+                }
+
+                if (t2 == null)
+                {
+                    return null;
+                }
+
+                // We know t2 is not null nor is it an empty tile, so just make sure it
+                // hasn't already been processed and isn't a "wall" type tile.
+                if (t2.structure.Type == ObjectType.Empty || !t2.structure.canCreateRooms || t2.structure.canCreateRooms && !t2.structure.IsConstructed || t2.structure.IsDoor() && t2.structure.IsConstructed)
+                {
+                    tilesToCheck.Enqueue(t2);
+                }
+            }
+        }
+
+        return null;
+    }
+
     #endregion
 }

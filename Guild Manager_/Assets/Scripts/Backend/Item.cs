@@ -97,6 +97,11 @@ public class Item
                 {
                     SendItemsToNeighbour(amount, type, tile);
                 }
+
+                if (parent.room != null)
+                {
+                    parent.room.AssignItemToRoom(this.Type, this.CurrentStackAmount);
+                }
             }
             return;
         }
@@ -118,9 +123,14 @@ public class Item
             }
 
             this.parent.item = this;
+
+            if (parent.room != null)
+            {
+                parent.room.AssignItemToRoom(this.Type, this.CurrentStackAmount);
+            }
         }
 
-        Character.itemsAreRefreshed = true;
+        if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
         this.relatedInventory = null;
 
         if (ItemChangedEvent == null)
@@ -166,8 +176,6 @@ public class Item
         int index = 1;
         while (amount > 0)
         {
-
-            Debug.Log(tile.x + " " + tile.y);
             for (int x = tile.x - index; x < tile.x + 1 + index; x++)
             {
                 for (int y = tile.y - index; y < tile.y + 1 + index; y++)
@@ -182,7 +190,7 @@ public class Item
                     {
                         Tile t = tile.world.GetTile(x, y);
 
-                        if (t.item == null || t.item.Type == type && t.item.CurrentStackAmount != t.item.maxStack)
+                        if (t.structure.Type == ObjectType.Empty && (t.item == null || t.item.Type == type && t.item.CurrentStackAmount != t.item.maxStack))
                         {
                             if (t.item == null)
                             {
@@ -190,6 +198,11 @@ public class Item
                             }
 
                             amount = t.item.TryAddingToStack(amount, type, t);
+
+                            if (t.room != null)
+                            {
+                                t.room.AssignItemToRoom(t.item.Type, t.item.currentStackAmount);
+                            }
                         }
                     }
 
@@ -222,6 +235,7 @@ public class Item
 
     public static Tile SearchForItem(string type, Tile tile)
     {
+
         List<Tile> checkedTiles = new List<Tile>();
         Queue<Tile> tilesToCheck = new Queue<Tile>();
         
@@ -260,7 +274,7 @@ public class Item
 
                     // We know t2 is not null nor is it an empty tile, so just make sure it
                     // hasn't already been processed and isn't a "wall" type tile.
-                    if (t2.structure == null || t2.structure.canCreateRooms == false || t2.structure.canCreateRooms && !t2.structure.IsConstructed)
+                    if (t2.structure == null || t2.structure.canCreateRooms == false || t2.structure.canCreateRooms && !t2.structure.IsConstructed || t2.structure.IsDoor())
                     {
                         tilesToCheck.Enqueue(t2);
                     }

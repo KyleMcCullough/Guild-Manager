@@ -39,9 +39,6 @@ public class Character
     Job parentJob;
     Job currentJob;
     static Thread tileGraphThread = null;
-    public static bool pathingIsRefreshed = false;
-    
-    public static bool itemsAreRefreshed = false;
 
     #endregion
 
@@ -57,7 +54,7 @@ public class Character
             // Gets new job.
             if (parentJob == null)
             {
-                currentJob = currTile.world.jobQueue.Dequeue();
+                currentJob = Room.GetNextAvailableJob(currTile);
             }
 
             if (currentJob != null || parentJob != null)
@@ -106,7 +103,10 @@ public class Character
                                 continue;
                             }
 
-                            searchedTile = Item.SearchForItem(requirement.material, this.currTile);
+                            if (currTile.room.ContainsItem(requirement.material))
+                            {
+                                searchedTile = Item.SearchForItem(requirement.material, this.currTile);
+                            }
 
                             // This means that the required material is reachable.
                             if (searchedTile != null) break;
@@ -148,14 +148,14 @@ public class Character
         {
             currentJob.UnregisterJobCancelCallback(OnJobEnded);
             currentJob.UnregisterJobCompleteCallback(OnJobEnded);
-            currTile.world.unreachableJobs.Add(currentJob);
+            currTile.room.unreachableJobs.Add(currentJob);
             currentJob = null;
         }
 
         // If there is a parent job assigned, add the parentJob to the list and delete the current job. It will be regenerated later.
         else if (parentJob != null)
         {
-            currTile.world.unreachableJobs.Add(parentJob);
+            currTile.room.unreachableJobs.Add(parentJob);
             currentJob = null;
             parentJob = null;
         }
@@ -259,19 +259,6 @@ public class Character
     public void Update(float deltaTime)
     {
 
-        // If there is a new pathing mesh or items, change all non-reachable jobs to canBeReached to check if it is now reachable.
-        if (pathingIsRefreshed || itemsAreRefreshed)
-        {
-            pathingIsRefreshed = false;
-            itemsAreRefreshed = false;
-
-            foreach (Job job in currTile.world.unreachableJobs)
-            {
-                currTile.world.jobQueue.Enqueue(job);
-            }
-            currTile.world.unreachableJobs = new List<Job>();
-        }
-
         Update_DoJob(deltaTime);
         Update_HandleMovement(deltaTime);
 
@@ -290,6 +277,7 @@ public class Character
 
     public void HaulingOnComplete()
     {
+        destTile.room.RemoveItemFromRoom(destTile.item.Type, destTile.item.CurrentStackAmount);
         this.inventory.AddItemFromTile(destTile.item);
     }
 
@@ -322,6 +310,12 @@ public class Character
 
     void OnJobEnded(Job job)
     {
+
+        //FIXME: Workaround for character getting glitched into non-traversable structure. Make smoother fix
+        if (currTile.structure.IsConstructed && currTile.structure.canCreateRooms)
+        {
+            currTile = currTile.GetClosestNeighborToGivenTile(currTile);
+        }
 
         // Called whether job was completed or cancelled.
         if (job != currentJob)

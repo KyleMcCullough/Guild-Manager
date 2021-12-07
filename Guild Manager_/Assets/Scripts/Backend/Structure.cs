@@ -229,7 +229,8 @@ public class Structure
             parent.world.InvalidateTileGraph();
         }
 
-        Character.pathingIsRefreshed = true;
+
+        if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
     }
 
     public void RemoveStructure()
@@ -264,10 +265,13 @@ public class Structure
             this.ReleaseRequiredTiles();
         }
 
-        
-        foreach (buildingRequirement item in this.GetTypeData(this.Type).itemsToDropOnDestroy)
+        // Drop items from the destruction if built
+        if (this.IsConstructed)
         {
-            this.parent.item = new Item(this.parent, item.material, item.amount);
+            foreach (buildingRequirement item in this.GetTypeData(this.Type).itemsToDropOnDestroy)
+            {
+                this.parent.item = new Item(this.parent, item.material, item.amount);
+            }
         }
 
         this.Type = prototype.Type;
@@ -277,7 +281,7 @@ public class Structure
             tile.structure.structureChangedEvent(tile.structure);
         }
 
-        Character.pathingIsRefreshed = true;
+        if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
     }
 
     static public Structure CreatePrototype(String type, string TypeCategory, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool canCreateRooms = false)
