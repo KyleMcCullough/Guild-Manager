@@ -330,8 +330,7 @@ public class Structure
                 for (int y = yPos; y < (yPos + height); y++)
                 {
                     Tile t = tile.world.GetTile(x, y);
-                    Debug.Log(t.x + "" + t.y);
-                    if (!Data.CheckIfTileIsWalkable(tile.Type) || t.structure.parentStructure != null || t.structure.overlappedStructureTiles != null)
+                    if (!Data.CheckIfTileIsWalkable(tile.Type) || t.structure.parentStructure != null || tile.structure.IsConstructed == true || t.structure.overlappedStructureTiles != null)
                     {
                         return false;
                     }
@@ -341,7 +340,7 @@ public class Structure
 
         else
         {
-            if (!Data.CheckIfTileIsWalkable(tile.Type) || tile.structure.parentStructure != null || tile.structure.overlappedStructureTiles != null) return false;
+            if (!Data.CheckIfTileIsWalkable(tile.Type) || tile.structure.parentStructure != null || tile.structure.IsConstructed == true || tile.structure.overlappedStructureTiles != null) return false;
         }
         return true;
     }
