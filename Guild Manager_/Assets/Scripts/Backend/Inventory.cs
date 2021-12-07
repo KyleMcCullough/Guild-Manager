@@ -105,22 +105,9 @@ public class Inventory
         return count;
     }
 
-    public bool ContainsRequiredMaterials(List<BuildingRequirements> requirements)
+    public bool ContainsRequiredMaterials(List<buildingRequirement> requirements)
     {
-        // int contains = 0;
-        // foreach (BuildingRequirements requirement in requirements)
-        // {
-        //     foreach (Item item in items.ToArray())
-        //     {
-        //         if (requirement.material == item.Type && item.CurrentStackAmount >= requirement.amount)
-        //         {
-        //             contains += 1;
-        //         }
-        //     }
-        // }
-        // return contains;
-
-        foreach (BuildingRequirements requirement in requirements)
+        foreach (buildingRequirement requirement in requirements)
         {
             int amount = GetCountOfItemInInventory(requirement.material);
 

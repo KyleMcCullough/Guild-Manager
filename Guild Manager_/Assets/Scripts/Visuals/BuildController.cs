@@ -49,12 +49,12 @@ public class BuildController : MonoBehaviour
             // Creates a new job with a queued wall object temporarily reserving the tile until
             // the job is completed or cancelled.
             WorldController.Instance.World.PlaceStructure(buildObject, tile, this.buildWidth, this.buildHeight, this.buildDirection);
-            WorldController.Instance.World.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.CompleteStructure(), Data.GetBuildingRequirements(buildObject)));
+            WorldController.Instance.World.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.CompleteStructure(), Data.GetbuildingRequirement(buildObject)));
 
         }
         else if (buildType == 2)
         {
-            tile.item = new Item(tile, "Wood", 50);
+            tile.item = new Item(tile, "Wood", 75);
         }
 
         else {

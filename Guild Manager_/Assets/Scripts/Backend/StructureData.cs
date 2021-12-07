@@ -8,13 +8,13 @@ public class StructureData
     public bool linksToNeighbours, canCreateRooms, rotates;
     public string[] relatedFunctions;
     public string[] relatedParameters;
-    public BuildingRequirements[] buildingRequirements;
+    public buildingRequirement[] buildingRequirement, itemsToDropOnDestroy;
 }
 
 [System.Serializable]
-public class BuildingRequirements
+public class buildingRequirement
 {
-    public BuildingRequirements(string material, int amount)
+    public buildingRequirement(string material, int amount)
     {
         this.material = material;
         this.amount = amount;

@@ -31,7 +31,7 @@ public static class Data
             structureTypes.Add(data.name);
         }
 
-        GetBuildingRequirements("Wood_Door");
+        GetbuildingRequirement("Wood_Door");
 
         json = File.ReadAllText(Application.dataPath + "/Resources/images/Tiles/details.json");
         Data.tiles = JsonUtility.FromJson<TileDataArray>(json);
@@ -141,15 +141,15 @@ public static class Data
         return false;
     }
 
-    public static List<BuildingRequirements> GetBuildingRequirements(string type)
+    public static List<buildingRequirement> GetbuildingRequirement(string type)
     {
 
         if (structureTypes.Contains(type))
         {
-            return new List<BuildingRequirements>(structureData[type].buildingRequirements);
+            return new List<buildingRequirement>(structureData[type].buildingRequirement);
         }
 
-        Debug.LogError("GetBuildingRequirements - An invalid type was given.");
+        Debug.LogError("GetbuildingRequirement - An invalid type was given.");
         return null;
     }
 }

@@ -97,7 +97,7 @@ public class Character
                         Tile searchedTile = null;
 
                         // Checks each requirement and scan the world to see if the item exists.
-                        foreach (BuildingRequirements requirement in this.parentJob.requiredMaterials)
+                        foreach (buildingRequirement requirement in this.parentJob.requiredMaterials)
                         {
                             
                             if (inventory.GetCountOfItemInInventory(requirement.material) >= requirement.amount)

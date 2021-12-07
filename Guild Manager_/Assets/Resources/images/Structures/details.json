@@ -36,7 +36,7 @@
             "rotates": false,
             "relatedParameters": [],
             "relatedFunctions": [],
-            "buildingRequirements": []
+            "buildingRequirement": []
         },
 
         {
@@ -51,7 +51,8 @@
             "rotates": true,
             "relatedParameters": [],
             "relatedFunctions": [],
-            "buildingRequirements": []
+            "buildingRequirement": [],
+            "itemsToDropOnDestroy": []
         },
 
         {
@@ -65,7 +66,8 @@
             "placementMode": 2,
             "relatedParameters": [],
             "relatedFunctions": [],
-            "buildingRequirements": [{"material": "Wood", "amount": 50}]
+            "buildingRequirement": [{"material": "Wood", "amount": 50}],
+            "itemsToDropOnDestroy": [{"material": "Wood", "amount": 25}]
         },
 
         {
@@ -84,7 +86,8 @@
                 "doorOpenTime", 0.25
             ],
             "relatedFunctions": ["Update_Door"],
-            "buildingRequirements": [{"material": "Wood", "amount": 125}]
+            "buildingRequirement": [{"material": "Wood", "amount": 125}],
+            "itemsToDropOnDestroy": [{"material": "Wood", "amount": 50}]
         },
 
         {
@@ -99,7 +102,8 @@
             "rotates": false,
             "relatedParameters": [],
             "relatedFunctions": [],
-            "buildingRequirements": []
+            "buildingRequirement": [],
+            "itemsToDropOnDestroy": [{"material": "Wood", "amount": 150}]
         },
 
         {
@@ -114,7 +118,8 @@
             "rotates": false,
             "relatedParameters": [],
             "relatedFunctions": [],
-            "buildingRequirements": []
+            "buildingRequirement": [],
+            "itemsToDropOnDestroy": []
         }
     ]
 }

@@ -64,8 +64,11 @@ public class Item
     public Item(Tile parent, string type, int currentStackAmount)
     {
         AssignParent(parent, currentStackAmount, type);
-        this.Type = type;
-        this.currentStackAmount = currentStackAmount;
+        
+        if (ItemChangedEvent != null)
+        {
+            ItemChangedEvent(this);
+        }
     }
 
     public Item(string type, int currentStackAmount, Inventory relatedInventory)
@@ -87,10 +90,9 @@ public class Item
             }
 
             else
-
             {
                 amount = TryAddingToStack(amount, type, tile);
-
+                Debug.Log(amount);
                 if (amount > 0)
                 {
                     SendItemsToNeighbour(amount, type, tile);
@@ -102,6 +104,19 @@ public class Item
         else
         {
             this.parent = tile;
+            this.type = type;
+
+            if (amount > maxStack)
+            {
+                this.currentStackAmount = maxStack;
+                SendItemsToNeighbour(amount - this.currentStackAmount, type, tile);
+            }
+
+            else
+            {
+                this.currentStackAmount = amount;
+            }
+
             this.parent.item = this;
         }
 
@@ -118,7 +133,7 @@ public class Item
     int TryAddingToStack(int amountToAdd, string type, Tile tile)
     {
 
-        if (this.Type == type || this.Type == ItemType.Empty && (tile.structure == null || !tile.structure.canCreateRooms))
+        if (this.Type == type || this.Type == ItemType.Empty && (tile.structure == null || tile.structure.Type == ObjectType.Empty))
         {
             this.Type = type;
         }

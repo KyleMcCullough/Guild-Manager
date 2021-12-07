@@ -11,9 +11,9 @@ public class Job
 
     Action<Job> jobFinished;
     Action<Job> jobCancelled;
-    public List<BuildingRequirements> requiredMaterials;
+    public List<buildingRequirement> requiredMaterials;
 
-    public Job(Tile tile, Action<Job> jobFinished, List<BuildingRequirements> requiredMaterials = null, float jobTime = 0.1f) {
+    public Job(Tile tile, Action<Job> jobFinished, List<buildingRequirement> requiredMaterials = null, float jobTime = 0.1f) {
         this.tile = tile;
         this.jobFinished += jobFinished;
         this.jobTime = jobTime;
@@ -21,7 +21,7 @@ public class Job
         if (requiredMaterials != null)
         {
             // Hard copies building requirements.
-            this.requiredMaterials = requiredMaterials.ConvertAll(material => new BuildingRequirements(material.material, material.amount));
+            this.requiredMaterials = requiredMaterials.ConvertAll(material => new buildingRequirement(material.material, material.amount));
         }
 
         else
@@ -56,7 +56,7 @@ public class Job
 
     public int GiveMaterial(string material, int amount)
     {
-        foreach (BuildingRequirements requirement in this.requiredMaterials)
+        foreach (buildingRequirement requirement in this.requiredMaterials)
         {
             if (requirement.material == material)
             {
@@ -88,7 +88,7 @@ public class Job
 
     public bool IsRequiredType(string type)
     {
-        foreach (BuildingRequirements requirement in this.requiredMaterials.ToArray())
+        foreach (buildingRequirement requirement in this.requiredMaterials.ToArray())
         {
             if (requirement.material == type)
             {

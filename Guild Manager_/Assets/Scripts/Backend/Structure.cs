@@ -95,6 +95,11 @@ public class Structure
         }
     }
 
+    public StructureData GetTypeData(string type)
+    {
+        return Data.GetStructureData(type);
+    }
+
     public bool PlaceStructure(Structure prototype, int width, int height, Facing buildDirection)
     {
         if (!this.IsValidPosition(this.parent, buildDirection, width, height))
@@ -246,7 +251,6 @@ public class Structure
 
         this.optionalParameters = prototype.optionalParameters;
         this.linksToNeighbour = prototype.linksToNeighbour;
-        this.Type = prototype.Type;
         this.movementCost = prototype.movementCost;
         this.TypeCategory = prototype.TypeCategory;
         this.canCreateRooms = prototype.canCreateRooms;
@@ -259,6 +263,14 @@ public class Structure
         {
             this.ReleaseRequiredTiles();
         }
+
+        
+        foreach (buildingRequirement item in this.GetTypeData(this.Type).itemsToDropOnDestroy)
+        {
+            this.parent.item = new Item(this.parent, item.material, item.amount);
+        }
+
+        this.Type = prototype.Type;
 
         foreach (Tile tile in this.parent.GetNeighbors())
         {
