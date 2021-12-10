@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
-public class Tile
+public class Tile : IXmlSerializable
 {
     public int x, y;
     Action<Tile> tileChangedEvent;
@@ -50,12 +53,13 @@ public class Tile
         }
     }
 
-    public Tile(int x, int y, World world)
+    public Tile(int x, int y, World world, Room outside)
     {
         this.x = x;
         this.y = y;
         this.structure = new Structure(this);
         this.world = world;
+        this.room = outside;
     }
 
     public void RegisterTileChangedDelegate(Action<Tile> callback)
@@ -305,4 +309,25 @@ public class Tile
     }
 
     #endregion
+
+
+    #region Saving/Loading
+    public XmlSchema GetSchema()
+    {
+        return null;
+    }
+
+    public void ReadXml(XmlReader reader)
+    {
+        Type = reader.GetAttribute("type");
+    }
+
+    public void WriteXml(XmlWriter writer)
+    {
+		writer.WriteAttributeString( "x", x.ToString());
+		writer.WriteAttributeString( "y", y.ToString());
+		writer.WriteAttributeString("type", Type);
+    }
+    #endregion
+
 }

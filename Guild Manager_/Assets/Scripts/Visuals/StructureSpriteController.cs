@@ -18,7 +18,7 @@ public class StructureSpriteController : MonoBehaviour
 
 
     // Start is called before the first frame update
-    void Start()
+    void OnEnable()
     {
 
         structureSprites = new Dictionary<string, Sprite>();
@@ -33,7 +33,6 @@ public class StructureSpriteController : MonoBehaviour
         }
 
         world.RegisterStructureChanged(OnStructureChanged);
-        RefreshAllStructures();
     }
 
     void OnStructureChanged(Structure structure)
@@ -45,10 +44,6 @@ public class StructureSpriteController : MonoBehaviour
     public void AssignSprite(Structure obj)
     {
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-
-        // Quaternion rotation = Quaternion.Euler(0f, 0f, 0f);
-
-        //TODO: Will need seperate sprites for horizontal vs vertical ones. 
 
         string trailing = obj.facingDirection.ToString();
         int posX = obj.parent.x;
@@ -70,61 +65,7 @@ public class StructureSpriteController : MonoBehaviour
             return;
         }
 
-        if (!obj.linksToNeighbour)
-        {
-            if (Data.GetStructureData(obj.Type).rotates)
-            {
-                t.sprite = structureSprites[obj.Type + "_" + trailing];
-            }
-
-            else
-            {
-                t.sprite = structureSprites[obj.Type + "_"];
-            }
-            
-
-            tilemap.SetTile(new Vector3Int(posX, posY, 0), t);
-            // tilemap.SetTransformMatrix(new Vector3Int(obj.parent.x, obj.parent.y, 0), Matrix4x4.TRS(Vector3.zero, rotation, Vector3.one));
-            return;
-        }
-
-        string spriteName = obj.Type + "_";
-
-        // Check for neighbours North, East, South, West.
-        Tile tile;
-
-        int x = obj.parent.x;
-        int y = obj.parent.y;
-
-        tile = world.GetTile(x, y + 1);
-        if (tile != null && tile.structure != null && tile.structure.Type == obj.Type)
-        {
-            spriteName += "N";
-        }
-
-        tile = world.GetTile(x + 1, y);
-        if (tile != null && tile.structure != null && tile.structure.Type == obj.Type)
-        {
-            spriteName += "E";
-        }
-
-        tile = world.GetTile(x, y - 1);
-        if (tile != null && tile.structure != null && tile.structure.Type == obj.Type)
-        {
-            spriteName += "S";
-        }
-
-        tile = world.GetTile(x - 1, y);
-        if (tile != null && tile.structure != null && tile.structure.Type == obj.Type)
-        {
-            spriteName += "W";
-        }
-
-        if (!structureSprites.ContainsKey(spriteName))
-        {
-            Debug.LogWarning("GetSprite - no sprite with name " + spriteName + " is found.");
-            t.sprite = structureSprites[obj.Type.ToString() + "_"];
-        }
+        string spriteName = GetSpriteName(obj);
 
         t.sprite = structureSprites[spriteName];
         tilemap.SetTile(new Vector3Int(obj.parent.x, obj.parent.y, 0), t);
@@ -137,6 +78,60 @@ public class StructureSpriteController : MonoBehaviour
         }
     }
 
+    public string GetSpriteName(Structure structure)
+    {
+        if (!structure.linksToNeighbour)
+        {
+            if (Data.GetStructureData(structure.Type).rotates)
+            {
+                return structure.Type + "_" + structure.facingDirection.ToString();;
+            }
+
+            else
+            {
+                return structure.Type + "_";
+            }
+        }
+
+        Tile tile;
+        string spriteName = structure.Type + "_";
+
+        int x = structure.parent.x;
+        int y = structure.parent.y;
+
+        tile = world.GetTile(x, y + 1);
+        if (tile != null && tile.structure != null && tile.structure.Type == structure.Type)
+        {
+            spriteName += "N";
+        }
+
+        tile = world.GetTile(x + 1, y);
+        if (tile != null && tile.structure != null && tile.structure.Type == structure.Type)
+        {
+            spriteName += "E";
+        }
+
+        tile = world.GetTile(x, y - 1);
+        if (tile != null && tile.structure != null && tile.structure.Type == structure.Type)
+        {
+            spriteName += "S";
+        }
+
+        tile = world.GetTile(x - 1, y);
+        if (tile != null && tile.structure != null && tile.structure.Type == structure.Type)
+        {
+            spriteName += "W";
+        }
+
+        if (!structureSprites.ContainsKey(spriteName))
+        {
+            Debug.LogWarning("GetSprite - no sprite with name " + spriteName + " is found.");
+            return structure.Type.ToString() + "_";
+        }
+
+        return spriteName;
+    }
+
     public void RefreshAllStructures()
     {
 
@@ -146,19 +141,13 @@ public class StructureSpriteController : MonoBehaviour
             {
                 Structure structure = world.GetTile(x, y).structure;
 
-                if (structure == null) continue;
-
-                UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-
-                if (structure.Type == ObjectType.Empty)
+                if (structure == null || structure.Type == ObjectType.Empty || structure.Type == null)
                 {
                     tilemap.SetTile(new Vector3Int(structure.parent.x, structure.parent.y, 0), null);
                     continue;
                 }
 
-                t.sprite = structureSprites[structure.Type + "_"];
-
-                tilemap.SetTile(new Vector3Int(structure.parent.x, structure.parent.y, 0), t);
+                AssignSprite(structure);
             }
         }
     }

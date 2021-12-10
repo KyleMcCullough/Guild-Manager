@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Threading;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
-public class Structure
+public class Structure : IXmlSerializable
 {
     #region variables
     public Tile parent;
@@ -100,9 +103,11 @@ public class Structure
         return Data.GetStructureData(type);
     }
 
-    public bool PlaceStructure(Structure prototype, int width, int height, Facing buildDirection)
+    public bool PlaceStructure(Structure prototype, int width, int height, Facing buildDirection, bool constructed = true, bool addOptionalParameters = true)
     {
-        if (!this.IsValidPosition(this.parent, buildDirection, width, height))
+
+        // Checks if position is valid and the structure is not constructed. Constructed structures are only given when loaded and don't need validation.
+        if (!this.IsValidPosition(this.parent, buildDirection, width, height) && !constructed)
         {
             return false;
         }
@@ -126,8 +131,12 @@ public class Structure
             this.AssignActions((Action<Structure, float>)prototype.updateActions.Clone());
         }
 
-        this.optionalParameters = prototype.optionalParameters;
-        this.IsConstructed = false;
+        if (addOptionalParameters)
+        {
+            this.optionalParameters = prototype.optionalParameters;
+        }
+
+        this.IsConstructed = constructed;
         this.linksToNeighbour = prototype.linksToNeighbour;
         this.movementCost = prototype.movementCost;
         this.TypeCategory = prototype.TypeCategory;
@@ -144,6 +153,12 @@ public class Structure
                 }
             }
         }
+
+        if (!this.parent.world.structures.Contains(this))
+        {
+            this.parent.world.structures.Add(this);
+        }
+
         return true;
     }
 
@@ -243,6 +258,7 @@ public class Structure
             return;
         }
 
+        this.parent.world.structures.Remove(this);
         Structure prototype = this.parent.world.structurePrototypes[ObjectType.Empty];
 
         if (this.updateActions != null)
@@ -279,6 +295,11 @@ public class Structure
         foreach (Tile tile in this.parent.GetNeighbors())
         {
             tile.structure.structureChangedEvent(tile.structure);
+        }
+
+        if (this.parent.world.structures.Contains(this))
+        {
+            this.parent.world.structures.Remove(this);
         }
 
         if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
@@ -406,4 +427,104 @@ public class Structure
         structure.parentStructure = this;
         structure.overlappedStructureTiles = null;
     }
+
+    #region Saving/Loading
+    public XmlSchema GetSchema()
+    {
+        return null;
+    }
+
+    public void ReadXml(XmlReader reader)
+    {
+        Type = reader.GetAttribute("type");
+        width = int.Parse(reader.GetAttribute("width"));
+        height = int.Parse(reader.GetAttribute("height"));
+
+        if (reader.GetAttribute("keys") != null && reader.GetAttribute("values") != null)
+        {
+
+            optionalParameters = new Dictionary<string, object>();
+            string[] keys = reader.GetAttribute("keys").Split('/');
+            string[] values = reader.GetAttribute("values").Split('/');
+
+            for (int i = 0; i < keys.Length; i++)
+            {
+                if (keys[i] == "" || values[i] == "") continue;
+
+                optionalParameters.Add(keys[i], Data.CastToCorrectType(values[i]));
+            }
+        }
+
+        // Load structure parent
+        if (reader.GetAttribute("xParent") != null && reader.GetAttribute("yParent") != null)
+        {
+            this.parentStructure = this.parent.world.GetTile(int.Parse(reader.GetAttribute("xParent")), int.Parse(reader.GetAttribute("yParent"))).structure;
+        }
+
+        // Load reserved structure tiles
+        if (reader.GetAttribute("xOverlappedCoords") != null && reader.GetAttribute("yOverlappedCoords") != null)
+        {
+            string[] xTileCoords = reader.GetAttribute("xOverlappedCoords").Split('/');
+            string[] yTileCoords = reader.GetAttribute("yOverlappedCoords").Split('/');
+
+                for (int i = 0; i < xTileCoords.Length; i++)
+                {
+                    if (xTileCoords[i] == "" || xTileCoords[i] == "") continue;
+
+                    overlappedStructureTiles.Add(this.parent.world.GetTile(int.Parse(xTileCoords[i]), int.Parse(yTileCoords[i])));
+                }
+        }
+
+    }
+
+	public void WriteXml(XmlWriter writer) {
+		writer.WriteAttributeString("x", parent.x.ToString());
+		writer.WriteAttributeString("y", parent.y.ToString());
+        writer.WriteAttributeString("width", width.ToString());
+		writer.WriteAttributeString("height", height.ToString());
+		writer.WriteAttributeString("type", Type);
+        writer.WriteAttributeString("IsConstructed", IsConstructed.ToString());
+        writer.WriteAttributeString("FacingDirection", facingDirection.ToString());
+
+        // Save parent structure
+        if (this.parentStructure != null)
+        {
+            writer.WriteAttributeString("xParent", parentStructure.parent.x.ToString());
+		    writer.WriteAttributeString("yParent", parentStructure.parent.y.ToString());
+        }
+
+        // Save overlapped structures
+        if (this.overlappedStructureTiles != null)
+        {
+            string xTileCoords = "";
+            string yTileCoords = "";
+
+            foreach (Tile t in this.overlappedStructureTiles)
+            {
+                xTileCoords += t.x + "/";
+                yTileCoords += t.y + "/";
+            }
+
+            writer.WriteAttributeString("xOverlappedCoords", xTileCoords);
+            writer.WriteAttributeString("yOverlappedCoords", yTileCoords);
+        }
+
+        // Save optional parameters
+        if (this.optionalParameters != null)
+        {
+            string keys = "";
+            string values = "";
+
+            foreach (string item in optionalParameters.Keys)
+            {
+                keys += item + "/";
+                values += optionalParameters[item] + "/";
+            }
+
+            writer.WriteAttributeString("keys", keys);
+		    writer.WriteAttributeString("values", values);
+
+        }
+	}
+    #endregion
 }

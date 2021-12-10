@@ -22,6 +22,9 @@ public static class Data
 
     public static void LoadData()
     {
+
+        if (structureData.Count != 0 || tileData.Count != 0 || itemData.Count != 0) return;
+
         string json = File.ReadAllText(Application.dataPath + "/Resources/images/Structures/details.json");
         Data.structures = JsonUtility.FromJson<StructureDataArray>(json);
 
@@ -30,8 +33,6 @@ public static class Data
             structureData.Add(data.name, data);
             structureTypes.Add(data.name);
         }
-
-        GetbuildingRequirement("Wood_Door");
 
         json = File.ReadAllText(Application.dataPath + "/Resources/images/Tiles/details.json");
         Data.tiles = JsonUtility.FromJson<TileDataArray>(json);

@@ -18,7 +18,7 @@ public class ItemSpriteController : MonoBehaviour
 
 
     // Start is called before the first frame update
-    void Start()
+    void OnEnable()
     {
 
         itemSprites = new Dictionary<string, Sprite>();
@@ -36,11 +36,6 @@ public class ItemSpriteController : MonoBehaviour
 
     void OnItemChanged(Item item)
     {
-
-        // TileBase mapTile = tilemap.GetTile(new Vector3Int(tile.x, tile.y, 0);
-
-        // Trys to get the tile object from the tile data. Continues if it can sucessfully find and assign it.
-
         //TODO: Apply random rotation to item sprites to make it better visually.
         if (item.Type == ObjectType.Empty)
         {

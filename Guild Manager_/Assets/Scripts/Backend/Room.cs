@@ -249,9 +249,12 @@ public class Room
             //     oldRoom.tiles.Remove(source.parent);
             // }
 
-            foreach (var entry in oldRoom.itemsInRoom)
+            if (oldRoom != null && oldRoom.itemsInRoom.Count > 0)
             {
-                source.parent.room.AssignItemToRoom(entry.Key, entry.Value);
+                foreach (var entry in oldRoom.itemsInRoom)
+                {
+                    source.parent.room.AssignItemToRoom(entry.Key, entry.Value);
+                }
             }
 
             if (oldRoom != null && oldRoom.tiles.Count > 0)
@@ -306,64 +309,6 @@ public class Room
         // Tell the world that a new room has been formed.
         tile.world.AddRoom(newRoom);
     }
-    
-    public static Room GetNextRoom(Tile tile, List<Room> excludedRooms)
-    {
-
-        // There is only an outside room.
-        if (tile.world.rooms.Count == 1)
-        {
-            return null;
-        }
-
-        List<Tile> checkedTiles = new List<Tile>();
-        Queue<Tile> tilesToCheck = new Queue<Tile>();
-        
-        tilesToCheck.Enqueue(tile);
-
-        while (tilesToCheck.Count > 0)
-        {
-            Tile t = null;
-            while (tilesToCheck.Count > 0)
-            {
-                t = tilesToCheck.Dequeue();
-
-                if (checkedTiles.Contains(t)) continue;
-
-                break;
-            }
-            
-            if (t == null) return null;
-
-            checkedTiles.Add(t);
-
-            if (t.room != null && t.room != tile.room && !excludedRooms.Contains(t.room)) return t.room;
-
-            Tile[] ns = t.GetNeighbors();
-            foreach (Tile t2 in ns)
-            {
-                if (checkedTiles.Contains(t2))
-                {
-                    continue;
-                }
-
-                if (t2 == null)
-                {
-                    return null;
-                }
-
-                // We know t2 is not null nor is it an empty tile, so just make sure it
-                // hasn't already been processed and isn't a "wall" type tile.
-                if (t2.structure == null || t2.structure.canCreateRooms == false || t2.structure.canCreateRooms && !t2.structure.IsConstructed || t2.structure.IsDoor())
-                {
-                    tilesToCheck.Enqueue(t2);
-                }
-            }
-        }
-
-        return null;
-    }
-    
     public static Job GetNextAvailableJob(Tile tile)
     {
         // There is only an outside room.

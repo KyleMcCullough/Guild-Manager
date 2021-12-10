@@ -8,6 +8,7 @@ public class JobQueue
 
     Queue<Job> jobQueue;
     Action<Job> jobCreated;
+    public int Count {private set; get; } = 0;
 
     public JobQueue()
     {
@@ -23,6 +24,7 @@ public class JobQueue
             return;
         }
         jobQueue.Enqueue(job);
+        Count++;
 
         if (jobCreated != null) {
             jobCreated(job);
@@ -36,6 +38,20 @@ public class JobQueue
     public Job Dequeue() {
 
         if (jobQueue.Count == 0) return null;
+
+        Count--;
         return jobQueue.Dequeue();
+    }
+
+    public List<Job> ToArray()
+    {
+        List<Job> jobs = new List<Job>();
+
+        while (this.Count > 0)
+        {
+            jobs.Add(this.Dequeue());
+        }
+
+        return jobs;
     }
 }

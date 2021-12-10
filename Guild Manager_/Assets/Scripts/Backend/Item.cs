@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
-public class Item
+public class Item : IXmlSerializable
 {
     public Tile parent = null;
     public Action<Item> ItemChangedEvent { get; protected set; } = null;
@@ -26,7 +29,7 @@ public class Item
             // If there are no contents to the item stack, destroy it.
             if (value == 0)
             {
-                this.Type = ItemType.Empty;
+                this.Type = ObjectType.Empty;
                 this.DeleteItem();
             }
 
@@ -36,7 +39,7 @@ public class Item
             }
         }
     }
-    public string type = ItemType.Empty;
+    public string type = ObjectType.Empty;
 
     public string Type
     {
@@ -92,6 +95,7 @@ public class Item
             else
             {
                 amount = TryAddingToStack(amount, type, tile);
+                
                 Debug.Log(amount);
                 if (amount > 0)
                 {
@@ -128,22 +132,23 @@ public class Item
             {
                 parent.room.AssignItemToRoom(this.Type, this.CurrentStackAmount);
             }
+
+            if (ItemChangedEvent == null)
+            {
+                ItemChangedEvent += this.parent.world.itemChangedEvent;
+            }
         }
 
         if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
         this.relatedInventory = null;
 
-        if (ItemChangedEvent == null)
-        {
-            ItemChangedEvent += this.parent.world.itemChangedEvent;
-        }
     }
 
     // Tries adding to a stack. Returns the amount that can't be added due to limit.
     int TryAddingToStack(int amountToAdd, string type, Tile tile)
     {
 
-        if (this.Type == type || this.Type == ItemType.Empty && (tile.structure == null || tile.structure.Type == ObjectType.Empty))
+        if (this.Type == type || this.Type == ObjectType.Empty && (tile.structure == null || tile.structure.Type == ObjectType.Empty))
         {
             this.Type = type;
         }
@@ -282,5 +287,26 @@ public class Item
         }
 
         return null;
+    }
+
+    public void SetItemChanged(Action<Item> callback)
+    {
+        this.ItemChangedEvent = callback;
+    }
+
+    public XmlSchema GetSchema()
+    {
+        return null;
+    }
+
+    public void ReadXml(XmlReader reader)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void WriteXml(XmlWriter writer)
+    {
+        writer.WriteAttributeString("itemType", this.type);
+        writer.WriteAttributeString("amount", this.CurrentStackAmount.ToString());
     }
 }

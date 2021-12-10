@@ -3,8 +3,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
-public class Job
+public class Job : IXmlSerializable
 {
     public Tile tile {get; protected set;}
     float jobTime;
@@ -12,11 +15,13 @@ public class Job
     Action<Job> jobFinished;
     Action<Job> jobCancelled;
     public List<buildingRequirement> requiredMaterials;
+    public JobType jobType {private set; get; }
 
-    public Job(Tile tile, Action<Job> jobFinished, List<buildingRequirement> requiredMaterials = null, float jobTime = 0.1f) {
+    public Job(Tile tile, Action<Job> jobFinished, JobType jobType, List<buildingRequirement> requiredMaterials = null, float jobTime = 0.1f) {
         this.tile = tile;
         this.jobFinished += jobFinished;
         this.jobTime = jobTime;
+        this.jobType = jobType;
 
         if (requiredMaterials != null)
         {
@@ -102,5 +107,35 @@ public class Job
         if (jobCancelled != null) {
             jobCancelled(this);
         }
+    }
+
+    public XmlSchema GetSchema()
+    {
+        return null;
+    }
+
+    public void ReadXml(XmlReader reader)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void WriteXml(XmlWriter writer)
+    {
+        writer.WriteAttributeString("x", tile.x.ToString());
+		writer.WriteAttributeString("y", tile.y.ToString());
+        writer.WriteAttributeString("jobTime", this.jobTime.ToString());
+        writer.WriteAttributeString("jobType", this.jobType.ToString());
+
+        string itemString = "";
+        string amounts = "";
+
+        foreach (buildingRequirement item in requiredMaterials)
+        {
+            itemString += item.material + "/";
+            amounts += item.amount + "/";
+        }
+
+        writer.WriteAttributeString("items", itemString);
+        writer.WriteAttributeString("amounts", amounts);
     }
 }

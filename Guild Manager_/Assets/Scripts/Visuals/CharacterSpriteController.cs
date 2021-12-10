@@ -14,7 +14,7 @@ public class CharacterSpriteController : MonoBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
+    void OnEnable()
     {
         characterGameObjects = new Dictionary<Character, GameObject>();
         characterSprites = new Dictionary<string, Sprite>();
@@ -27,11 +27,6 @@ public class CharacterSpriteController : MonoBehaviour
         }
 
         world.RegisterCharacterCreated(OnCharacterCreated);
-        // world.RegisterInstallObject(OnCharacterCreated);
-
-        Character c = world.CreateCharacter(world.GetTile(world.width / 2, world.height / 2));
-
-        // c.SetDestination(world.GetTileAt(world.width / 2 + 5, world.height / 2));
     }
 
     // Update is called once per frame
@@ -42,8 +37,6 @@ public class CharacterSpriteController : MonoBehaviour
 
     public void OnCharacterCreated(Character character)
     {
-        // Creates a game object linked to tile.
-        //FIxME: Doesn't consider multi-tile objects or rotated objects.
 
         GameObject obj = new GameObject();
         obj.name = "Character";

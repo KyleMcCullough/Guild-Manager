@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
-public class Inventory
+public class Inventory : IXmlSerializable
 {
     int maxSlots
     {
@@ -114,5 +117,30 @@ public class Inventory
             if (amount < requirement.amount) return false;
         }
         return true;
+    }
+
+    public XmlSchema GetSchema()
+    {
+        return null;
+    }
+
+    public void ReadXml(XmlReader reader)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void WriteXml(XmlWriter writer)
+    {
+        string itemString = "";
+        string amounts = "";
+
+        foreach (Item item in items)
+        {
+            itemString += item.Type + "/";
+            amounts += item.CurrentStackAmount + "/";
+        }
+
+        writer.WriteAttributeString("items", itemString);
+        writer.WriteAttributeString("amounts", amounts);
     }
 }

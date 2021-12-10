@@ -3,8 +3,11 @@ using System.Threading;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
-public class Character
+public class Character : IXmlSerializable
 {
     public float x
     {
@@ -23,7 +26,7 @@ public class Character
     }
 
     #region Character variables
-    Inventory inventory = new Inventory();
+    public Inventory inventory = new Inventory();
 
     #endregion
 
@@ -86,7 +89,7 @@ public class Character
                     // If the character's inventory is full, or has all the required materials, haul to the construction site.
                     else if (inventory.isFull || inventory.ContainsRequiredMaterials(parentJob.requiredMaterials))
                     {
-                        this.currentJob = new Job(this.parentJob.tile, (theJob) => this.HaulToConstructionComplete(), null);
+                        this.currentJob = new Job(this.parentJob.tile, (theJob) => this.HaulToConstructionComplete(), JobType.Hauling, null);
                     }
 
                     else
@@ -119,7 +122,7 @@ public class Character
                             return;
                         }
 
-                        this.currentJob = new Job(searchedTile, (theJob) => this.HaulingOnComplete(), null);
+                        this.currentJob = new Job(searchedTile, (theJob) => this.HaulingOnComplete(), JobType.Hauling, null);
                     }
                 }
 
@@ -326,4 +329,42 @@ public class Character
 
         currentJob = null;
     }
+
+    public Job GetActiveJob()
+    {
+        if (parentJob != null) return parentJob;
+        else if (currentJob != null) return currentJob;
+
+        return null;
+    }
+
+    
+    #region Saving/Loading
+	public XmlSchema GetSchema() {
+		return null;
+	}
+
+	public void WriteXml(XmlWriter writer) {
+		writer.WriteAttributeString("x", currTile.x.ToString());
+		writer.WriteAttributeString("y", currTile.y.ToString());
+	}
+
+	public void ReadXml(XmlReader reader) 
+    {
+        if (reader.GetAttribute("items") != null && reader.GetAttribute("amounts") != null)
+        {
+            string[] items = reader.GetAttribute("items").Split('/');
+            string[] amounts = reader.GetAttribute("amounts").Split('/');
+
+            // Get all saved inventory items and add them.
+            for (int i = 0; i < items.Length; i++)
+            {
+                if (items[i] == "" || int.Parse(amounts[i]) == 0) continue;
+
+                inventory.AddItem(items[i], int.Parse(amounts[i]));
+            }
+        }
+	}
+
+    #endregion
 }

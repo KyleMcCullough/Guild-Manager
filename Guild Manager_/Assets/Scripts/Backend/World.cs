@@ -1,44 +1,81 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
+
 using UnityEngine;
 
-public class World
+public class World : IXmlSerializable
 {
     // Day, month, year.
-    int[] date;
-    List<Character> characters;
-    Tile[,] tiles;
-    public int width { get; }
-    public int height { get; }
-    public Dictionary<string, Structure> structurePrototypes { get; protected set; }
-    Action<Character> characterCreated;
-    Action<Tile> tileChangedEvent;
-    Action<Structure> structureChangedEvent;
-    public Action<Item> itemChangedEvent;
-    public Path_TileGraph tileGraph;
-    public List<Tile> updatingTiles;
-    public List<Structure> updatingStructures;
-    public List<Room> rooms;
     float worldTime = 0;
+    int[] date;
+    public int height;
+    public int width;
+
+    #region Collections
+
+    Action<Character> characterCreated;
+    Action<Structure> structureChangedEvent;
+    Action<Tile> tileChangedEvent;
+    List<Character> characters;
+    List<Character> queuedCharactersToCreate;
+    List<Item> queuedItemsToCreate;
+    Tile[,] tiles;
+    public Action<Item> itemChangedEvent;
+    public Dictionary<string, Structure> structurePrototypes { get; protected set; }
+    public List<Room> rooms;
+    public List<Structure> structures;
+    public List<Structure> updatingStructures;
+    public Path_TileGraph tileGraph;
+    #endregion
 
     public World(int width, int height)
     {
-        this.width = width;
+        SetupWorld(width, height);
+    }
+
+    void SetupWorld(int width, int height, bool generateWorld = true)
+    {
+
+        // Instantiating lists
+        this.characters = new List<Character>();
+        this.queuedCharactersToCreate = new List<Character>();
+        this.queuedItemsToCreate = new List<Item>();
+        this.rooms = new List<Room>();
+        this.structures = new List<Structure>();
+        this.updatingStructures = new List<Structure>();
+
         this.height = height;
+        this.width = width;
 
         date = new int[] { 1, 1, 1253 };
         tiles = new Tile[width, height];
         structurePrototypes = new Dictionary<string, Structure>();
-        updatingStructures = new List<Structure>();
-        rooms = new List<Room>();
         rooms.Add(new Room());
-        updatingTiles = new List<Tile>();
 
         Data.LoadData();
         GeneratePrototypes();
-        GenerateWorld(UnityEngine.Random.Range(1, 10000).GetHashCode());
-        characters = new List<Character>();
+
+        // Generate tiles
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+
+                tiles[x, y] = new Tile(x, y, this, GetOutSideRoom());
+                tiles[x, y].RegisterTileChangedDelegate(OnTileChanged);
+                tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
+            }
+        }
+
+        if (generateWorld) 
+        {
+            GenerateWorld(UnityEngine.Random.Range(1, 10000).GetHashCode());
+            CreateCharacter(GetTile(width / 2, height / 2));
+        }
     }
 
     public void Update(float deltaTime)
@@ -98,7 +135,15 @@ public class World
         characters.Add(c);
 
         if (characterCreated != null)
+        {
             characterCreated(c);
+        }
+
+        // If Character cannot be visually created, add it to the queue to create once ready.
+        else
+        {
+            queuedCharactersToCreate.Add(c);
+        }
 
         return c;
     }
@@ -111,14 +156,6 @@ public class World
         {
             for (int y = 0; y < height; y++)
             {
-
-                tiles[x, y] = new Tile(x, y, this);
-                tiles[x, y].RegisterTileChangedDelegate(OnTileChanged);
-                tiles[x, y].structure.RegisterObjectChangedDelegate(OnStructureChanged);
-
-                // Sets room default to outside.
-                tiles[x, y].room = GetOutSideRoom();
-
                 float height = NoiseCreator.GetNoiseAt(x, y, seed);
 
                 // Assigns tiles
@@ -338,12 +375,43 @@ public class World
 
     public void RegisterCharacterCreated(Action<Character> callback)
     {
-        characterCreated += callback;
+        if (characterCreated == null)
+        {
+            characterCreated += callback;
+
+            foreach (Character c in queuedCharactersToCreate)
+            {
+                characterCreated(c);
+            }
+
+            queuedCharactersToCreate = new List<Character>();
+        }
+
+        else
+        {
+            characterCreated += callback;
+        }
     }
 
     public void RegisterItemChanged(Action<Item> callback)
     {
-        itemChangedEvent += callback;
+        if (itemChangedEvent == null)
+        {
+            itemChangedEvent += callback;
+
+            foreach (Item i in queuedItemsToCreate)
+            {
+                itemChangedEvent(i);
+                i.SetItemChanged(itemChangedEvent);
+            }
+
+            queuedItemsToCreate = new List<Item>();
+        }
+
+        else
+        {
+            itemChangedEvent += callback;
+        }
     }
 
     public bool IsStructurePlacementValid(string objectType, Tile tile, Facing buildDirection, int width, int height)
@@ -351,26 +419,31 @@ public class World
         return structurePrototypes[objectType].IsValidPosition(tile, buildDirection, width, height);
     }
 
-    public void PlaceStructure(string type, Tile tile, int width, int height, Facing buildDirection)
+    public Structure PlaceStructure(string type, Tile tile, int width, int height, Facing buildDirection, bool constructed = false, bool addOptionalParameters = true)
     {
 
         if (!structurePrototypes.ContainsKey(type))
         {
             Debug.LogError("Prototype array does not contain prototype for key " + type);
-            return;
+            return null;
         }
 
-        bool valid = tile.structure.PlaceStructure(structurePrototypes[type], width, height, buildDirection);
+        bool valid = tile.structure.PlaceStructure(structurePrototypes[type], width, height, buildDirection, constructed, addOptionalParameters);
         if (!valid)
         {
+            Debug.LogError("Placement was invalid " + type);
             // Failed to place object, probably because something was already there.
-            return;
+            return null;
         }
+
+        structures.Add(tile.structure);
 
         if (structureChangedEvent != null)
         {
             structureChangedEvent(tile.structure);
         }
+
+        return tile.structure;
     }
 
     #region Rooms
@@ -391,6 +464,8 @@ public class World
 
     public void DestroyRoom(Room room)
     {
+        if (room == null) return;
+
         if (room == GetOutSideRoom())
         {
             Debug.LogError("Tried to delete outside room.");
@@ -400,7 +475,213 @@ public class World
         rooms.Remove(room);
         room.UnassignAllTiles();
     }
+    #endregion
 
+    #region Saving/Loading
+    
+    public World(){}
+    
+    public XmlSchema GetSchema()
+    {
+        return null;
+    }
+
+    public void ReadXml(XmlReader reader)
+    {
+		width = int.Parse( reader.GetAttribute("width"));
+		height = int.Parse( reader.GetAttribute("height"));
+
+		SetupWorld(width, height, false);
+
+		while(reader.Read()) {
+			switch(reader.Name) {
+				case "Tiles":
+					ReadXml_Tiles(reader);
+					break;
+				case "Structures":
+					ReadXml_Structures(reader);
+					break;
+				case "Characters":
+					ReadXml_Characters(reader);
+					break;
+                case "Jobs":
+                    ReadXml_Jobs(reader);
+                    break;
+			}
+		}
+
+	}
+
+	void ReadXml_Tiles(XmlReader reader) {
+		// We are in the "Tiles" element, so read elements until
+		// we run out of "Tile" nodes.
+		while(reader.Read()) {
+			if(reader.Name != "Tile")
+				return;	// We are out of tiles.
+
+			int x = int.Parse(reader.GetAttribute("x"));
+			int y = int.Parse(reader.GetAttribute("y"));
+
+            if (reader.GetAttribute("itemType") != null && reader.GetAttribute("amount") != null)
+            {
+                tiles[x, y].item = new Item(tiles[x, y], reader.GetAttribute("itemType"), int.Parse(reader.GetAttribute("amount")));
+                queuedItemsToCreate.Add(tiles[x, y].item);
+            }
+
+			tiles[x,y].ReadXml(reader);
+		}
+
+	}
+
+	void ReadXml_Structures(XmlReader reader) {
+
+        Structure structure = null;
+
+		while(reader.Read()) {
+			if(reader.Name != "Structure")
+				return;
+
+			int x = int.Parse(reader.GetAttribute("x"));
+			int y = int.Parse(reader.GetAttribute("y"));
+
+			structure = PlaceStructure(reader.GetAttribute("type"), tiles[x,y], int.Parse(reader.GetAttribute("width")), int.Parse(reader.GetAttribute("height")), (Facing) Enum.Parse(typeof(Facing), reader.GetAttribute("FacingDirection")), bool.Parse(reader.GetAttribute("IsConstructed")), false);
+			structure.ReadXml(reader);
+
+            if (structure.optionalParameters.Count > 0)
+            {
+                this.updatingStructures.Add(structure);
+            }
+
+		}
+
+        Room.FloodFillRoom(structure);
+	}
+
+	void ReadXml_Characters(XmlReader reader) {
+
+		while(reader.Read()) {
+			if(reader.Name != "Character")
+				return;
+
+			int x = int.Parse(reader.GetAttribute("x"));
+			int y = int.Parse(reader.GetAttribute("y"));
+			Character c = CreateCharacter(tiles[x,y]);
+
+			c.ReadXml(reader);
+		}
+	}
+
+    void ReadXml_Jobs(XmlReader reader) {
+
+		while(reader.Read()) {
+			if(reader.Name != "Job")
+				return;
+
+            List<buildingRequirement> items = new List<buildingRequirement>();
+
+            int x = int.Parse(reader.GetAttribute("x"));
+			int y = int.Parse(reader.GetAttribute("y"));
+            Tile tile = tiles[x, y];
+
+            // Loads saved building materials
+            if (reader.GetAttribute("items") != null && reader.GetAttribute("amounts") != null)
+            {
+                string[] itemsString = reader.GetAttribute("items").Split('/');
+                string[] amounts = reader.GetAttribute("amounts").Split('/');
+
+                for (int i = 0; i < itemsString.Length; i++)
+                {
+                    if (itemsString[i] == "") continue;
+
+                    Debug.Log(itemsString[i] + " " + int.Parse(amounts[i]));
+                    items.Add(new buildingRequirement(itemsString[i], int.Parse(amounts[i])));
+                }
+            }
+            
+            // Creates new job based on category.
+            switch (Enum.Parse(typeof(SaveableJob), reader.GetAttribute("jobType")))
+            {
+                case SaveableJob.Construction:
+                    tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.CompleteStructure(), JobType.Construction, items, float.Parse(reader.GetAttribute("jobTime"))));
+                    break;
+                case SaveableJob.Demolition:
+                    tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.RemoveStructure(), JobType.Demolition, null, float.Parse(reader.GetAttribute("jobTime"))));
+                    break;
+            }
+		}
+	}
+
+    public void WriteXml(XmlWriter writer)
+    {
+        writer.WriteAttributeString("width", width.ToString());
+		writer.WriteAttributeString("height", height.ToString());
+
+		writer.WriteStartElement("Tiles");
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				writer.WriteStartElement("Tile");
+				tiles[x,y].WriteXml(writer);
+
+                if (tiles[x, y].item != null && tiles[x, y].item.CurrentStackAmount > 0)
+                {
+                    tiles[x, y].item.WriteXml(writer);
+                }
+
+				writer.WriteEndElement();
+			}
+		}
+		writer.WriteEndElement();
+
+		writer.WriteStartElement("Structures");
+		foreach(Structure structure in structures) {
+			writer.WriteStartElement("Structure");
+			structure.WriteXml(writer);
+			writer.WriteEndElement();
+
+		}
+		writer.WriteEndElement();
+
+		writer.WriteStartElement("Characters");
+		foreach(Character c in characters) {
+			writer.WriteStartElement("Character");
+			c.WriteXml(writer);
+            c.inventory.WriteXml(writer);
+			writer.WriteEndElement();
+
+		}
+		writer.WriteEndElement();
+
+        writer.WriteStartElement("Jobs");
+
+        // Save each job a character is working on if its saveable.
+        foreach (Character c in characters)
+        {
+            Job job = c.GetActiveJob();
+            if (job != null && Enum.IsDefined(typeof(SaveableJob), job.jobType.ToString()))
+            {
+                writer.WriteStartElement("Job");
+                job.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+        }
+
+		foreach(Room room in rooms) {
+
+            if (room.jobQueue.Count == 0) continue;
+
+            foreach (Job job in room.jobQueue.ToArray())
+            {
+                if (Enum.IsDefined(typeof(SaveableJob), job.jobType.ToString()))
+                {
+                    writer.WriteStartElement("Job");
+                    job.WriteXml(writer);
+                    writer.WriteEndElement();
+                }
+            }
+		}
+		writer.WriteEndElement();
+
+    }
     #endregion
 }
 

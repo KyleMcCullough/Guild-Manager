@@ -1,8 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml.Serialization;
+
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Experimental.Rendering.Universal;
+
+using UnityEngine.SceneManagement;
 
 public class WorldController : MonoBehaviour
 {
@@ -17,13 +22,31 @@ public class WorldController : MonoBehaviour
     Light2D GlobalLight;
     public static WorldController Instance { get; protected set; }
     public World World { get; protected set; }
+    static bool loadingWorld = false;
 
     // Start is called before the first frame update
-    void Awake()
+    void OnEnable()
     {
-        World = new World(100, 100);
+        if (loadingWorld)
+        {
+            loadingWorld = false;
+            // paused = true;
+            LoadSaveFile();
+        }
+
+        else
+        {
+            World = new World(100, 100);
+        }
+
         Instance = this;
         Camera.main.transform.position = new Vector3(World.width / 2, World.height / 2, Camera.main.transform.position.z);
+        
+    }
+
+    void Start()
+    {
+        RefreshStructures();
     }
 
     void Update()
@@ -64,6 +87,49 @@ public class WorldController : MonoBehaviour
 
         structureSpriteController.RefreshAllStructures();
     }
+
+    public void RefreshStructures()
+    {
+        StructureSpriteController structureSpriteController = GetComponent<StructureSpriteController>();
+        structureSpriteController.RefreshAllStructures();
+    }
+
+	public void SaveWorld() {
+		Debug.Log("SaveWorld button was clicked.");
+
+		XmlSerializer serializer = new XmlSerializer(typeof(World));
+		TextWriter writer = new StringWriter();
+		serializer.Serialize(writer, World);
+		writer.Close();
+
+        using (StreamWriter file = new StreamWriter(Application.persistentDataPath + "/gamedata.xml"))
+        {
+            file.WriteLine(writer.ToString());
+        }
+        Debug.Log(Application.persistentDataPath);
+	}
+
+    public void LoadWorld() {
+		Debug.Log("LoadWorld button was clicked.");
+
+		// Reload the scene to reset all data (and purge old references)
+		loadingWorld = true;
+		SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+	}
+
+	public void LoadSaveFile() {
+		Debug.Log("CreateWorldFromSaveFile");
+		// Create a world from our save file data.
+
+		XmlSerializer serializer = new XmlSerializer( typeof(World) );
+        
+		TextReader reader = new StringReader(System.IO.File.ReadAllText(Application.persistentDataPath + "/gamedata.xml"));
+        Debug.Log(System.IO.File.ReadAllText(Application.persistentDataPath + "/gamedata.xml"));
+
+		World = (World)serializer.Deserialize(reader);
+		reader.Close();
+	}
 
     void UpdateSpeed()
     {

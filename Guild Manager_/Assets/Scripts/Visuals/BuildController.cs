@@ -49,7 +49,7 @@ public class BuildController : MonoBehaviour
             // Creates a new job with a queued wall object temporarily reserving the tile until
             // the job is completed or cancelled.
             WorldController.Instance.World.PlaceStructure(buildObject, tile, this.buildWidth, this.buildHeight, this.buildDirection);
-            tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.CompleteStructure(), Data.GetbuildingRequirement(buildObject)));
+            tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.CompleteStructure(), JobType.Construction, Data.GetbuildingRequirement(buildObject)));
 
         }
         else if (buildType == 2)
@@ -62,22 +62,8 @@ public class BuildController : MonoBehaviour
             {
                 return;
             }
-
-            // if (tile.structure.parentStructure == null)
-            // {
-            tile.room.jobQueue.Enqueue(new Job(tile.world.GetTile(tile.x, tile.y), (theJob) => tile.structure.RemoveStructure(), null, 0.3f));
-            // }
-
-            // If the structure being deleted is part of a parent structure, set a delete for the parent.
-            // else 
-            // {
-            //     Debug.Log("Going to parent structure to destroy.");
-            //     Debug.Log(tile.structure.parentStructure.parent);
-            //     Debug.Log(tile.structure.parentStructure);
-            //     Debug.Log(WorldController.Instance.World.jobQueue);
-
-            //     WorldController.Instance.World.jobQueue.Enqueue(new Job(tile.structure.parentStructure.parent, (theJob) => tile.structure.parentStructure.RemoveStructure(), null, 0.3f));
-            // }
+            
+            tile.room.jobQueue.Enqueue(new Job(tile.world.GetTile(tile.x, tile.y), (theJob) => tile.structure.RemoveStructure(), JobType.Demolition,  null, 0.3f));
         }
     }
 
