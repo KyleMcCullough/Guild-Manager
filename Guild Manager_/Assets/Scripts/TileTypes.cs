@@ -18,7 +18,9 @@ public enum JobType
 {
     Construction,
     Demolition,
-    Hauling
+    Hauling,
+    Sleeping,
+    Consuming
 }
 
 // Jobs that will be saved

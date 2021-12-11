@@ -63,11 +63,6 @@ public class Character : IXmlSerializable
             if (currentJob != null || parentJob != null)
             {
 
-                // if (!currentJob.tile.structure.hasJob || currentJob.tile.structure.parentStructure != null && !currentJob.tile.structure.parentStructure.hasJob)
-                // {
-                //     return;
-                // }
-
                 if (this.parentJob != null || currentJob != null && currentJob.requiredMaterials != null)
                 {
 
@@ -106,7 +101,7 @@ public class Character : IXmlSerializable
                                 continue;
                             }
 
-                            if (currTile.room.ContainsItem(requirement.material))
+                            if (Item.ItemExistsOnMap(currTile, requirement.material))
                             {
                                 searchedTile = Item.SearchForItem(requirement.material, this.currTile);
                             }

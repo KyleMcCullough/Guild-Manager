@@ -289,6 +289,16 @@ public class Item : IXmlSerializable
         return null;
     }
 
+    public static bool ItemExistsOnMap(Tile tile, string item)
+    {
+        foreach (Room room in tile.world.rooms)
+        {
+            if (room.ContainsItem(item)) return true;
+        }
+
+        return false;
+    }
+
     public void SetItemChanged(Action<Item> callback)
     {
         this.ItemChangedEvent = callback;
