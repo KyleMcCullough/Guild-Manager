@@ -311,6 +311,16 @@ public class Room
     }
     public static Job GetNextAvailableJob(Tile tile)
     {
+
+        int jobs = 0;
+
+        foreach (Room room in tile.world.rooms)
+        {
+            jobs += room.jobQueue.Count;
+        }
+
+        if (jobs == 0) return null;
+
         // There is only an outside room.
         if (tile.world.rooms.Count == 1)
         {

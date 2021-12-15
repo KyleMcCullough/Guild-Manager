@@ -53,20 +53,26 @@ public class CharacterSpriteController : MonoBehaviour
         
         // Registers callback.
         character.RegisterOnChangedCallback(OnCharacterChanged);
+        character.RegisterOnDeletedCallback(OnCharacterDeleted);
     }
 
     private void OnCharacterChanged(Character character)
     {
-        // Ensures graphics are correct.
+
+        // This means the character has been deleted. This will only be called on the same frame it is deleted.
         if (!characterGameObjects.ContainsKey(character))
         {
-            Debug.LogError("OnCharacterChanged - Trying to change visuals not in our map.");
             return;
         }
 
         GameObject characterObject = characterGameObjects[character];
-
         characterObject.transform.position = new Vector3(character.x, character.y, 0);
+    }
+
+    private void OnCharacterDeleted(Character character)
+    {
+        Destroy(characterGameObjects[character]);
+        characterGameObjects.Remove(character);
     }
 
 }

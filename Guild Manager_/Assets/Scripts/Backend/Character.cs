@@ -27,11 +27,13 @@ public class Character : IXmlSerializable
 
     #region Character variables
     public Inventory inventory = new Inventory();
+    public int id;
 
     #endregion
 
     #region Pathing variables
-    public Tile currTile { get; protected set; }
+    public Tile currTile;
+    public JobQueue prioritizedJobs = new JobQueue();
     Tile nextTile;
     Path_AStar pathing;
     Tile destTile;
@@ -39,15 +41,17 @@ public class Character : IXmlSerializable
     float speed = 2f;
 
     Action<Character> characterChanged;
+    Action<Character> characterDeleted;
     Job parentJob;
-    Job currentJob;
+    public Job currentJob;
     static Thread tileGraphThread = null;
 
     #endregion
 
-    public Character(Tile tile)
+    public Character(Tile tile, int id)
     {
         currTile = destTile = nextTile = tile;
+        this.id = id;
     }
 
     void Update_DoJob(float deltaTime)
@@ -57,7 +61,15 @@ public class Character : IXmlSerializable
             // Gets new job.
             if (parentJob == null)
             {
-                currentJob = Room.GetNextAvailableJob(currTile);
+                if (prioritizedJobs != null && prioritizedJobs.Count > 0)
+                {
+                    currentJob = prioritizedJobs.Dequeue();
+                }
+
+                else
+                {
+                    currentJob = Room.GetNextAvailableJob(currTile);
+                }
             }
 
             if (currentJob != null || parentJob != null)
@@ -306,6 +318,22 @@ public class Character : IXmlSerializable
         characterChanged -= callback;
     }
 
+    
+    public void RegisterOnDeletedCallback(Action<Character> callback)
+    {
+        characterDeleted += callback;
+    }
+
+    public void Destroy()
+    {
+        if (characterDeleted != null)
+        {
+            currTile.world.characters.Remove(this);
+            characterDeleted(this);
+            
+        }
+    }
+
     void OnJobEnded(Job job)
     {
 
@@ -342,6 +370,7 @@ public class Character : IXmlSerializable
 	public void WriteXml(XmlWriter writer) {
 		writer.WriteAttributeString("x", currTile.x.ToString());
 		writer.WriteAttributeString("y", currTile.y.ToString());
+        writer.WriteAttributeString("id", this.id.ToString());
 	}
 
 	public void ReadXml(XmlReader reader) 

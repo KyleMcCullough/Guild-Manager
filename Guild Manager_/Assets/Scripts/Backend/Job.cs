@@ -91,6 +91,11 @@ public class Job : IXmlSerializable
         return amount;
     }
 
+    public bool HasNoRequirements()
+    {
+        return requiredMaterials == null && requiredMaterials.Count == 0;
+    }
+
     public bool IsRequiredType(string type)
     {
         foreach (buildingRequirement requirement in this.requiredMaterials.ToArray())
@@ -126,6 +131,8 @@ public class Job : IXmlSerializable
         writer.WriteAttributeString("jobTime", this.jobTime.ToString());
         writer.WriteAttributeString("jobType", this.jobType.ToString());
 
+        if (requiredMaterials == null) return;
+        
         string itemString = "";
         string amounts = "";
 

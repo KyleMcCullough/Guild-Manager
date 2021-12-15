@@ -18,6 +18,8 @@ public enum JobType
 {
     Construction,
     Demolition,
+    QuestGiving,
+    Exiting,
     Hauling,
     Sleeping,
     Consuming
@@ -27,5 +29,29 @@ public enum JobType
 public enum SaveableJob
 {
     Construction,
-    Demolition
+    Demolition,
+    QuestGiving,
+    Exiting
+}
+
+public enum StructureCategory
+{
+    None,
+    Wall,
+    Furniture,
+    Door,
+    QuestBoard
+}
+
+public enum AdventurerRank
+{
+    F,
+    E,
+    D,
+    C,
+    B,
+    A,
+    S
+    
+
 }

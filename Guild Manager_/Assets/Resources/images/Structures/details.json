@@ -19,6 +19,11 @@
         {
             "name": "Door",
             "id": 3
+        },
+        
+        {
+            "name": "QuestBoard",
+            "id": 4
         }
     ],
 
@@ -109,6 +114,22 @@
         {
             "name": "Bush",
             "category": 0,
+            "movementCost": 1,
+            "width": 1,
+            "height": 1,
+            "linksToNeighbours": false,
+            "canCreateRooms": false,
+            "placementMode": 1,
+            "rotates": false,
+            "relatedParameters": [],
+            "relatedFunctions": [],
+            "buildingRequirement": [],
+            "itemsToDropOnDestroy": []
+        },
+
+        {
+            "name": "SmallQuestBoard",
+            "category": 4,
             "movementCost": 1,
             "width": 1,
             "height": 1,

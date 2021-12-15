@@ -1,0 +1,19 @@
+{
+    "quests" : [
+        {
+            "id": 0,
+            "title": "Hunt rabbits terrorizing town",
+            "description": "The village I hail from is typically peaceful, but a few days a pack of horrific rabbits appeared and began terrorizing and stealing our stuff. Please send help!",
+            "timeToSolve": 2,
+            "requiredRank": 1
+        },
+
+        {
+            "id": 1,
+            "title": "Rescue cat from tree",
+            "description": "My cat sniffies was chasing a squirrel when it ran up a tree and got stuck!",
+            "timeToSolve": 0.5,
+            "requiredRank": 0
+        }
+    ]
+}

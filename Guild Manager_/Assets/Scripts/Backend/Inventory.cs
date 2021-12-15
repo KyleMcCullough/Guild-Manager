@@ -38,7 +38,6 @@ public class Inventory : IXmlSerializable
 
     public int AddItem(string type, int amount)
     {
-        Debug.Log("Adding " + type + " " + amount + " to inventory.");
         foreach (Item item in items)
         {
             if (item.Type == type && item.maxStack < item.CurrentStackAmount)

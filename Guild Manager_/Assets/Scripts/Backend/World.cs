@@ -11,21 +11,24 @@ public class World : IXmlSerializable
 {
     // Day, month, year.
     float worldTime = 0;
+    int nextCharacterID;
     int[] date;
     public int height;
     public int width;
+    public QuestManager questManager;
 
     #region Collections
 
     Action<Character> characterCreated;
+    Action<Character> characterDeleted;
     Action<Structure> structureChangedEvent;
     Action<Tile> tileChangedEvent;
-    List<Character> characters;
     List<Character> queuedCharactersToCreate;
     List<Item> queuedItemsToCreate;
     Tile[,] tiles;
     public Action<Item> itemChangedEvent;
     public Dictionary<string, Structure> structurePrototypes { get; protected set; }
+    public List<Character> characters;
     public List<Room> rooms;
     public List<Structure> structures;
     public List<Structure> updatingStructures;
@@ -39,6 +42,7 @@ public class World : IXmlSerializable
 
     void SetupWorld(int width, int height, bool generateWorld = true)
     {
+        this.questManager = new QuestManager(this);
 
         // Instantiating lists
         this.characters = new List<Character>();
@@ -47,6 +51,7 @@ public class World : IXmlSerializable
         this.rooms = new List<Room>();
         this.structures = new List<Structure>();
         this.updatingStructures = new List<Structure>();
+        this.nextCharacterID = 0;
 
         this.height = height;
         this.width = width;
@@ -82,7 +87,7 @@ public class World : IXmlSerializable
     {
         worldTime += (1 * deltaTime);
 
-        foreach (Character c in characters)
+        foreach (Character c in characters.ToArray())
         {
             c.Update(deltaTime);
         }
@@ -131,7 +136,9 @@ public class World : IXmlSerializable
             t = tile;
         }
 
-        Character c = new Character(t);
+        Character c = new Character(t, nextCharacterID);
+        nextCharacterID ++;
+
         characters.Add(c);
 
         if (characterCreated != null)
@@ -147,6 +154,28 @@ public class World : IXmlSerializable
 
         return c;
     }
+
+    // This version takes away safety checks. This is only meant for loading.
+    Character CreateCharacter(Tile tile, int id)
+    {
+        Character c = new Character(tile, id);
+        characters.Add(c);
+
+        
+        if (characterCreated != null)
+        {
+            characterCreated(c);
+        }
+
+        // If Character cannot be visually created, add it to the queue to create once ready.
+        else
+        {
+            queuedCharactersToCreate.Add(c);
+        }
+
+        return c;
+    }
+    
 
     public void GenerateWorld(int seed)
     {
@@ -276,6 +305,10 @@ public class World : IXmlSerializable
                             break;
                         }
                     }
+
+                    this.questManager.outOfMapSpawnpoints.Add(startingTile);
+                    this.questManager.outOfMapSpawnpoints.Add(endingTile);
+
                     break;
                 }
             }
@@ -296,7 +329,7 @@ public class World : IXmlSerializable
         foreach (string type in Data.structureTypes)
         {
             StructureData data = Data.GetStructureData(type);
-            Structure structure = Structure.CreatePrototype(type, Data.GetItemCategory(data.category).name, data.movementCost, data.width, data.height, data.linksToNeighbours, data.canCreateRooms);
+            Structure structure = Structure.CreatePrototype(type, data.movementCost, data.width, data.height, data.linksToNeighbours, data.canCreateRooms);
 
             // Convert the string to the actual method, and load each function into the delegate
             foreach (string func in data.relatedFunctions)
@@ -336,6 +369,15 @@ public class World : IXmlSerializable
     {
         if (x >= height || x < 0 || y >= width || y < 0) { return null; }
         return tiles[x, y];
+    }
+
+    public Character GetCharacterByID(int id)
+    {
+        foreach(Character c in characters)
+        {
+            if (c.id == id) return c;
+        }
+        return null;
     }
 
     void OnTileChanged(Tile tile)
@@ -391,6 +433,11 @@ public class World : IXmlSerializable
         {
             characterCreated += callback;
         }
+    }
+
+    public void RegisterCharacterDeleted(Action<Character> callback)
+    {
+        characterDeleted += callback;
     }
 
     public void RegisterItemChanged(Action<Item> callback)
@@ -507,6 +554,9 @@ public class World : IXmlSerializable
                 case "Jobs":
                     ReadXml_Jobs(reader);
                     break;
+                case "Quests":
+                    ReadXml_Quests(reader);
+                    break;
 			}
 		}
 
@@ -565,8 +615,7 @@ public class World : IXmlSerializable
 
 			int x = int.Parse(reader.GetAttribute("x"));
 			int y = int.Parse(reader.GetAttribute("y"));
-			Character c = CreateCharacter(tiles[x,y]);
-
+			Character c = CreateCharacter(tiles[x,y], int.Parse(reader.GetAttribute("id")));
 			c.ReadXml(reader);
 		}
 	}
@@ -593,23 +642,58 @@ public class World : IXmlSerializable
                 {
                     if (itemsString[i] == "") continue;
 
-                    Debug.Log(itemsString[i] + " " + int.Parse(amounts[i]));
                     items.Add(new buildingRequirement(itemsString[i], int.Parse(amounts[i])));
                 }
             }
             
-            // Creates new job based on category.
-            switch (Enum.Parse(typeof(SaveableJob), reader.GetAttribute("jobType")))
+            // Assigns job to character 
+            if (reader.GetAttribute("characterID") != null)
             {
-                case SaveableJob.Construction:
-                    tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.CompleteStructure(), JobType.Construction, items, float.Parse(reader.GetAttribute("jobTime"))));
-                    break;
-                case SaveableJob.Demolition:
-                    tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.RemoveStructure(), JobType.Demolition, null, float.Parse(reader.GetAttribute("jobTime"))));
-                    break;
+                Character c = GetCharacterByID(int.Parse(reader.GetAttribute("characterID")));
+
+                switch (Enum.Parse(typeof(SaveableJob), reader.GetAttribute("jobType")))
+                {
+                    case SaveableJob.Exiting:
+                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Destroy(), JobType.Exiting, null, float.Parse(reader.GetAttribute("jobTime"))));
+                        break;
+                    case SaveableJob.QuestGiving:
+                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => questManager.SubmitQuest(), JobType.QuestGiving, null, float.Parse(reader.GetAttribute("jobTime"))));
+                        break;
+                }
+            }
+
+            // Assigns job to room the tile is assigned in
+            else
+            {
+                // For all generic queued jobs
+                switch (Enum.Parse(typeof(SaveableJob), reader.GetAttribute("jobType")))
+                {
+                    case SaveableJob.Construction:
+                        tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.CompleteStructure(), JobType.Construction, items, float.Parse(reader.GetAttribute("jobTime"))));
+                        break;
+                    case SaveableJob.Demolition:
+                        tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.RemoveStructure(), JobType.Demolition, null, float.Parse(reader.GetAttribute("jobTime"))));
+                        break;
+                }
             }
 		}
 	}
+
+    void ReadXml_Quests(XmlReader reader)
+    {
+        Debug.Log("Quests");
+        while(reader.Read()) {
+        if(reader.Name != "Quest")
+            return;
+        
+            if (reader.GetAttribute("id") != null)
+            {
+                questManager.quests.Add(Data.GetQuestTemplateById(int.Parse(reader.GetAttribute("id"))));
+                Debug.Log(questManager.quests.Count);
+            }
+        }
+        Debug.Log(questManager.quests.Count);
+    }
 
     public void WriteXml(XmlWriter writer)
     {
@@ -661,6 +745,17 @@ public class World : IXmlSerializable
             {
                 writer.WriteStartElement("Job");
                 job.WriteXml(writer);
+                writer.WriteAttributeString("characterID", c.id.ToString());
+                writer.WriteEndElement();
+            }
+
+            foreach(Job j in c.prioritizedJobs.ToArray())
+            {
+                if (!Enum.IsDefined(typeof(SaveableJob), job.jobType.ToString())) continue;
+
+                writer.WriteStartElement("Job");
+                j.WriteXml(writer);
+                writer.WriteAttributeString("characterID", c.id.ToString());
                 writer.WriteEndElement();
             }
         }
@@ -678,6 +773,15 @@ public class World : IXmlSerializable
                     writer.WriteEndElement();
                 }
             }
+		}
+		writer.WriteEndElement();
+
+        // Save each quest id.
+        writer.WriteStartElement("Quests");
+		foreach(Quest quest in questManager.quests) {
+			writer.WriteStartElement("Quest");
+			writer.WriteAttributeString("id", quest.id.ToString());
+			writer.WriteEndElement();
 		}
 		writer.WriteEndElement();
 

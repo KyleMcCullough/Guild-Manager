@@ -95,7 +95,6 @@ public class WorldController : MonoBehaviour
     }
 
 	public void SaveWorld() {
-		Debug.Log("SaveWorld button was clicked.");
 
 		XmlSerializer serializer = new XmlSerializer(typeof(World));
 		TextWriter writer = new StringWriter();
@@ -106,11 +105,9 @@ public class WorldController : MonoBehaviour
         {
             file.WriteLine(writer.ToString());
         }
-        Debug.Log(Application.persistentDataPath);
 	}
 
     public void LoadWorld() {
-		Debug.Log("LoadWorld button was clicked.");
 
 		// Reload the scene to reset all data (and purge old references)
 		loadingWorld = true;
@@ -119,17 +116,20 @@ public class WorldController : MonoBehaviour
 	}
 
 	public void LoadSaveFile() {
-		Debug.Log("CreateWorldFromSaveFile");
 		// Create a world from our save file data.
 
 		XmlSerializer serializer = new XmlSerializer( typeof(World) );
         
 		TextReader reader = new StringReader(System.IO.File.ReadAllText(Application.persistentDataPath + "/gamedata.xml"));
-        Debug.Log(System.IO.File.ReadAllText(Application.persistentDataPath + "/gamedata.xml"));
 
 		World = (World)serializer.Deserialize(reader);
 		reader.Close();
 	}
+
+    public void CreateQuestGiver()
+    {
+        this.World.questManager.SpawnQuestGiver();
+    }
 
     void UpdateSpeed()
     {

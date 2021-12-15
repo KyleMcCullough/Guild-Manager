@@ -158,6 +158,14 @@ public class BuildController : MonoBehaviour
         this.buildHeight = Data.structureData[objectType].height;
     }
 
+    public void SetMode_BuildQuestBoard(string objectType)
+    {
+        buildType = 1;
+        buildObject = objectType;
+        this.buildWidth = Data.structureData[objectType].width;
+        this.buildHeight = Data.structureData[objectType].height;
+    }
+
     public void SetMode_PutItem(string itemType)
     {
         buildType = 2;

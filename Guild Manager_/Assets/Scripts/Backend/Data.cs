@@ -4,6 +4,8 @@ using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+
+
 public static class Data
 {
     public static int DayLength {get; private set;} = 40;
@@ -13,12 +15,14 @@ public static class Data
     public static Dictionary<string, TileData> tileData = new Dictionary<string, TileData>();
     public static Dictionary<string, ItemData> itemData = new Dictionary<string, ItemData>();
     public static List<string> structureTypes = new List<string>();
+    public static List<Quest> questTemplates = new List<Quest>();
     public static List<string> tileTypes = new List<string>();
     public static List<string> itemTypes = new List<string>();
 
     static StructureDataArray structures;
     static TileDataArray tiles;
     static ItemDataArray items;
+    static QuestDataArray quests;
 
     public static void LoadData()
     {
@@ -51,6 +55,16 @@ public static class Data
             itemData.Add(data.name, data);
             itemTypes.Add(data.name);
         }
+
+        json = File.ReadAllText(Application.dataPath + "/Resources/quests.json");
+        Data.quests = JsonUtility.FromJson<QuestDataArray>(json);
+
+        foreach (QuestData data in Data.quests.quests)
+        {
+            questTemplates.Add(new Quest(data.title, data.description, data.timeToSolve, (AdventurerRank) data.requiredRank, data.id));
+        }
+
+
     }
 
     public static StructureData GetStructureData(string name)
@@ -77,6 +91,19 @@ public static class Data
             }
         }
         UnityEngine.Debug.LogError("No id of '" + id + "' has been found in the Category data array.");
+        return null;
+    }
+
+    public static Quest GetQuestTemplateById(int id)
+    {
+        foreach (Quest q in questTemplates)
+        {
+            if (q.id == id)
+            {
+                return q;
+            }
+        }
+
         return null;
     }
 

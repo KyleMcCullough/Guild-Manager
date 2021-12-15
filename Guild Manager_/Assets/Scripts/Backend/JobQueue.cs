@@ -45,13 +45,6 @@ public class JobQueue
 
     public List<Job> ToArray()
     {
-        List<Job> jobs = new List<Job>();
-
-        while (this.Count > 0)
-        {
-            jobs.Add(this.Dequeue());
-        }
-
-        return jobs;
+        return new List<Job>(jobQueue.ToArray());
     }
 }

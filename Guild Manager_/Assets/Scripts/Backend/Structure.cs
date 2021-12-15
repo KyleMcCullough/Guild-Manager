@@ -11,7 +11,13 @@ public class Structure : IXmlSerializable
 {
     #region variables
     public Tile parent;
-    public string TypeCategory;
+    public StructureCategory structureCategory
+    {
+        get
+        {
+            return (StructureCategory) Data.structureData[Type].category;
+        }
+    }
     public Structure parentStructure = null;
     public Facing facingDirection = Facing.East;
     public List<Tile> overlappedStructureTiles;
@@ -139,7 +145,6 @@ public class Structure : IXmlSerializable
         this.IsConstructed = constructed;
         this.linksToNeighbour = prototype.linksToNeighbour;
         this.movementCost = prototype.movementCost;
-        this.TypeCategory = prototype.TypeCategory;
         this.canCreateRooms = prototype.canCreateRooms;
         this.Type = prototype.Type;
 
@@ -239,6 +244,11 @@ public class Structure : IXmlSerializable
             UpdateRoomThread.Start();
         }
 
+        if (this.structureCategory == StructureCategory.QuestBoard)
+        {
+            this.parent.world.questManager.jobBoards.Add(this);
+        }
+
         if (this.movementCost != 1)
         {
             parent.world.InvalidateTileGraph();
@@ -266,10 +276,14 @@ public class Structure : IXmlSerializable
             this.RemoveActions();
         }
 
+        if (this.structureCategory == StructureCategory.QuestBoard)
+        {
+            this.parent.world.questManager.jobBoards.Remove(this);
+        }
+
         this.optionalParameters = prototype.optionalParameters;
         this.linksToNeighbour = prototype.linksToNeighbour;
         this.movementCost = prototype.movementCost;
-        this.TypeCategory = prototype.TypeCategory;
         this.canCreateRooms = prototype.canCreateRooms;
         this.parent.world.GetOutSideRoom().AssignTile(this.parent);
 
@@ -305,11 +319,10 @@ public class Structure : IXmlSerializable
         if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
     }
 
-    static public Structure CreatePrototype(String type, string TypeCategory, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool canCreateRooms = false)
+    static public Structure CreatePrototype(String type, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool canCreateRooms = false)
     {
 
         Structure obj = new Structure();
-        obj.TypeCategory = TypeCategory;
         obj.Type = type;
         obj.movementCost = movementCost;
         obj.width = width;
@@ -373,7 +386,7 @@ public class Structure : IXmlSerializable
     #region Door Methods
     public bool IsDoor()
     {
-        return this.TypeCategory == "Door";
+        return this.structureCategory == StructureCategory.Door;
     }
 
     public bool IsDoorOpen()
