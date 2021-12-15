@@ -266,7 +266,7 @@ public class World : IXmlSerializable
         while (true)
         {
             attempts++;
-            int value = UnityEngine.Random.Range(0, width);
+            int value = UnityEngine.Random.Range(0, width - 5);
             Tile startingTile;
 
             if (UnityEngine.Random.value > .5f)

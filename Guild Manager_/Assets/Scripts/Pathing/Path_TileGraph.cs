@@ -43,7 +43,7 @@ public class Path_TileGraph
 
                 // The neighbour exists and can be walked on. If it is, create an edge.
                 if (allowWater && neighbours[i] != null && neighbours[i].movementCost > 0 || neighbours[i] != null && neighbours[i].structure.IsDoor()
-                || !allowWater && neighbours[i] != null && !Data.CheckIfTileIsWater(neighbours[i].Type) && neighbours[i].movementCost > 0 || neighbours[i] != null && neighbours[i].structure.IsDoor()) {
+                || !allowWater && neighbours[i] != null && !IsWaterNearby(neighbours[i]) && neighbours[i].movementCost > 0 || neighbours[i] != null && neighbours[i].structure.IsDoor()) {
 
                     // Make sure there is no diagonal clipping. If it is clipping, don't create an edge.
                     if (IsClippingCorner(tile, neighbours[i])) {
@@ -81,6 +81,16 @@ public class Path_TileGraph
                 return true;
             }
         }
+        return false;
+    }
+
+    bool IsWaterNearby(Tile tile)
+    {
+        foreach(var t in tile.GetNeighbors(true))
+        {
+            if (t != null && Data.CheckIfTileIsWater(t.Type)) return true;
+        }
+
         return false;
     }
 }

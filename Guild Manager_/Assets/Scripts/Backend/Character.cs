@@ -139,7 +139,7 @@ public class Character : IXmlSerializable
             }
         }
 
-        if ((currTile == destTile) || currTile.IsNeighbour(destTile, true) && currentJob != null && currentJob.jobType != JobType.Exiting)
+        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && currentJob.jobType != JobType.Exiting)
         {
             if (currentJob != null)
             {
@@ -174,7 +174,7 @@ public class Character : IXmlSerializable
     void Update_HandleMovement(float deltatime)
     {
 
-        if ((currTile == destTile) || currTile.IsNeighbour(destTile, true) && currentJob != null && currentJob.jobType != JobType.Exiting)
+        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && currentJob.jobType != JobType.Exiting)
         {
             pathing = null;
             return;
