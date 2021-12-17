@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 public class StructureData
 {
     public string name;
-    public int movementCost, width, height, category, placementMode;
+    public int movementCost, width, height, category, placementMode, storageAmount;
     public bool linksToNeighbours, canCreateRooms, rotates;
     public string[] relatedFunctions;
     public string[] relatedParameters;

@@ -41,7 +41,7 @@ public class Room
 
     public void AssignItemToRoom(string type, int amount)
     {
-        if (amount == 0) return;
+        if (amount == 0 || type == ObjectType.Empty) return;
 
         if (itemsInRoom == null)
         {
@@ -378,6 +378,94 @@ public class Room
         }
 
         return null;
+    }
+
+    public static Structure GetClosestAvailableStorage(Tile startingTile)
+    {
+        List<Structure> availableStorages = new List<Structure>();
+
+        //FIXME: Does not account for storage slots not being maxed out.
+        // Get all storages with space in them.
+        foreach (Structure storage in startingTile.world.storageStructures)
+        {
+            if (!storage.inventory.isFull) availableStorages.Add(storage);
+        }
+
+        if (availableStorages.Count == 0) return null;
+
+        List<Tile> checkedTiles = new List<Tile>();
+        List<Room> checkedRooms = new List<Room>();
+        Queue<Tile> tilesToCheck = new Queue<Tile>();
+        
+        tilesToCheck.Enqueue(startingTile);
+
+        while (checkedRooms.Count < startingTile.world.rooms.Count)
+        {
+            Tile t = null;
+            while (tilesToCheck.Count > 0)
+            {
+                t = tilesToCheck.Dequeue();
+
+                if (checkedTiles.Contains(t)) continue;
+
+                break;
+            }
+
+            checkedTiles.Add(t);
+
+            if (t.structure != null && t.structure.structureCategory == StructureCategory.Storage)
+            {
+                return t.structure;
+            }
+
+            foreach (Tile t2 in t.GetNeighbors())
+            {
+                if (checkedTiles.Contains(t2))
+                {
+                    continue;
+                }
+
+                if (t2 == null)
+                {
+                    return null;
+                }
+
+                // We know t2 is not null nor is it an empty tile, so just make sure it
+                // hasn't already been processed and isn't a "wall" type tile.
+                if (t2.structure.Type == ObjectType.Empty || !t2.structure.canCreateRooms || t2.structure.canCreateRooms && !t2.structure.IsConstructed || t2.structure.IsDoor() && t2.structure.IsConstructed)
+                {
+                    tilesToCheck.Enqueue(t2);
+                }
+            }
+        }
+        return null;
+    }
+
+    //FIXME: This checks available slots, but not if every slot is maxed out. 
+    public static int GetCountOfAvailableStorages(World world)
+    {
+        int count = 0;
+        foreach (Structure storage in world.storageStructures)
+        {
+            if (!storage.inventory.isFull) count ++;
+        }
+
+        return count;
+    }
+
+    public static int GetCountOfAllItemsInWorld(World world)
+    {
+        int count = 0;
+
+        foreach (Room room in world.rooms)
+        {
+            foreach (var item in room.itemsInRoom)
+            {
+                count += item.Value;
+            }
+        }
+
+        return count;
     }
 
     #endregion

@@ -66,7 +66,9 @@ public class Item : IXmlSerializable
 
     public Item(Tile parent, string type, int currentStackAmount)
     {
-        AssignParent(parent, currentStackAmount, type);
+        this.parent = parent;
+        this.type = type;
+        this.CurrentStackAmount = currentStackAmount;
         
         if (ItemChangedEvent != null)
         {
@@ -83,28 +85,29 @@ public class Item : IXmlSerializable
     }
 
     // Assigns parent and registers item changed callback from it.
-    public void AssignParent(Tile tile, int amount, string type)
+    public static void CreateNewItem(Tile tile, string type, int amount)
     {
         if(tile.item != null)
         {
             if (tile.item.maxStack == tile.item.currentStackAmount)
             {
-                SendItemsToNeighbour(amount, type, tile);
+                Debug.Log("Again");
+                tile.item.SendItemsToNeighbour(amount, type, tile);
             }
 
             else
             {
-                amount = TryAddingToStack(amount, type, tile);
+                amount = tile.item.TryAddingToStack(amount, type, tile);
                 
                 Debug.Log(amount);
                 if (amount > 0)
                 {
-                    SendItemsToNeighbour(amount, type, tile);
+                    tile.item.SendItemsToNeighbour(amount, type, tile);
                 }
 
-                if (parent.room != null)
+                if (tile.room != null)
                 {
-                    parent.room.AssignItemToRoom(this.Type, this.CurrentStackAmount);
+                    tile.room.AssignItemToRoom(tile.item.Type, tile.item.CurrentStackAmount);
                 }
             }
             return;
@@ -112,35 +115,38 @@ public class Item : IXmlSerializable
 
         else
         {
-            this.parent = tile;
-            this.type = type;
 
-            if (amount > maxStack)
+            tile.item = new Item(tile, type, amount);
+            tile.item.parent = tile;
+            Debug.Log("here");
+
+            if (amount > tile.item.maxStack)
             {
-                this.currentStackAmount = maxStack;
-                SendItemsToNeighbour(amount - this.currentStackAmount, type, tile);
+                tile.item.currentStackAmount = tile.item.maxStack;
+                tile.item.SendItemsToNeighbour(amount - tile.item.currentStackAmount, type, tile);
             }
 
             else
             {
-                this.currentStackAmount = amount;
+                tile.item.currentStackAmount = amount;
             }
 
-            this.parent.item = this;
-
-            if (parent.room != null)
+            if (tile.room != null)
             {
-                parent.room.AssignItemToRoom(this.Type, this.CurrentStackAmount);
+                tile.room.AssignItemToRoom(tile.item.Type, tile.item.CurrentStackAmount);
             }
 
-            if (ItemChangedEvent == null)
+            if (tile.item.ItemChangedEvent == null)
             {
-                ItemChangedEvent += this.parent.world.itemChangedEvent;
+                tile.item.ItemChangedEvent += tile.world.itemChangedEvent;
             }
+
+            Debug.Log(tile.item.parent.x + " " + tile.item.parent.y);
+            tile.item.ItemChangedEvent(tile.item);
         }
 
-        if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
-        this.relatedInventory = null;
+        if (tile.room != null) tile.room.ResetUnreachableJobs();
+        tile.item.relatedInventory = null;
 
     }
 
@@ -195,6 +201,8 @@ public class Item : IXmlSerializable
                     {
                         Tile t = tile.world.GetTile(x, y);
 
+                        if (t == this.parent) continue;
+
                         if (t.structure.Type == ObjectType.Empty && (t.item == null || t.item.Type == type && t.item.CurrentStackAmount != t.item.maxStack))
                         {
                             if (t.item == null)
@@ -236,6 +244,7 @@ public class Item : IXmlSerializable
             this.parent.item = null;
             this.parent = null;
         }
+        Debug.Log("Deleted item");
     }
 
     public static Tile SearchForItem(string type, Tile tile)
@@ -262,28 +271,79 @@ public class Item : IXmlSerializable
 
             checkedTiles.Add(t);
 
-            if (t.item != null && t.item.Type == type) return t;
+            if (t.item != null && t.item.Type == type || t.structure.structureCategory == StructureCategory.Storage && t.structure.inventory.ContainsItem(type)) return t;
 
-                Tile[] ns = t.GetNeighbors();
-                foreach (Tile t2 in ns)
+            Tile[] ns = t.GetNeighbors();
+            foreach (Tile t2 in ns)
+            {
+                if (checkedTiles.Contains(t2))
                 {
-                    if (checkedTiles.Contains(t2))
-                    {
-                        continue;
-                    }
-
-                    if (t2 == null)
-                    {
-                        return null;
-                    }
-
-                    // We know t2 is not null nor is it an empty tile, so just make sure it
-                    // hasn't already been processed and isn't a "wall" type tile.
-                    if (t2.structure == null || t2.structure.canCreateRooms == false || t2.structure.canCreateRooms && !t2.structure.IsConstructed || t2.structure.IsDoor())
-                    {
-                        tilesToCheck.Enqueue(t2);
-                    }
+                    continue;
                 }
+
+                if (t2 == null)
+                {
+                    return null;
+                }
+
+                // We know t2 is not null nor is it an empty tile, so just make sure it
+                // hasn't already been processed and isn't a "wall" type tile.
+                if (t2.structure == null || t2.structure.canCreateRooms == false || t2.structure.canCreateRooms && !t2.structure.IsConstructed || t2.structure.IsDoor())
+                {
+                    tilesToCheck.Enqueue(t2);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static Tile GetClosestItem(Tile tile)
+    {
+
+        List<Tile> checkedTiles = new List<Tile>();
+        Queue<Tile> tilesToCheck = new Queue<Tile>();
+        
+        tilesToCheck.Enqueue(tile);
+
+        while (tilesToCheck.Count > 0)
+        {
+            Tile t = null;
+            while (tilesToCheck.Count > 0)
+            {
+                t = tilesToCheck.Dequeue();
+
+                if (checkedTiles.Contains(t)) continue;
+
+                break;
+            }
+            
+            if (t == null) return null;
+
+            checkedTiles.Add(t);
+
+            if (t.item != null && t.item.CurrentStackAmount > 0) return t;
+
+            Tile[] ns = t.GetNeighbors();
+            foreach (Tile t2 in ns)
+            {
+                if (checkedTiles.Contains(t2))
+                {
+                    continue;
+                }
+
+                if (t2 == null)
+                {
+                    return null;
+                }
+
+                // We know t2 is not null nor is it an empty tile, so just make sure it
+                // hasn't already been processed and isn't a "wall" type tile.
+                if (t2.structure == null || t2.structure.canCreateRooms == false || t2.structure.canCreateRooms && !t2.structure.IsConstructed || t2.structure.IsDoor())
+                {
+                    tilesToCheck.Enqueue(t2);
+                }
+            }
         }
 
         return null;
@@ -294,6 +354,11 @@ public class Item : IXmlSerializable
         foreach (Room room in tile.world.rooms)
         {
             if (room.ContainsItem(item)) return true;
+        }
+
+        foreach (Structure s in tile.world.storageStructures)
+        {
+            if (s.inventory.ContainsItem(item)) return true;
         }
 
         return false;

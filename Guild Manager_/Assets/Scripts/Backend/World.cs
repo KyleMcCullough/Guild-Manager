@@ -11,11 +11,11 @@ public class World : IXmlSerializable
 {
     // Day, month, year.
     float worldTime = 0;
-    int nextCharacterID;
+    int nextID = 0;
     int[] date;
+    public QuestManager questManager;
     public int height;
     public int width;
-    public QuestManager questManager;
 
     #region Collections
 
@@ -30,6 +30,7 @@ public class World : IXmlSerializable
     public Dictionary<string, Structure> structurePrototypes { get; protected set; }
     public List<Character> characters;
     public List<Room> rooms;
+    public List<Structure> storageStructures;
     public List<Structure> structures;
     public List<Structure> updatingStructures;
     public Path_TileGraph tileGraph;
@@ -49,12 +50,13 @@ public class World : IXmlSerializable
         this.queuedCharactersToCreate = new List<Character>();
         this.queuedItemsToCreate = new List<Item>();
         this.rooms = new List<Room>();
+        this.storageStructures = new List<Structure>();
         this.structures = new List<Structure>();
         this.updatingStructures = new List<Structure>();
-        this.nextCharacterID = 0;
 
         this.height = height;
         this.width = width;
+        this.nextID = 0;
 
         date = new int[] { 1, 1, 1253 };
         tiles = new Tile[width, height];
@@ -126,6 +128,12 @@ public class World : IXmlSerializable
         }
     }
 
+    public void CreateNewStructureAtTile(Tile t)
+    {
+        t.structure = new Structure(t);
+        t.structure.RegisterObjectChangedDelegate(OnStructureChanged);
+    }
+
     public Character CreateCharacter(Tile tile)
     {
 
@@ -136,10 +144,9 @@ public class World : IXmlSerializable
             t = tile;
         }
 
-        Character c = new Character(t, nextCharacterID);
-        nextCharacterID ++;
-
+        Character c = new Character(t, nextID);
         characters.Add(c);
+        nextID++;
 
         if (characterCreated != null)
         {
@@ -160,6 +167,7 @@ public class World : IXmlSerializable
     {
         Character c = new Character(tile, id);
         characters.Add(c);
+        nextID++;
 
         
         if (characterCreated != null)
@@ -483,7 +491,7 @@ public class World : IXmlSerializable
             return null;
         }
 
-        structures.Add(tile.structure);
+        if (!structures.Contains(tile.structure)) structures.Add(tile.structure);
 
         if (structureChangedEvent != null)
         {
@@ -535,10 +543,12 @@ public class World : IXmlSerializable
 
     public void ReadXml(XmlReader reader)
     {
-		width = int.Parse( reader.GetAttribute("width"));
-		height = int.Parse( reader.GetAttribute("height"));
+		width = int.Parse(reader.GetAttribute("width"));
+		height = int.Parse(reader.GetAttribute("height"));
 
 		SetupWorld(width, height, false);
+
+        nextID = int.Parse(reader.GetAttribute("nextID"));
 
 		while(reader.Read()) {
 			switch(reader.Name) {
@@ -601,7 +611,6 @@ public class World : IXmlSerializable
             {
                 this.updatingStructures.Add(structure);
             }
-
 		}
 
         Room.FloodFillRoom(structure);
@@ -699,6 +708,7 @@ public class World : IXmlSerializable
     {
         writer.WriteAttributeString("width", width.ToString());
 		writer.WriteAttributeString("height", height.ToString());
+        writer.WriteAttributeString("nextID", nextID.ToString());
 
 		writer.WriteStartElement("Tiles");
 		for (int x = 0; x < width; x++) {

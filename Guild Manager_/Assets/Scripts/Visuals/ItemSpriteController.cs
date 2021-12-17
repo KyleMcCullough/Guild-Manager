@@ -39,7 +39,7 @@ public class ItemSpriteController : MonoBehaviour
         //TODO: Apply random rotation to item sprites to make it better visually.
         if (item.Type == ObjectType.Empty)
         {
-            tilemap.SetTile(new Vector3Int(item.parent.x, item.parent.y,0), null);
+            tilemap.SetTile(new Vector3Int(item.parent.x, item.parent.y, 0), null);
             return;
         }
 

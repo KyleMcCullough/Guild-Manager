@@ -54,7 +54,7 @@ public class BuildController : MonoBehaviour
         }
         else if (buildType == 2)
         {
-            tile.item = new Item(tile, "Wood", 150);
+            Item.CreateNewItem(tile, "Wood", 150);
         }
 
         else {
@@ -63,7 +63,19 @@ public class BuildController : MonoBehaviour
                 return;
             }
             
-            tile.room.jobQueue.Enqueue(new Job(tile.world.GetTile(tile.x, tile.y), (theJob) => tile.structure.RemoveStructure(), JobType.Demolition,  null, 0.3f));
+            Room room = null;
+
+            if (tile.room == null)
+            {
+                room = tile.GetClosestNeighborToGivenTile(tile).room;
+            }
+
+            else
+            {
+                room = tile.room;
+            }
+
+            room.jobQueue.Enqueue(new Job(tile.world.GetTile(tile.x, tile.y), (theJob) => tile.structure.RemoveStructure(), JobType.Demolition,  null, 0.3f));
         }
     }
 

@@ -25,6 +25,7 @@ public class Structure : IXmlSerializable
 
     public Dictionary<string, object> optionalParameters = new Dictionary<string, object>();
     public Action<Structure, float> updateActions = null;
+    public Inventory inventory = null;
 
     public String Type
     {
@@ -142,6 +143,11 @@ public class Structure : IXmlSerializable
             this.optionalParameters = prototype.optionalParameters;
         }
 
+        if (Data.structureData[prototype.type].storageAmount > 0)
+        {
+            this.inventory = new Inventory(Data.structureData[prototype.type].storageAmount);
+        }
+
         this.IsConstructed = constructed;
         this.linksToNeighbour = prototype.linksToNeighbour;
         this.movementCost = prototype.movementCost;
@@ -234,11 +240,11 @@ public class Structure : IXmlSerializable
         this.overlappedStructureTiles = null;
     }
 
-    public void CompleteStructure()
+    public void CompleteStructure(bool loading = false)
     {
         this.IsConstructed = true;
 
-        if (this.canCreateRooms)
+        if (this.canCreateRooms && !loading)
         {
             Thread UpdateRoomThread = new Thread(new ThreadStart(this.Thread_UpdateRooms_Creation));
             UpdateRoomThread.Start();
@@ -246,7 +252,13 @@ public class Structure : IXmlSerializable
 
         if (this.structureCategory == StructureCategory.QuestBoard)
         {
+            Debug.Log("Added");
             this.parent.world.questManager.jobBoards.Add(this);
+        }
+
+        if (this.inventory != null)
+        {
+            this.parent.world.storageStructures.Add(this);
         }
 
         if (this.movementCost != 1)
@@ -300,7 +312,8 @@ public class Structure : IXmlSerializable
         {
             foreach (buildingRequirement item in this.GetTypeData(this.Type).itemsToDropOnDestroy)
             {
-                this.parent.item = new Item(this.parent, item.material, item.amount);
+                Debug.Log(item.material + item.amount);
+                Item.CreateNewItem(this.parent, item.material, item.amount);
             }
         }
 
@@ -314,6 +327,16 @@ public class Structure : IXmlSerializable
         if (this.parent.world.structures.Contains(this))
         {
             this.parent.world.structures.Remove(this);
+        }
+
+        if (this.inventory != null)
+        {
+            foreach (Item item in this.inventory.items)
+            {
+                Item.CreateNewItem(this.parent, item.type, item.CurrentStackAmount);
+            }
+
+            this.parent.world.storageStructures.Remove(this);
         }
 
         if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
@@ -426,6 +449,7 @@ public class Structure : IXmlSerializable
     void Thread_UpdateRooms_Deletion()
     {
         Room.FloodFill_Remove(this);
+        this.parent.world.CreateNewStructureAtTile(this.parent);
     }
 
     #endregion
@@ -449,7 +473,7 @@ public class Structure : IXmlSerializable
 
     public void ReadXml(XmlReader reader)
     {
-        Type = reader.GetAttribute("type");
+        type = reader.GetAttribute("type");
         width = int.Parse(reader.GetAttribute("width"));
         height = int.Parse(reader.GetAttribute("height"));
 
@@ -488,6 +512,20 @@ public class Structure : IXmlSerializable
                 }
         }
 
+        if (reader.GetAttribute("items") != null && reader.GetAttribute("amounts") != null)
+        {
+            string[] itemsString = reader.GetAttribute("items").Split('/');
+            string[] amounts = reader.GetAttribute("amounts").Split('/');
+
+            for (int i = 0; i < itemsString.Length; i++)
+            {
+                if (itemsString[i] == "") continue;
+
+                this.inventory.AddItem(itemsString[i], int.Parse(amounts[i]));
+            }
+        }
+
+        if (this.IsConstructed) this.CompleteStructure(true);
     }
 
 	public void WriteXml(XmlWriter writer) {
@@ -537,6 +575,11 @@ public class Structure : IXmlSerializable
             writer.WriteAttributeString("keys", keys);
 		    writer.WriteAttributeString("values", values);
 
+        }
+
+        if (this.inventory != null)
+        {
+            this.inventory.WriteXml(writer);
         }
 	}
     #endregion

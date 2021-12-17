@@ -33,6 +33,11 @@ public class UIController : MonoBehaviour
         {
             string text = $"{tile.x}-{tile.y}, {tile.Type.Replace("_", " ")}\n";
 
+            if (tile.structure.Type != ObjectType.Empty)
+            {
+                text += $"{tile.structure.Type.Replace("_", " ")}\n";
+            }
+
             if (tile.structure.parentStructure != null)
             {
                 text += tile.structure.parentStructure.Type.ToString().Replace("_", " ");
@@ -41,6 +46,11 @@ public class UIController : MonoBehaviour
             else if (tile.structure.IsConstructed)
             {
                 text += tile.structure.Type.ToString().Replace("_", " ");
+            }
+
+            else if (tile.item != null && tile.item.CurrentStackAmount > 0)
+            {
+                text += tile.item.Type.ToString() + " " + tile.item.CurrentStackAmount + " Room ";
             }
 
             text += tile.world.rooms.IndexOf(tile.room);

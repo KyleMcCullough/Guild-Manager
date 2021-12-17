@@ -24,6 +24,11 @@
         {
             "name": "QuestBoard",
             "id": 4
+        },
+
+        {
+            "name": "Storage",
+            "id": 5
         }
     ],
 
@@ -35,6 +40,7 @@
             "movementCost": 1,
             "width": 1,
             "height": 1,
+            "storageAmount": 0,
             "linksToNeighbours": false,
             "canCreateRooms": false,
             "placementMode": 3,
@@ -46,10 +52,11 @@
 
         {
             "name": "Table",
-            "category": 2,
+            "category": 5,
             "movementCost": 1,
             "width": 3,
             "height": 1,
+            "storageAmount": 6,
             "linksToNeighbours": false,
             "canCreateRooms": false,
             "placementMode": 1,
@@ -66,13 +73,14 @@
             "movementCost": 0,
             "width": 1,
             "height": 1,
+            "storageAmount": 0,
             "linksToNeighbours": true,
             "canCreateRooms": true,
             "placementMode": 2,
             "relatedParameters": [],
             "relatedFunctions": [],
             "buildingRequirement": [{"material": "Wood", "amount": 50}],
-            "itemsToDropOnDestroy": [{"material": "Wood", "amount": 0}]
+            "itemsToDropOnDestroy": [{"material": "Wood", "amount": 50}]
         },
 
         {
@@ -81,6 +89,7 @@
             "movementCost": 0,
             "width": 1,
             "height": 1,
+            "storageAmount": 0,
             "linksToNeighbours": false,
             "canCreateRooms": true,
             "placementMode": 1,
@@ -101,6 +110,7 @@
             "movementCost": 1,
             "width": 1,
             "height": 1,
+            "storageAmount": 0,
             "linksToNeighbours": false,
             "canCreateRooms": false,
             "placementMode": 1,
@@ -117,6 +127,7 @@
             "movementCost": 1,
             "width": 1,
             "height": 1,
+            "storageAmount": 0,
             "linksToNeighbours": false,
             "canCreateRooms": false,
             "placementMode": 1,
@@ -133,6 +144,7 @@
             "movementCost": 1,
             "width": 1,
             "height": 1,
+            "storageAmount": 0,
             "linksToNeighbours": false,
             "canCreateRooms": false,
             "placementMode": 1,

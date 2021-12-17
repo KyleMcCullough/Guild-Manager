@@ -26,7 +26,7 @@ public class Character : IXmlSerializable
     }
 
     #region Character variables
-    public Inventory inventory = new Inventory();
+    public Inventory inventory = new Inventory(Data.MaxInventory);
     public int id;
 
     #endregion
@@ -39,6 +39,7 @@ public class Character : IXmlSerializable
     Tile destTile;
     float movementPercent;
     float speed = 2f;
+    buildingRequirement haulingRequirement;
 
     Action<Character> characterChanged;
     Action<Character> characterDeleted;
@@ -69,7 +70,31 @@ public class Character : IXmlSerializable
                 else
                 {
                     currentJob = Room.GetNextAvailableJob(currTile);
+                    int itemsInWorld = Room.GetCountOfAllItemsInWorld(currTile.world);
+                
+                    // If there are no more tasks, check if items need hauling to storage.
+                    if (currentJob == null && Room.GetCountOfAvailableStorages(currTile.world) > 0)
+                    {
+
+                        Structure closestStorage = Room.GetClosestAvailableStorage(currTile);
+
+                        // If the character's inventory isn't full and there are items, get the closest item and create a job.
+                        if (closestStorage != null && !this.inventory.isFull && itemsInWorld > 0)
+                        {
+                            Tile searchedTile = Item.GetClosestItem(currTile);
+                            if (searchedTile != null)
+                            {
+                                this.currentJob = new Job(searchedTile, (theJob) => this.HaulingOnComplete(), JobType.Hauling, null);
+                            }
+                        }
+
+                        else if (closestStorage != null && this.inventory.items.Count > 0)
+                        {
+                            this.currentJob = new Job(closestStorage.parent, (job) => this.HaulToStorageComplete(), JobType.Hauling, null);
+                        }
+                    }
                 }
+
             }
 
             if (currentJob != null || parentJob != null)
@@ -116,6 +141,7 @@ public class Character : IXmlSerializable
                             if (Item.ItemExistsOnMap(currTile, requirement.material))
                             {
                                 searchedTile = Item.SearchForItem(requirement.material, this.currTile);
+                                haulingRequirement = requirement;
                             }
 
                             // This means that the required material is reachable.
@@ -165,7 +191,7 @@ public class Character : IXmlSerializable
         // If there is a parent job assigned, add the parentJob to the list and delete the current job. It will be regenerated later.
         else if (parentJob != null)
         {
-            currTile.room.unreachableJobs.Add(parentJob);
+            if (currTile.room != null) currTile.room.unreachableJobs.Add(parentJob);
             currentJob = null;
             parentJob = null;
         }
@@ -287,8 +313,16 @@ public class Character : IXmlSerializable
 
     public void HaulingOnComplete()
     {
-        destTile.room.RemoveItemFromRoom(destTile.item.Type, destTile.item.CurrentStackAmount);
-        this.inventory.AddItemFromTile(destTile.item);
+        if (destTile.structure != null && destTile.structure.structureCategory == StructureCategory.Storage && destTile.structure.inventory != null)
+        {
+            destTile.structure.inventory.TransferItem(this.inventory, haulingRequirement.material, haulingRequirement.amount);
+        }
+
+        else
+        {
+            destTile.room.RemoveItemFromRoom(destTile.item.Type, destTile.item.CurrentStackAmount);
+            this.inventory.AddItemFromTile(ref destTile.item);
+        }
     }
 
     public void HaulToConstructionComplete()
@@ -299,6 +333,14 @@ public class Character : IXmlSerializable
             {
                 item.CurrentStackAmount = this.parentJob.GiveMaterial(item.Type, item.CurrentStackAmount);
             }
+        }
+    }
+
+    public void HaulToStorageComplete()
+    {
+        foreach (Item item in this.inventory.items.ToArray())
+        {
+            item.CurrentStackAmount = this.currentJob.tile.structure.inventory.AddItem(item.type, item.CurrentStackAmount);
         }
     }
 
@@ -342,6 +384,8 @@ public class Character : IXmlSerializable
         {
             currTile = currTile.GetClosestNeighborToGivenTile(currTile);
         }
+
+        nextTile = destTile = currTile;
 
         // Called whether job was completed or cancelled.
         if (job != currentJob)

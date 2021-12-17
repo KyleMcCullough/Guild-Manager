@@ -40,7 +40,8 @@ public enum StructureCategory
     Wall,
     Furniture,
     Door,
-    QuestBoard
+    QuestBoard,
+    Storage
 }
 
 public enum AdventurerRank
