@@ -78,9 +78,31 @@ public class MouseController : MonoBehaviour
         }
 
         Camera.main.orthographicSize -= Camera.main.orthographicSize * Input.GetAxis("Mouse ScrollWheel");
-
         Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize, 3f, 25f);
 
+        // Controls zooming towards the mouse position.
+        if (Input.GetAxis("Mouse ScrollWheel") > 0)
+        {
+            if (mousePosition.x > Camera.main.transform.position.x)
+            {
+                Camera.main.transform.position += new Vector3(Mathf.Abs(mousePosition.x - Camera.main.transform.position.x) / 10, 0, 0);
+            }
+
+            else if (mousePosition.x < Camera.main.transform.position.x)
+            {
+                Camera.main.transform.position -= new Vector3(Mathf.Abs(mousePosition.x - Camera.main.transform.position.x) / 10, 0, 0);
+            }
+
+            if (mousePosition.y > Camera.main.transform.position.y)
+            {
+                Camera.main.transform.position += new Vector3(0, Mathf.Abs(mousePosition.y - Camera.main.transform.position.y) / 10, 0);
+            }
+
+            else if (mousePosition.y < Camera.main.transform.position.y)
+            {
+                Camera.main.transform.position -= new Vector3(0, Mathf.Abs(mousePosition.y - Camera.main.transform.position.y) / 10, 0);
+            }
+        }
 
         Vector3 updatedMovement = Vector3.zero;
 
