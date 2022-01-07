@@ -84,7 +84,7 @@ public class StructureSpriteController : MonoBehaviour
         {
             if (Data.GetStructureData(structure.Type).rotates)
             {
-                return structure.Type + "_" + structure.facingDirection.ToString();;
+                return structure.Type + "_" + structure.facingDirection.ToString();
             }
 
             else

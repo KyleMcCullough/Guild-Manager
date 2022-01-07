@@ -2,22 +2,30 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class BuildController : MonoBehaviour
 {
 
-
-
     string buildTile = "Dirt";
     public bool buildObjectsMode { get; private set; } = false;
     public string buildObject = ObjectType.Empty;
+    public bool buildMode = false;
     public int buildType = 0;
     public int buildWidth = 1;
     public int buildHeight = 1;
     public Facing buildDirection = Facing.East;
+    public PreviewSpriteController previewSpriteController;
+
+    private void Start()
+    {
+        this.previewSpriteController = FindObjectOfType<PreviewSpriteController>();
+    }
 
     private void Update() 
     {
+        if (!buildMode) return;
+
         if (Input.GetKeyDown(KeyCode.Q))
         {
             RotateStructure(0);
@@ -26,6 +34,23 @@ public class BuildController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.E))
         {
             RotateStructure(1);
+        }
+
+        if (buildType != 2)
+        {
+            PlacePreview();
+        }
+    }
+
+    void PlacePreview()
+    {
+        switch (buildType)
+        {
+            case 1:
+            {
+                this.previewSpriteController.PlacePreviewSprite(this.buildObject, buildDirection, buildWidth, buildHeight);
+                break;
+            }
         }
     }
 
@@ -201,5 +226,11 @@ public class BuildController : MonoBehaviour
     {
         buildType = 3;
         buildObject = ObjectType.Empty;
+    }
+
+    public void Toggle_BuildMode()
+    {
+        if (buildMode) buildMode = false;
+        else buildMode = true;
     }
 }
