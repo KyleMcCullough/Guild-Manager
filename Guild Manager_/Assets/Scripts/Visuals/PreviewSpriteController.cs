@@ -13,7 +13,6 @@ public class PreviewSpriteController : MonoBehaviour
     MouseController mouseController;
     Tile lastPreviewTile = null;
     Facing lastPreviewDirection = Facing.None;
-    List<Structure> changedSprites;
 
     World world
     {
@@ -24,7 +23,6 @@ public class PreviewSpriteController : MonoBehaviour
     void OnEnable()
     {
         this.mouseController = FindObjectOfType<MouseController>();
-        this.changedSprites = new List<Structure>();
         structureSprites = new Dictionary<string, Sprite>();
 
         Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Structures");
@@ -58,7 +56,6 @@ public class PreviewSpriteController : MonoBehaviour
         {
             if (Data.GetStructureData(structureType).rotates)
             {
-                Debug.Log(direction);
                 return structureType + "_" + direction.ToString();
             }
 
@@ -135,20 +132,19 @@ public class PreviewSpriteController : MonoBehaviour
 
         // Clears previous preview as well as all changed existing structures.
         tilemap.ClearAllTiles();
-        Debug.Log("Refreshing");
 
         lastPreviewTile = tile;
         lastPreviewDirection = direction;
 
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-        t.sprite = structureSprites[GetSpriteName(world.GetTile(xPos, yPos).structure, structureType, direction, null, width, height)];
+        t.sprite = structureSprites[GetSpriteName(tile.structure, structureType, direction, null, width, height)];
 
         tilemap.SetTile(new Vector3Int(xPos, yPos, 0), t);
         this.UpdateAdjacentSprites(tile);
 
         //FIXME: Multi-tile structures are being properly placed and validated.
         // If structure placement is invalid give the sprite a red tint
-        if (WorldController.Instance.World.IsStructurePlacementValid(structureType, world.GetTile(xPos, yPos), direction, width, height))
+        if (WorldController.Instance.World.IsStructurePlacementValid(structureType, tile, direction, width, height))
         {
             tilemap.SetTileFlags(new Vector3Int(xPos, yPos, 0), TileFlags.None);
             tilemap.SetColor(new Vector3Int(xPos, yPos, 0), new Color(1f, 1f, 1f, .5f));
@@ -165,9 +161,7 @@ public class PreviewSpriteController : MonoBehaviour
     {
         foreach (Tile n in tile.GetNeighbors())
         {
-            if (n == null || n.structure == null || n.structure.Type == ObjectType.Empty) continue;
-
-            this.changedSprites.Add(n.structure);
+            if (n == null || n.structure == null || n.structure.Type == ObjectType.Empty || !n.structure.linksToNeighbour) continue;
 
             UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
             t.sprite = structureSprites[this.GetSpriteName(n.structure, n.structure.Type, n.structure.facingDirection, tile)];
