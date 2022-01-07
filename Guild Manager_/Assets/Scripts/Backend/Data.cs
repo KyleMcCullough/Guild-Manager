@@ -14,6 +14,7 @@ public static class Data
     public static Dictionary<string, StructureData> structureData = new Dictionary<string, StructureData>();
     public static Dictionary<string, TileData> tileData = new Dictionary<string, TileData>();
     public static Dictionary<string, ItemData> itemData = new Dictionary<string, ItemData>();
+    public static Dictionary<string, Sprite> sprites = new Dictionary<string, Sprite>();
     public static List<string> structureTypes = new List<string>();
     public static List<Quest> questTemplates = new List<Quest>();
     public static List<string> tileTypes = new List<string>();
@@ -62,6 +63,19 @@ public static class Data
         foreach (QuestData data in Data.quests.quests)
         {
             questTemplates.Add(new Quest(data.title, data.description, data.timeToSolve, (AdventurerRank) data.requiredRank, data.id));
+        }
+
+        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/");
+
+        // Changes pixels per unit.
+        foreach (Sprite sprite in sprites)
+        {
+            Sprite s = sprite;
+            if (!sprite.name.Contains("character"))
+            {
+                s = Sprite.Create(sprite.texture, new Rect(0, 0, sprite.texture.width, sprite.texture.height), new Vector2(0f, 0f), 32f);
+            }
+            Data.sprites[sprite.name] = s;
         }
 
 
@@ -179,5 +193,18 @@ public static class Data
 
         Debug.LogError("GetbuildingRequirement - An invalid type was given.");
         return null;
+    }
+
+    public static Sprite GetSprite(string type)
+    {
+        if (sprites.ContainsKey(type)) return sprites[type];
+        
+        Debug.LogError("GetSprite - '" + type + "' sprite does not exist.");
+        return null;
+    }
+
+    public static bool ContainsSprite(string type)
+    {
+        return sprites.ContainsKey(type);
     }
 }

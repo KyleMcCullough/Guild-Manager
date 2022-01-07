@@ -6,7 +6,6 @@ public class CharacterSpriteController : MonoBehaviour
 {
 
     Dictionary<Character, GameObject> characterGameObjects;
-    Dictionary<string, Sprite> characterSprites;
 
     World world
     {
@@ -17,22 +16,7 @@ public class CharacterSpriteController : MonoBehaviour
     void OnEnable()
     {
         characterGameObjects = new Dictionary<Character, GameObject>();
-        characterSprites = new Dictionary<string, Sprite>();
-
-        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Characters");
-
-        foreach (Sprite sprite in sprites)
-        {
-            characterSprites[sprite.name] = sprite;
-        }
-
         world.RegisterCharacterCreated(OnCharacterCreated);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 
     public void OnCharacterCreated(Character character)
@@ -46,9 +30,8 @@ public class CharacterSpriteController : MonoBehaviour
         // Adds tile data and object to dictonary.
         characterGameObjects.Add(character, obj);
 
-        // FIxME: Assumes object must be a wall. Currently hardcoded.
         SpriteRenderer sprite = obj.AddComponent<SpriteRenderer>();
-        sprite.sprite = characterSprites["p1_front"];
+        sprite.sprite = Data.GetSprite("character_front");
         sprite.sortingOrder = 3;
         
         // Registers callback.

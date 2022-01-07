@@ -9,7 +9,6 @@ using UnityEngine.Tilemaps;
 public class ItemSpriteController : MonoBehaviour
 {
     public Tilemap tilemap;
-    public Dictionary<string, Sprite> itemSprites;
 
     World world
     {
@@ -20,17 +19,6 @@ public class ItemSpriteController : MonoBehaviour
     // Start is called before the first frame update
     void OnEnable()
     {
-
-        itemSprites = new Dictionary<string, Sprite>();
-
-        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Items");
-
-        // Changes pixels per unit.
-        foreach (Sprite sprite in sprites)
-        {
-            itemSprites[sprite.name] = Sprite.Create(sprite.texture, new Rect(0, 0, sprite.texture.width, sprite.texture.height), new Vector2(0f, 0f), 32f);
-        }
-
         world.RegisterItemChanged(OnItemChanged);
     }
 
@@ -44,7 +32,7 @@ public class ItemSpriteController : MonoBehaviour
         }
 
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-        t.sprite = itemSprites[item.Type];
+        t.sprite = Data.GetSprite(item.Type);
 
         tilemap.SetTile(new Vector3Int(item.parent.x, item.parent.y, 0), t);
     }

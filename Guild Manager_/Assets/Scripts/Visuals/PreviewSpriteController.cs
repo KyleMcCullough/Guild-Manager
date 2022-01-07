@@ -9,7 +9,6 @@ using UnityEngine.Tilemaps;
 public class PreviewSpriteController : MonoBehaviour
 {
     public Tilemap tilemap;
-    Dictionary<string, Sprite> structureSprites;
     MouseController mouseController;
     Tile lastPreviewTile = null;
     Facing lastPreviewDirection = Facing.None;
@@ -23,16 +22,6 @@ public class PreviewSpriteController : MonoBehaviour
     void OnEnable()
     {
         this.mouseController = FindObjectOfType<MouseController>();
-        structureSprites = new Dictionary<string, Sprite>();
-
-        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Structures");
-
-        // Changes pixels per unit.
-        foreach (Sprite sprite in sprites)
-        {
-            Sprite s = Sprite.Create(sprite.texture, new Rect(0, 0, sprite.texture.width, sprite.texture.height), new Vector2(0f, 0f), 32f);
-            structureSprites[sprite.name] = s;
-        }
     }
 
     public string GetSpriteName(Structure structure, string structureType, Facing direction, Tile previewTile = null, int width = 1, int height = 1)
@@ -95,7 +84,7 @@ public class PreviewSpriteController : MonoBehaviour
             spriteName += "W";
         }
 
-        if (!structureSprites.ContainsKey(spriteName))
+        if (!Data.ContainsSprite(spriteName))
         {
             Debug.LogWarning("GetSprite - no sprite with name " + spriteName + " is found.");
             return structure.Type.ToString() + "_";
@@ -137,12 +126,11 @@ public class PreviewSpriteController : MonoBehaviour
         lastPreviewDirection = direction;
 
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-        t.sprite = structureSprites[GetSpriteName(tile.structure, structureType, direction, null, width, height)];
+        t.sprite = Data.GetSprite(GetSpriteName(tile.structure, structureType, direction, null, width, height));
 
         tilemap.SetTile(new Vector3Int(xPos, yPos, 0), t);
         this.UpdateAdjacentSprites(tile);
 
-        //FIXME: Multi-tile structures are being properly placed and validated.
         // If structure placement is invalid give the sprite a red tint
         if (WorldController.Instance.World.IsStructurePlacementValid(structureType, tile, direction, width, height))
         {
@@ -164,7 +152,7 @@ public class PreviewSpriteController : MonoBehaviour
             if (n == null || n.structure == null || n.structure.Type == ObjectType.Empty || !n.structure.linksToNeighbour) continue;
 
             UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-            t.sprite = structureSprites[this.GetSpriteName(n.structure, n.structure.Type, n.structure.facingDirection, tile)];
+            t.sprite = Data.GetSprite(this.GetSpriteName(n.structure, n.structure.Type, n.structure.facingDirection, tile));
             tilemap.SetTile(new Vector3Int(n.x, n.y, 0), t);
 
             // Sets opacity if it is not constructed yet.

@@ -362,7 +362,6 @@ public class Structure : IXmlSerializable
 
         if (width > 1 || height > 1)
         {
-            Debug.Log(width + " " + height);
             int xPos = tile.x;
             int yPos = tile.y;
 
@@ -380,11 +379,6 @@ public class Structure : IXmlSerializable
                     xPos = tile.x - (width - 1);
                     break;
                 }
-                
-                default:
-                {
-                    break;
-                }
             }
 
             for (int x = xPos; x < (xPos + width); x++)
@@ -392,7 +386,7 @@ public class Structure : IXmlSerializable
                 for (int y = yPos; y < (yPos + height); y++)
                 {
                     Tile t = tile.world.GetTile(x, y);
-                    if (!Data.CheckIfTileIsWalkable(tile.Type) || t.structure.type != ObjectType.Empty || t.structure.parentStructure != null || tile.structure.IsConstructed == true || t.structure.overlappedStructureTiles != null)
+                    if (!Data.CheckIfTileIsWalkable(tile.Type) || t.structure.type != ObjectType.Empty || t.structure.parentStructure != null)
                     {
                         return false;
                     }
@@ -402,7 +396,7 @@ public class Structure : IXmlSerializable
 
         else
         {
-            if (!Data.CheckIfTileIsWalkable(tile.Type) || tile.structure.type != ObjectType.Empty || tile.structure.parentStructure != null || tile.structure.IsConstructed == true || tile.structure.overlappedStructureTiles != null) return false;
+            if (!Data.CheckIfTileIsWalkable(tile.Type) || tile.structure.type != ObjectType.Empty || tile.structure.parentStructure != null) return false;
         }
         return true;
     }

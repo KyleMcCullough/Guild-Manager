@@ -9,7 +9,6 @@ using UnityEngine.Tilemaps;
 public class StructureSpriteController : MonoBehaviour
 {
     public Tilemap tilemap;
-    public Dictionary<string, Sprite> structureSprites;
 
     World world
     {
@@ -20,18 +19,6 @@ public class StructureSpriteController : MonoBehaviour
     // Start is called before the first frame update
     void OnEnable()
     {
-
-        structureSprites = new Dictionary<string, Sprite>();
-
-        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Structures");
-
-        // Changes pixels per unit.
-        foreach (Sprite sprite in sprites)
-        {
-            Sprite s = Sprite.Create(sprite.texture, new Rect(0, 0, sprite.texture.width, sprite.texture.height), new Vector2(0f, 0f), 32f);
-            structureSprites[sprite.name] = s;
-        }
-
         world.RegisterStructureChanged(OnStructureChanged);
     }
 
@@ -69,7 +56,7 @@ public class StructureSpriteController : MonoBehaviour
 
         string spriteName = GetSpriteName(obj);
 
-        t.sprite = structureSprites[spriteName];
+        t.sprite = Data.GetSprite(spriteName);
         tilemap.SetTile(new Vector3Int(tileToUpdate.x, tileToUpdate.y, 0), t);
 
         // Sets opacity if it is not constructed yet.
@@ -125,7 +112,7 @@ public class StructureSpriteController : MonoBehaviour
             spriteName += "W";
         }
 
-        if (!structureSprites.ContainsKey(spriteName))
+        if (!Data.ContainsSprite(spriteName))
         {
             Debug.LogWarning("GetSprite - no sprite with name " + spriteName + " is found.");
             return structure.Type.ToString() + "_";

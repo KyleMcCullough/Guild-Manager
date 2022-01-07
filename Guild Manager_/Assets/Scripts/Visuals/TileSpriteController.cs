@@ -6,7 +6,6 @@ using UnityEngine.Tilemaps;
 public class TileSpriteController : MonoBehaviour
 {
     public Tilemap tilemap;
-    public Dictionary<string, Sprite> tileSprites;
 
     World world
     {
@@ -17,15 +16,6 @@ public class TileSpriteController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        tileSprites = new Dictionary<string, Sprite>();
-        Sprite[] sprites = Resources.LoadAll<Sprite>("Images/Tiles");
-
-        foreach (Sprite sprite in sprites)
-        {
-            Sprite s = Sprite.Create(sprite.texture, new Rect(0, 0, sprite.texture.width, sprite.texture.height), new Vector2(0f, 0f), 32f);
-            tileSprites[sprite.name] = s;
-        }
-
         // Registers callback.
         world.RegisterTileChanged(OnTileChanged);
         RefreshAllTiles();
@@ -48,7 +38,7 @@ public class TileSpriteController : MonoBehaviour
 
         if (!Data.tileData[obj.Type].linksToNeighbours)
         {
-            t.sprite = tileSprites[obj.Type + "_"];
+            t.sprite = Data.GetSprite(obj.Type + "_");
             tilemap.SetTile(new Vector3Int(obj.x, obj.y, 0), t);
             return;
         }
@@ -85,13 +75,13 @@ public class TileSpriteController : MonoBehaviour
             spriteName += "W";
         }
 
-        if (!tileSprites.ContainsKey(spriteName))
+        if (!Data.ContainsSprite(spriteName))
         {
             Debug.LogWarning("GetSprite - no sprite with name " + spriteName + " is found.");
-            t.sprite = tileSprites[obj.Type.ToString()];
+            t.sprite = Data.GetSprite(obj.Type);
         }
 
-        t.sprite = tileSprites[spriteName];
+        t.sprite = Data.GetSprite(spriteName);
         tilemap.SetTile(new Vector3Int(obj.x, obj.y, 0), t);
     }
 
@@ -104,7 +94,7 @@ public class TileSpriteController : MonoBehaviour
             {
                 Tile tile = world.GetTile(x, y);
                 UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-                t.sprite = tileSprites[tile.Type];
+                t.sprite = Data.GetSprite(tile.Type);
 
                 tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
             }
