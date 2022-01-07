@@ -46,18 +46,20 @@ public class StructureSpriteController : MonoBehaviour
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
 
         string trailing = obj.facingDirection.ToString();
-        int posX = obj.parent.x;
-        int posY = obj.parent.y;
+        int xPos = obj.parent.x;
+        int yPos = obj.parent.y;
 
-        if (obj.facingDirection == Facing.South)
+        // Adjust selected structure for placing south or west to properly align sprite to tiles.
+        if (obj.facingDirection == Facing.South || obj.facingDirection == Facing.West)
         {
-            posY -= (obj.height - 1);
+            if (obj.width > 1)
+                xPos -= (obj.width - 1);
+
+            if (obj.height > 1)
+                yPos -= (obj.height - 1);
         }
 
-        else if (obj.facingDirection == Facing.West)
-        {
-            posX -= (obj.width - 1);
-        }
+        Tile tileToUpdate = world.GetTile(xPos, yPos);
 
         if (obj.Type == ObjectType.Empty)
         {
@@ -68,13 +70,13 @@ public class StructureSpriteController : MonoBehaviour
         string spriteName = GetSpriteName(obj);
 
         t.sprite = structureSprites[spriteName];
-        tilemap.SetTile(new Vector3Int(obj.parent.x, obj.parent.y, 0), t);
+        tilemap.SetTile(new Vector3Int(tileToUpdate.x, tileToUpdate.y, 0), t);
 
         // Sets opacity if it is not constructed yet.
         if (!obj.IsConstructed)
         {
-            tilemap.SetTileFlags(new Vector3Int(obj.parent.x, obj.parent.y, 0), TileFlags.None);
-            tilemap.SetColor(new Vector3Int(obj.parent.x, obj.parent.y, 0), new Color(1f, 1f, 1f, .5f));
+            tilemap.SetTileFlags(new Vector3Int(tileToUpdate.x, tileToUpdate.y, 0), TileFlags.None);
+            tilemap.SetColor(new Vector3Int(tileToUpdate.x, tileToUpdate.y, 0), new Color(1f, 1f, 1f, .5f));
         }
     }
 

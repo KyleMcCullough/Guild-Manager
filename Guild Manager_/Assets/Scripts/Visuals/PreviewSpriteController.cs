@@ -37,8 +37,22 @@ public class PreviewSpriteController : MonoBehaviour
         }
     }
 
-    public string GetSpriteName(Structure structure, string structureType, Facing direction, Tile previewTile = null)
+    public string GetSpriteName(Structure structure, string structureType, Facing direction, Tile previewTile = null, int width = 1, int height = 1)
     {
+        if (previewTile == null && direction == Facing.South || direction == Facing.West)
+        {
+            int spriteX = structure.parent.x;
+            int spriteY = structure.parent.y;
+
+            if (width > 1)
+                spriteX -= width;
+
+            if (height > 1)
+                spriteY -= height;
+
+            structure = world.GetTile(spriteX, spriteY).structure;
+        }
+
 
         if (!Data.structureData[structureType].linksToNeighbours)
         {
@@ -104,18 +118,30 @@ public class PreviewSpriteController : MonoBehaviour
         // Turn mouse position into coords
         int xPos = Mathf.FloorToInt(mouseController.mousePosition.x);
         int yPos = Mathf.FloorToInt(mouseController.mousePosition.y);
+
+        // Adjust selected structure for placing south or west to properly align sprite to tiles.
+        if (direction == Facing.South || direction == Facing.West)
+        {
+            if (width > 1)
+                xPos -= (width - 1);
+
+            if (height > 1)
+                yPos -= (height - 1);
+        }
+
         Tile tile = world.GetTile(xPos, yPos);
 
         if (lastPreviewTile == tile && lastPreviewDirection == direction || (xPos >= world.width || yPos >= world.height || xPos < 0 || yPos < 0)) return;
 
         // Clears previous preview as well as all changed existing structures.
         tilemap.ClearAllTiles();
+        Debug.Log("Refreshing");
 
         lastPreviewTile = tile;
         lastPreviewDirection = direction;
 
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-        t.sprite = structureSprites[GetSpriteName(world.GetTile(xPos, yPos).structure, structureType, direction)];
+        t.sprite = structureSprites[GetSpriteName(world.GetTile(xPos, yPos).structure, structureType, direction, null, width, height)];
 
         tilemap.SetTile(new Vector3Int(xPos, yPos, 0), t);
         this.UpdateAdjacentSprites(tile);
