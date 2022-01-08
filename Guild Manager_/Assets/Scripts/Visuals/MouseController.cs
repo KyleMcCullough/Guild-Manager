@@ -15,13 +15,15 @@ public class MouseController : MonoBehaviour
     public GameObject highlightCursorPrefab;
     public float CameraMoveSpeed = 10f;
     BuildController buildController;
+    PreviewSpriteController previewSpriteController;
     bool allowDragging = true;
 
     // Start is called before the first frame update
     void Start()
     {
         dragPreviewArea = new List<GameObject>();
-        buildController = GameObject.FindObjectOfType<BuildController>();
+        buildController = FindObjectOfType<BuildController>();
+        previewSpriteController = FindObjectOfType<PreviewSpriteController>();
     }
 
     // Update is called once per frame
@@ -151,7 +153,6 @@ public class MouseController : MonoBehaviour
         int startY = Mathf.FloorToInt(dragStartPosition.y);
         int endY = Mathf.FloorToInt(mousePosition.y);
 
-        //FIXME: May cause issues with some objects.
         // Only allows objects to be dragged on either x or y axis.
         if (buildController.buildType == 1 && Data.structureData[buildController.buildObject].placementMode == 2)
         {
@@ -182,36 +183,10 @@ public class MouseController : MonoBehaviour
             startY = temp;
         }
 
-
-        // Garbage collect old drag preview images.
-        while (dragPreviewArea.Count > 0)
-        {
-            GameObject obj = dragPreviewArea[0];
-            dragPreviewArea.RemoveAt(0);
-            SimplePool.Despawn(obj);
-        }
-
         if (Input.GetMouseButton(0) && this.allowDragging)
         {
-
-            // Display preview of drag area.
-            for (int x = startX; x <= endX; x++)
-            {
-                for (int y = startY; y <= endY; y++)
-                {
-                    Tile tile = WorldController.Instance.World.GetTile(x, y);
-
-                    if (tile != null)
-                    {
-                        GameObject obj = SimplePool.Spawn(highlightCursorPrefab, new Vector3(x, y, 0), Quaternion.identity);
-
-                        obj.transform.SetParent(this.transform, true);
-                        dragPreviewArea.Add(obj);
-                    }
-                }
-            }
+            previewSpriteController.UpdateDragging(startX, startY, endX, endY);
         }
-
 
         // Ends drag
         if (Input.GetMouseButtonUp(0) && this.allowDragging)
@@ -230,6 +205,7 @@ public class MouseController : MonoBehaviour
                     }
                 }
             }
+            previewSpriteController.EndDragging();
         }
     }
 }

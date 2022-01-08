@@ -10,8 +10,12 @@ public class PreviewSpriteController : MonoBehaviour
 {
     public Tilemap tilemap;
     MouseController mouseController;
+    BuildController buildController;
     Tile lastPreviewTile = null;
     Facing lastPreviewDirection = Facing.None;
+    public bool dragging {get; private set;} = false;
+    Vector3 lastMousePosition;
+
 
     World world
     {
@@ -22,6 +26,8 @@ public class PreviewSpriteController : MonoBehaviour
     void OnEnable()
     {
         this.mouseController = FindObjectOfType<MouseController>();
+        this.buildController = FindObjectOfType<BuildController>();
+        lastMousePosition = new Vector3(0,0,0);
     }
 
     public string GetSpriteName(Structure structure, string structureType, Facing direction, Tile previewTile = null, int width = 1, int height = 1)
@@ -40,8 +46,7 @@ public class PreviewSpriteController : MonoBehaviour
             structure = world.GetTile(spriteX, spriteY).structure;
         }
 
-
-        if (!Data.structureData[structureType].linksToNeighbours)
+        if (structureType != "select" && !Data.structureData[structureType].linksToNeighbours)
         {
             if (Data.GetStructureData(structureType).rotates)
             {
@@ -61,25 +66,25 @@ public class PreviewSpriteController : MonoBehaviour
         int y = structure.parent.y;
 
         tile = world.GetTile(x, y + 1);
-        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile)
+        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
         {
             spriteName += "N";
         }
 
         tile = world.GetTile(x + 1, y);
-        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile)
+        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
         {
             spriteName += "E";
         }
 
         tile = world.GetTile(x, y - 1);
-        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile)
+        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
         {
             spriteName += "S";
         }
 
         tile = world.GetTile(x - 1, y);
-        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile)
+        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
         {
             spriteName += "W";
         }
@@ -95,6 +100,8 @@ public class PreviewSpriteController : MonoBehaviour
 
     public void PlacePreviewSprite(string structureType, Facing direction, int width, int height)
     {
+        if (dragging) return;
+
         if (structureType == ObjectType.Empty)
         {
             tilemap.ClearAllTiles();
@@ -162,5 +169,65 @@ public class PreviewSpriteController : MonoBehaviour
                 tilemap.SetColor(new Vector3Int(n.x, n.y, 0), new Color(1f, 1f, 1f, .5f));
             }
         }
+    }
+
+    public void UpdateDragging(int startX, int startY, int endX, int endY)
+    {
+        if (!dragging) dragging = true;
+
+        Tile currentPreviewTile = world.GetTile(Mathf.FloorToInt(mouseController.mousePosition.x), Mathf.FloorToInt(mouseController.mousePosition.y));
+        if (buildController.buildObject == ObjectType.Empty && buildController.buildType == 1 || lastPreviewTile == currentPreviewTile) return;
+        lastPreviewTile = currentPreviewTile;
+        
+        tilemap.ClearAllTiles();
+
+        // Creates empty tiles at locations, this is used for correct sprite generation.
+        for (int x = startX; x <= endX; x++)
+        {
+            for (int y = startY; y <= endY; y++)
+            {
+                tilemap.SetTile(new Vector3Int(x, y, 0), ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>());
+            }
+        }
+
+        // Goes through all tiles and assigns sprites to them.
+        for (int x = startX; x <= endX; x++)
+        {
+            for (int y = startY; y <= endY; y++)
+            {
+
+                Tile tile = world.GetTile(x, y);
+
+                UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
+
+                // Changes sprites to the selection type.
+                if (buildController.buildType == 3)
+                {
+                    t.sprite = Data.GetSprite(this.GetSpriteName(tile.structure, "select", tile.structure.facingDirection, tile));
+                }
+
+                else
+                {
+                    t.sprite = Data.GetSprite(this.GetSpriteName(tile.structure, buildController.buildObject, tile.structure.facingDirection, tile));
+                }
+
+                tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
+                
+                if (buildController.buildType != 2)
+                {
+                    tilemap.SetTileFlags(new Vector3Int(tile.x, tile.y, 0), TileFlags.None);
+                    tilemap.SetColor(new Vector3Int(tile.x, tile.y, 0), new Color(1f, 1f, 1f, .5f));
+                }
+
+
+                UpdateAdjacentSprites(tile);
+            }
+        }
+    }
+
+    public void EndDragging()
+    {
+        tilemap.ClearAllTiles();
+        dragging = false;
     }
 }

@@ -141,7 +141,6 @@ public class Item : IXmlSerializable
                 tile.item.ItemChangedEvent += tile.world.itemChangedEvent;
             }
 
-            Debug.Log(tile.item.parent.x + " " + tile.item.parent.y);
             tile.item.ItemChangedEvent(tile.item);
         }
 
