@@ -93,7 +93,7 @@ public class Job : IXmlSerializable
 
     public bool HasNoRequirements()
     {
-        return requiredMaterials == null && requiredMaterials.Count == 0;
+        return requiredMaterials == null || requiredMaterials.Count == 0;
     }
 
     public bool IsRequiredType(string type)

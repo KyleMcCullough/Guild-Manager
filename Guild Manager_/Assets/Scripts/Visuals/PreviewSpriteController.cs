@@ -201,14 +201,19 @@ public class PreviewSpriteController : MonoBehaviour
                 UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
 
                 // Changes sprites to the selection type.
-                if (buildController.buildType == 3)
+                switch (buildController.buildType)
                 {
-                    t.sprite = Data.GetSprite(this.GetSpriteName(tile.structure, "select", tile.structure.facingDirection, tile));
-                }
+                    case 1:
+                    {
+                        t.sprite = Data.GetSprite(this.GetSpriteName(tile.structure, buildController.buildObject, tile.structure.facingDirection, tile));
+                        break;
+                    }
 
-                else
-                {
-                    t.sprite = Data.GetSprite(this.GetSpriteName(tile.structure, buildController.buildObject, tile.structure.facingDirection, tile));
+                    case 3:
+                    {
+                        t.sprite = Data.GetSprite(this.GetSpriteName(tile.structure, "select", tile.structure.facingDirection, tile));
+                        break;
+                    }
                 }
 
                 tilemap.SetTile(new Vector3Int(tile.x, tile.y, 0), t);
@@ -218,7 +223,6 @@ public class PreviewSpriteController : MonoBehaviour
                     tilemap.SetTileFlags(new Vector3Int(tile.x, tile.y, 0), TileFlags.None);
                     tilemap.SetColor(new Vector3Int(tile.x, tile.y, 0), new Color(1f, 1f, 1f, .5f));
                 }
-
 
                 UpdateAdjacentSprites(tile);
             }

@@ -545,7 +545,6 @@ public class World : IXmlSerializable
     {
 		width = int.Parse(reader.GetAttribute("width"));
 		height = int.Parse(reader.GetAttribute("height"));
-
 		SetupWorld(width, height, false);
 
         nextID = int.Parse(reader.GetAttribute("nextID"));
@@ -668,6 +667,9 @@ public class World : IXmlSerializable
                     case SaveableJob.QuestGiving:
                         c.prioritizedJobs.Enqueue(new Job(tile, (job) => questManager.SubmitQuest(), JobType.QuestGiving, null, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
+                    case SaveableJob.Waiting:
+                        c.prioritizedJobs.Enqueue(new Job(tile, null, JobType.Waiting, null, float.Parse(reader.GetAttribute("jobTime"))));
+                        break;
                 }
             }
 
@@ -698,7 +700,6 @@ public class World : IXmlSerializable
             if (reader.GetAttribute("id") != null)
             {
                 questManager.quests.Add(Data.GetQuestTemplateById(int.Parse(reader.GetAttribute("id"))));
-                Debug.Log(questManager.quests.Count);
             }
         }
         Debug.Log(questManager.quests.Count);
@@ -750,18 +751,26 @@ public class World : IXmlSerializable
         // Save each job a character is working on if its saveable.
         foreach (Character c in characters)
         {
-            Job job = c.GetActiveJob();
-            if (job != null && Enum.IsDefined(typeof(SaveableJob), job.jobType.ToString()))
+
+            if (c.currentJob != null && Enum.IsDefined(typeof(SaveableJob), c.currentJob.jobType.ToString()))
             {
                 writer.WriteStartElement("Job");
-                job.WriteXml(writer);
+                c.currentJob.WriteXml(writer);
+                writer.WriteAttributeString("characterID", c.id.ToString());
+                writer.WriteEndElement();
+            }
+
+            if (c.parentJob != null && Enum.IsDefined(typeof(SaveableJob), c.parentJob.jobType.ToString()))
+            {
+                writer.WriteStartElement("Job");
+                c.parentJob.WriteXml(writer);
                 writer.WriteAttributeString("characterID", c.id.ToString());
                 writer.WriteEndElement();
             }
 
             foreach(Job j in c.prioritizedJobs.ToArray())
             {
-                if (!Enum.IsDefined(typeof(SaveableJob), job.jobType.ToString())) continue;
+                if (!Enum.IsDefined(typeof(SaveableJob), j.jobType.ToString())) continue;
 
                 writer.WriteStartElement("Job");
                 j.WriteXml(writer);

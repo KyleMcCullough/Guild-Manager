@@ -14,6 +14,13 @@ public enum Facing
     None
 }
 
+public enum State
+{
+    Working,
+    Queueing,
+    Idling
+}
+
 // All job types
 public enum JobType
 {
@@ -23,7 +30,8 @@ public enum JobType
     Exiting,
     Hauling,
     Sleeping,
-    Consuming
+    Consuming,
+    Waiting
 }
 
 // Jobs that will be saved
@@ -32,7 +40,8 @@ public enum SaveableJob
     Construction,
     Demolition,
     QuestGiving,
-    Exiting
+    Exiting,
+    Waiting
 }
 
 public enum StructureCategory

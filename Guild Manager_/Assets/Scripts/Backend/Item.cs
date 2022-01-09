@@ -91,7 +91,6 @@ public class Item : IXmlSerializable
         {
             if (tile.item.maxStack == tile.item.currentStackAmount)
             {
-                Debug.Log("Again");
                 tile.item.SendItemsToNeighbour(amount, type, tile);
             }
 
@@ -118,7 +117,6 @@ public class Item : IXmlSerializable
 
             tile.item = new Item(tile, type, amount);
             tile.item.parent = tile;
-            Debug.Log("here");
 
             if (amount > tile.item.maxStack)
             {

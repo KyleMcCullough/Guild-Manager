@@ -12,7 +12,6 @@ public class MouseController : MonoBehaviour
     Vector3 dragStartPosition;
     public Vector3 mousePosition;
     List<GameObject> dragPreviewArea;
-    public GameObject highlightCursorPrefab;
     public float CameraMoveSpeed = 10f;
     BuildController buildController;
     PreviewSpriteController previewSpriteController;

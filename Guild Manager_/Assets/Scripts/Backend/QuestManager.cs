@@ -27,7 +27,7 @@ public class QuestManager
         Character c = world.CreateCharacter(spawnpoint);
 
         // Create jobs to deliver quest, and head to the border of the map and delete itself.
-        c.prioritizedJobs.Enqueue(new Job(jobBoard.parent, (job) => SubmitQuest(), JobType.QuestGiving));
+        c.prioritizedJobs.Enqueue(new Job(jobBoard.parent, (job) => SubmitQuest(), JobType.QuestGiving, null, 2f));
         c.prioritizedJobs.Enqueue(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Destroy(), JobType.Exiting, null, 0f));
     }
 

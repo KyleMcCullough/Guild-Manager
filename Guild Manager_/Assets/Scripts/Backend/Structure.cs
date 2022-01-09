@@ -25,6 +25,22 @@ public class Structure : IXmlSerializable
 
     public Dictionary<string, object> optionalParameters = new Dictionary<string, object>();
     public Action<Structure, float> updateActions = null;
+    int usedByCharacterID = -1;
+    public int UsedByCharacterID
+    {
+        get
+        {
+            return usedByCharacterID;
+        }
+
+        set
+        {
+            if (Data.structureData[Type].hasQueue)
+            {
+                usedByCharacterID = value;
+            }
+        }
+    }
     public Inventory inventory = null;
 
     public String Type
@@ -472,6 +488,9 @@ public class Structure : IXmlSerializable
         width = int.Parse(reader.GetAttribute("width"));
         height = int.Parse(reader.GetAttribute("height"));
 
+        if (reader.GetAttribute("usedByCharacterID") != null)
+            usedByCharacterID = int.Parse(reader.GetAttribute("usedByCharacterID"));
+
         if (reader.GetAttribute("keys") != null && reader.GetAttribute("values") != null)
         {
 
@@ -531,6 +550,9 @@ public class Structure : IXmlSerializable
 		writer.WriteAttributeString("type", Type);
         writer.WriteAttributeString("IsConstructed", IsConstructed.ToString());
         writer.WriteAttributeString("FacingDirection", facingDirection.ToString());
+
+        if (usedByCharacterID != -1)
+            writer.WriteAttributeString("usedByCharacterID", usedByCharacterID.ToString());
 
         // Save parent structure
         if (this.parentStructure != null)

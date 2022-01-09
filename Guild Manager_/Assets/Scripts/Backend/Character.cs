@@ -34,16 +34,19 @@ public class Character : IXmlSerializable
     #region Pathing variables
     public Tile currTile;
     public JobQueue prioritizedJobs = new JobQueue();
+    public State state = State.Working;
     Tile nextTile;
     Path_AStar pathing;
     Tile destTile;
     float movementPercent;
     float speed = 2f;
+    bool givingQueueSpace = false;
     buildingRequirement haulingRequirement;
 
     Action<Character> characterChanged;
     Action<Character> characterDeleted;
-    Job parentJob;
+    Character waitingBehind = null;
+    public Job parentJob {get; private set;}
     public Job currentJob;
     static Thread tileGraphThread = null;
 
@@ -62,6 +65,7 @@ public class Character : IXmlSerializable
             // Gets new job.
             if (parentJob == null)
             {
+                
                 if (prioritizedJobs != null && prioritizedJobs.Count > 0)
                 {
                     currentJob = prioritizedJobs.Dequeue();
@@ -111,7 +115,7 @@ public class Character : IXmlSerializable
                     }
 
                     // If the job has all required materials, build it.
-                    if (parentJob.requiredMaterials.Count == 0)
+                    if (parentJob.HasNoRequirements())
                     {
                         this.currentJob = parentJob;
                         this.parentJob = null;
@@ -165,13 +169,62 @@ public class Character : IXmlSerializable
             }
         }
 
-        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && currentJob.jobType != JobType.Exiting)
+        // if (jobInQueue != null && jobInQueue.jobType != JobType.QuestGiving) Debug.LogError("Job with type " + jobInQueue.jobType + " is wrongly in jobInQueue.");
+
+        // Checks if there is a nearby queue for the job tile. If there is, join it.
+        if (currentJob != null && currentJob.jobType == JobType.QuestGiving && this.state != State.Queueing && (currentJob.tile.structure.UsedByCharacterID != this.id && currentJob.tile.structure.UsedByCharacterID != -1) && QueueForTileExists())
         {
-            if (currentJob != null)
+            AssignWaitingJob();
+            givingQueueSpace = false;
+        }
+
+        else if (!givingQueueSpace && waitingBehind != null && waitingBehind.state != State.Queueing)
+        {
+            Debug.Log("test");
+            AssignWaitingJob(.2f);
+            givingQueueSpace = true;
+        }
+
+        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && (currentJob.jobType != JobType.Exiting))
+        {
+
+            // If the job is questgiving, check that it isn't being used.
+            if (currentJob != null && currentJob.jobType != JobType.QuestGiving || currentJob != null && currentJob.jobType == JobType.QuestGiving && (currentJob.tile.structure.UsedByCharacterID == this.id || currentJob.tile.structure.UsedByCharacterID == -1))
             {
+                this.state = State.Working;
+                this.waitingBehind = null;
+
+                if (currentJob.tile.structure.UsedByCharacterID == -1)
+                    currentJob.tile.structure.UsedByCharacterID = id;
+
                 currentJob.DoWork(deltaTime);
             }
+
+            // If a character has reserved the current tile, begin a queue.
+            else if (currentJob != null && currentJob.jobType == JobType.QuestGiving && currentJob.tile.structure.UsedByCharacterID != this.id)
+            {
+                AssignWaitingJob();
+                givingQueueSpace = false;
+            }
         }
+    }
+
+    bool QueueForTileExists()
+    {
+        if (currTile.world.characters.Count == 1) return false;
+
+        foreach (Character c in currTile.world.characters.ToArray())
+        {
+            if (c == this) continue;
+
+            if (c.currentJob != null && currentJob != null && currTile.IsNeighbour(c.currTile, true) && (c.currentJob.tile == currentJob.tile || c.parentJob != null && c.parentJob.tile == currentJob.tile) && (c.currentJob.jobType == JobType.Waiting || c.state == State.Queueing) 
+            || currentJob != null && currTile.IsNeighbour(c.currTile, true) && currentJob.tile.structure.UsedByCharacterID == c.id)
+            {
+                this.waitingBehind = c;
+                return true;
+            }
+        }
+        return false;
     }
 
     public void AbandonJob()
@@ -200,7 +253,7 @@ public class Character : IXmlSerializable
     void Update_HandleMovement(float deltatime)
     {
 
-        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && currentJob.jobType != JobType.Exiting)
+        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && (currentJob.jobType != JobType.Exiting))
         {
             pathing = null;
             return;
@@ -372,8 +425,20 @@ public class Character : IXmlSerializable
         {
             currTile.world.characters.Remove(this);
             characterDeleted(this);
-            
         }
+    }
+
+    void AssignWaitingJob(float time = 1f)
+    {
+        this.state = State.Queueing;
+        currentJob.UnregisterJobCancelCallback(OnJobEnded);
+        currentJob.UnregisterJobCompleteCallback(OnJobEnded);
+        this.parentJob = currentJob;
+
+        this.currentJob = new Job(currTile, null, JobType.Waiting, null, time);
+        this.destTile = this.nextTile = this.currTile;
+        currentJob.RegisterJobCancelCallback(OnJobEnded);
+        currentJob.RegisterJobCompleteCallback(OnJobEnded);
     }
 
     void OnJobEnded(Job job)
@@ -386,25 +451,17 @@ public class Character : IXmlSerializable
         }
 
         nextTile = destTile = currTile;
-
-        // Called whether job was completed or cancelled.
+        
         if (job != currentJob)
         {
-            Debug.LogError("Chracter::OnJobEnded - Character being told about job that isn't his.");
+            Debug.LogError("Chracter::OnJobEnded - Character being told about job that isn't his." + $"{job.jobType} - {currentJob.jobType}");
             return;
         }
 
+        currentJob.tile.structure.UsedByCharacterID = -1;
+        state = State.Idling;
         currentJob = null;
     }
-
-    public Job GetActiveJob()
-    {
-        if (parentJob != null) return parentJob;
-        else if (currentJob != null) return currentJob;
-
-        return null;
-    }
-
     
     #region Saving/Loading
 	public XmlSchema GetSchema() {

@@ -11,8 +11,8 @@ using UnityEngine.SceneManagement;
 
 public class WorldController : MonoBehaviour
 {
-    int currentSpeed = 1;
-    bool paused = false;
+    public int currentSpeed = 1;
+    public bool paused = false;
 
     [SerializeField]
     public Color dayColor = new Color(1.0f, 1.0f, 1.0f);

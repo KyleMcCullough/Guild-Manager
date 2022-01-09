@@ -8,14 +8,13 @@ public class BuildController : MonoBehaviour
 {
 
     string buildTile = "Dirt";
-    public bool buildObjectsMode { get; private set; } = false;
     public string buildObject = ObjectType.Empty;
-    public bool buildMode = false;
+    bool buildMode = false;
     public int buildType = 0;
-    public int buildWidth = 1;
-    public int buildHeight = 1;
+    int buildWidth = 1;
+    int buildHeight = 1;
     public Facing buildDirection = Facing.East;
-    public PreviewSpriteController previewSpriteController;
+    PreviewSpriteController previewSpriteController;
 
     private void Start()
     {

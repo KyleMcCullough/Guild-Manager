@@ -20,7 +20,6 @@ public class JobQueue
         
         if (jobQueue.Contains(job))
         {
-            // Debug.LogError("Job is being requeued, not triggering jobCreated.");
             return;
         }
         jobQueue.Enqueue(job);
