@@ -40,12 +40,9 @@ public class Character : IXmlSerializable
     Tile destTile;
     float movementPercent;
     float speed = 2f;
-    bool givingQueueSpace = false;
     buildingRequirement haulingRequirement;
-
     Action<Character> characterChanged;
     Action<Character> characterDeleted;
-    Character waitingBehind = null;
     public Job parentJob {get; private set;}
     public Job currentJob;
     static Thread tileGraphThread = null;
@@ -175,14 +172,6 @@ public class Character : IXmlSerializable
         if (currentJob != null && currentJob.jobType == JobType.QuestGiving && this.state != State.Queueing && (currentJob.tile.structure.UsedByCharacterID != this.id && currentJob.tile.structure.UsedByCharacterID != -1) && QueueForTileExists())
         {
             AssignWaitingJob();
-            givingQueueSpace = false;
-        }
-
-        else if (!givingQueueSpace && waitingBehind != null && waitingBehind.state != State.Queueing)
-        {
-            Debug.Log("test");
-            AssignWaitingJob(.2f);
-            givingQueueSpace = true;
         }
 
         if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && (currentJob.jobType != JobType.Exiting))
@@ -192,7 +181,6 @@ public class Character : IXmlSerializable
             if (currentJob != null && currentJob.jobType != JobType.QuestGiving || currentJob != null && currentJob.jobType == JobType.QuestGiving && (currentJob.tile.structure.UsedByCharacterID == this.id || currentJob.tile.structure.UsedByCharacterID == -1))
             {
                 this.state = State.Working;
-                this.waitingBehind = null;
 
                 if (currentJob.tile.structure.UsedByCharacterID == -1)
                     currentJob.tile.structure.UsedByCharacterID = id;
@@ -204,7 +192,6 @@ public class Character : IXmlSerializable
             else if (currentJob != null && currentJob.jobType == JobType.QuestGiving && currentJob.tile.structure.UsedByCharacterID != this.id)
             {
                 AssignWaitingJob();
-                givingQueueSpace = false;
             }
         }
     }
@@ -220,7 +207,6 @@ public class Character : IXmlSerializable
             if (c.currentJob != null && currentJob != null && currTile.IsNeighbour(c.currTile, true) && (c.currentJob.tile == currentJob.tile || c.parentJob != null && c.parentJob.tile == currentJob.tile) && (c.currentJob.jobType == JobType.Waiting || c.state == State.Queueing) 
             || currentJob != null && currTile.IsNeighbour(c.currTile, true) && currentJob.tile.structure.UsedByCharacterID == c.id)
             {
-                this.waitingBehind = c;
                 return true;
             }
         }
@@ -428,7 +414,7 @@ public class Character : IXmlSerializable
         }
     }
 
-    void AssignWaitingJob(float time = 1f)
+    private void AssignWaitingJob(float time = 1f)
     {
         this.state = State.Queueing;
         currentJob.UnregisterJobCancelCallback(OnJobEnded);
