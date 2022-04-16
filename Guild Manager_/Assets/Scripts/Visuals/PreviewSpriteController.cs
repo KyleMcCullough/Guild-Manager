@@ -67,28 +67,36 @@ public class PreviewSpriteController : MonoBehaviour
         int x = structure.parent.x;
         int y = structure.parent.y;        
 
-        tile = world.GetTile(x, y + 1);
-        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
-        {
-            spriteName += "N";
+        if (y + 1 > structure.parent.world.height) {
+            tile = world.GetTile(x, y + 1);
+            if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
+            {
+                spriteName += "N";
+            }
         }
 
-        tile = world.GetTile(x + 1, y);
-        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
-        {
-            spriteName += "E";
+        if (x + 1 > structure.parent.world.width) {
+            tile = world.GetTile(x + 1, y);
+            if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
+            {
+                spriteName += "E";
+            }
         }
 
-        tile = world.GetTile(x, y - 1);
-        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
-        {
-            spriteName += "S";
+        if (y - 1 >= 0) {
+            tile = world.GetTile(x, y - 1);
+            if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
+            {
+                spriteName += "S";
+            }
         }
 
-        tile = world.GetTile(x - 1, y);
-        if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
-        {
-            spriteName += "W";
+        if (x - 1 >= 0) {
+            tile = world.GetTile(x - 1, y);
+            if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
+            {
+                spriteName += "W";
+            }
         }
 
         if (!Data.ContainsSprite(spriteName))
