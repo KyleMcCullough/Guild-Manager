@@ -5,7 +5,7 @@ using System.Xml.Serialization;
 
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.Rendering.Universal;
+
 
 using UnityEngine.SceneManagement;
 
@@ -19,7 +19,7 @@ public class WorldController : MonoBehaviour
     [SerializeField]
     public Color nightColor = new Color(0.25f, 0.25f, 0.6f);
     [SerializeField]
-    Light2D GlobalLight;
+    UnityEngine.Rendering.Universal.Light2D GlobalLight;
     public static WorldController Instance { get; protected set; }
     public World World { get; protected set; }
     static bool loadingWorld = false;

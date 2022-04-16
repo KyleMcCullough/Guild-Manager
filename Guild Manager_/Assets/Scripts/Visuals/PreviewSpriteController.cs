@@ -62,8 +62,10 @@ public class PreviewSpriteController : MonoBehaviour
         Tile tile;
         string spriteName = structureType + "_";
 
+        // TODO: Error catching, as when on the border it throws an error when checking a tile out of range. 
+
         int x = structure.parent.x;
-        int y = structure.parent.y;
+        int y = structure.parent.y;        
 
         tile = world.GetTile(x, y + 1);
         if (tile != null && tile.structure != null && tile.structure.Type == structureType || previewTile != null && previewTile == tile || tilemap.HasTile(new Vector3Int(tile.x, tile.y, 0)))
