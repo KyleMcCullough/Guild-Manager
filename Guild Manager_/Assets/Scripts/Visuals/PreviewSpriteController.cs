@@ -62,8 +62,6 @@ public class PreviewSpriteController : MonoBehaviour
         Tile tile;
         string spriteName = structureType + "_";
 
-        // TODO: Error catching, as when on the border it throws an error when checking a tile out of range. 
-
         int x = structure.parent.x;
         int y = structure.parent.y;        
 

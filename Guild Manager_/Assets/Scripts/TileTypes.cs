@@ -31,7 +31,8 @@ public enum JobType
     Hauling,
     Sleeping,
     Consuming,
-    Waiting
+    Waiting,
+    Passing
 }
 
 // Jobs that will be saved
@@ -41,7 +42,8 @@ public enum SaveableJob
     Demolition,
     QuestGiving,
     Exiting,
-    Waiting
+    Waiting,
+    Passing
 }
 
 public enum StructureCategory

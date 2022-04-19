@@ -4,7 +4,6 @@ using System.IO;
 using System.Xml.Serialization;
 
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 
 using UnityEngine.SceneManagement;
@@ -56,6 +55,14 @@ public class WorldController : MonoBehaviour
 
         World.Update(Time.deltaTime * currentSpeed);
         UpdateDayCycle();
+
+    }
+
+    private void FixedUpdate() {
+        //FIXME: This is for testing, this rate will later be calculated by renown and others.
+        if (UnityEngine.Random.Range(0, 100) == 99) {
+            CreatePasserby();
+        }
     }
 
     // Changes lighting on day/night switch.
@@ -128,7 +135,12 @@ public class WorldController : MonoBehaviour
 
     public void CreateQuestGiver()
     {
-        this.World.questManager.SpawnQuestGiver();
+        this.World.npcManager.SpawnQuestGiver();
+    }
+
+    public void CreatePasserby()
+    {
+        this.World.npcManager.SpawnPasserBy();
     }
 
     void UpdateSpeed()

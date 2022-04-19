@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-
+using System.Linq;
 using UnityEngine;
 
 public class World : IXmlSerializable
@@ -13,7 +13,7 @@ public class World : IXmlSerializable
     float worldTime = 0;
     int nextID = 0;
     int[] date;
-    public QuestManager questManager;
+    public NPCManager npcManager;
     public int height;
     public int width;
 
@@ -34,6 +34,7 @@ public class World : IXmlSerializable
     public List<Structure> structures;
     public List<Structure> updatingStructures;
     public Path_TileGraph tileGraph;
+    public Path_AStar mainRoadPath {get; private set;}
     #endregion
 
     public World(int width, int height)
@@ -43,7 +44,7 @@ public class World : IXmlSerializable
 
     void SetupWorld(int width, int height, bool generateWorld = true)
     {
-        this.questManager = new QuestManager(this);
+        this.npcManager = new NPCManager(this);
 
         // Instantiating lists
         this.characters = new List<Character>();
@@ -184,6 +185,64 @@ public class World : IXmlSerializable
         return c;
     }
     
+    public Path_AStar GetMainPath()
+    {
+        Stack<Tile> path = new Stack<Tile>();
+        List<Tile> checkedTiles = new List<Tile>();
+        Tile activeTile = null;
+        Tile previousTile = null;
+
+        // Loop through all tiles on the left border to find the start of the path
+        for (int y = 0; y < this.height; y++)
+        {
+            if (tiles[0, y] != null && tiles[0, y].Type == "Path") {
+                activeTile = tiles[0, y];
+                break;
+            }
+        }
+
+        if (activeTile == null) {
+            for (int x = 0; x < this.width; x++)
+            {
+                if (tiles[x, 0] != null && tiles[x, 0].Type == "Path") {
+                    activeTile = tiles[x, 0];
+                    break;
+                }
+            }
+        }
+
+        // If no starting border tile was found return
+        if (activeTile == null) return null;
+
+        // Add starting path tile.
+        this.npcManager.outOfMapSpawnpoints.Add(activeTile);
+
+        while (activeTile != null) {
+            path.Push(activeTile);
+
+            // This means there is no complete path.
+            if (activeTile == previousTile) break;
+
+            previousTile = activeTile;
+
+            // Parse all directions
+            foreach (var tile in activeTile.GetNeighbors(true))
+            {
+                if (tile != null && tile.Type == "Path" && !checkedTiles.Contains(tile)) {
+                    checkedTiles.Add(tile);
+                    activeTile = tile;
+                    break;
+                }
+            }
+
+            if (path.Count > 1 && (activeTile.x == width - 1 || activeTile.y == height - 1)) break;
+        }
+
+        // Add ending path tile.
+        this.npcManager.outOfMapSpawnpoints.Add(activeTile);
+
+        return new Path_AStar(path);
+    }
 
     public void GenerateWorld(int seed)
     {
@@ -313,10 +372,6 @@ public class World : IXmlSerializable
                             break;
                         }
                     }
-
-                    this.questManager.outOfMapSpawnpoints.Add(startingTile);
-                    this.questManager.outOfMapSpawnpoints.Add(endingTile);
-
                     break;
                 }
             }
@@ -329,6 +384,7 @@ public class World : IXmlSerializable
             }
         }
 
+        this.mainRoadPath = GetMainPath();
         this.tileGraph = new Path_TileGraph(this);
     }
 
@@ -569,6 +625,7 @@ public class World : IXmlSerializable
 			}
 		}
 
+        mainRoadPath = GetMainPath();
 	}
 
 	void ReadXml_Tiles(XmlReader reader) {
@@ -665,10 +722,13 @@ public class World : IXmlSerializable
                         c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Destroy(), JobType.Exiting, null, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
                     case SaveableJob.QuestGiving:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => questManager.SubmitQuest(), JobType.QuestGiving, null, float.Parse(reader.GetAttribute("jobTime"))));
+                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.SubmitQuest(), JobType.QuestGiving, null, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
                     case SaveableJob.Waiting:
                         c.prioritizedJobs.Enqueue(new Job(tile, null, JobType.Waiting, null, float.Parse(reader.GetAttribute("jobTime"))));
+                        break;
+                    case SaveableJob.Passing:
+                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Destroy(), JobType.Passing, null, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
                 }
             }
@@ -699,10 +759,10 @@ public class World : IXmlSerializable
         
             if (reader.GetAttribute("id") != null)
             {
-                questManager.quests.Add(Data.GetQuestTemplateById(int.Parse(reader.GetAttribute("id"))));
+                npcManager.quests.Add(Data.GetQuestTemplateById(int.Parse(reader.GetAttribute("id"))));
             }
         }
-        Debug.Log(questManager.quests.Count);
+        Debug.Log(npcManager.quests.Count);
     }
 
     public void WriteXml(XmlWriter writer)
@@ -797,7 +857,7 @@ public class World : IXmlSerializable
 
         // Save each quest id.
         writer.WriteStartElement("Quests");
-		foreach(Quest quest in questManager.quests) {
+		foreach(Quest quest in npcManager.quests) {
 			writer.WriteStartElement("Quest");
 			writer.WriteAttributeString("id", quest.id.ToString());
 			writer.WriteEndElement();

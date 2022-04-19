@@ -269,7 +269,7 @@ public class Structure : IXmlSerializable
         if (this.structureCategory == StructureCategory.QuestBoard)
         {
             Debug.Log("Added");
-            this.parent.world.questManager.jobBoards.Add(this);
+            this.parent.world.npcManager.jobBoards.Add(this);
         }
 
         if (this.inventory != null)
@@ -306,7 +306,7 @@ public class Structure : IXmlSerializable
 
         if (this.structureCategory == StructureCategory.QuestBoard)
         {
-            this.parent.world.questManager.jobBoards.Remove(this);
+            this.parent.world.npcManager.jobBoards.Remove(this);
         }
 
         this.optionalParameters = prototype.optionalParameters;

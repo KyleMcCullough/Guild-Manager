@@ -1,14 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public class QuestManager
+public class NPCManager
 {
     public List<Structure> jobBoards;
     public List<Tile> outOfMapSpawnpoints;
     public List<Quest> quests;
     World world;
 
-    public QuestManager(World world)
+    public NPCManager(World world)
     {
         this.jobBoards = new List<Structure>();
         this.outOfMapSpawnpoints = new List<Tile>();
@@ -31,7 +31,18 @@ public class QuestManager
         c.prioritizedJobs.Enqueue(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Destroy(), JobType.Exiting, null, 0f));
     }
 
+    public void SpawnPasserBy()
+    {
+        if (world.mainRoadPath == null || world.mainRoadPath.Length() == 0 || outOfMapSpawnpoints.Count == 0) return;
 
+        // Select random spawnpoint
+        Tile spawnpoint = outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)];
+        
+        Character c = world.CreateCharacter(spawnpoint);
+
+        // Create jobs to travel to the opposite side of map and delete itself.
+        c.prioritizedJobs.Enqueue(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Destroy(), JobType.Passing, null, 0f));
+    }
 
     public void SubmitQuest()
     {

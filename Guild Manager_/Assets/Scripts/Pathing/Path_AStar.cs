@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Priority_Queue;
@@ -106,6 +107,10 @@ public class Path_AStar
         return;
     }
 
+    public Path_AStar(Stack<Tile> path) {
+        this.path = path;
+    }
+
     float distance_detween(Path_Node<Tile> a, Path_Node<Tile> b)
     {
         // We can make assumptions since we are on a grid.
@@ -157,5 +162,10 @@ public class Path_AStar
         if(path == null) return 0;
 
         return path.Count;
+    }
+
+    public Path_AStar Copy(bool reverse = false) {
+        if (reverse) return new Path_AStar(new Stack<Tile>(this.path.Reverse()));
+        return new Path_AStar(new Stack<Tile>(this.path));
     }
 }

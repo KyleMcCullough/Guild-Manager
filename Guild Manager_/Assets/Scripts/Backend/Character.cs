@@ -1,3 +1,4 @@
+using System.Linq;
 using System;
 using System.Threading;
 using System.Collections;
@@ -174,7 +175,7 @@ public class Character : IXmlSerializable
             AssignWaitingJob();
         }
 
-        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && (currentJob.jobType != JobType.Exiting))
+        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && (currentJob.jobType != JobType.Exiting || currentJob.jobType != JobType.Passing))
         {
 
             // If the job is questgiving, check that it isn't being used.
@@ -247,8 +248,29 @@ public class Character : IXmlSerializable
 
         if (nextTile == null || nextTile == currTile)
         {
+
+            // If the character is passing, give set path.
+            if (pathing == null && currentJob.jobType == JobType.Passing) {
+                if (currentJob.tile == currTile.world.npcManager.outOfMapSpawnpoints[1]) {
+                    pathing = currTile.world.mainRoadPath.Copy();
+                } 
+                
+                else if (currentJob.tile == currTile.world.npcManager.outOfMapSpawnpoints[0]) {
+                    pathing = currTile.world.mainRoadPath.Copy(true);
+                }
+
+                // This is only entered on loading, as the character will always start from one of the 2 points when being created.
+                if (currTile != currTile.world.npcManager.outOfMapSpawnpoints[0] && currTile != currTile.world.npcManager.outOfMapSpawnpoints[1]) {
+                    while (true) {
+                        Tile t = pathing.Dequeue();
+
+                        if (t == currTile) break;
+                    }
+                }
+            }
+
             // Get next tile from path finder.
-            if (pathing == null || pathing.Length() == 0)
+            else if (pathing == null || pathing.Length() == 0)
             {
 
                 // Create a new thread to generate a new tilegraph if possible.
