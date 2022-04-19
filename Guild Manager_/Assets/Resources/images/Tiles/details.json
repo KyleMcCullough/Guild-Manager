@@ -7,6 +7,11 @@
         },
 
         {
+            "name": "Path",
+            "id": 2
+        },
+
+        {
             "name": "Water",
             "id": 1
         }
@@ -51,9 +56,9 @@
 
         {
             "name": "Path",
-            "category": 0,
+            "category": 2,
             "linksToNeighbours": true,
-            "movementCost": 1,
+            "movementCost": 1.2,
             "walkable": true,
             "fertility": 0
         }

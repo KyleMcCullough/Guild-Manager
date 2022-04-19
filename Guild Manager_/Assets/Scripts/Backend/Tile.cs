@@ -11,6 +11,11 @@ public class Tile : IXmlSerializable
     public int x, y;
     Action<Tile> tileChangedEvent;
     string type = ObjectType.Empty;
+    public Category category {
+        get {
+            return Data.GetTileCategory(Data.GetTileData(type).category);
+        }
+    }
     public Structure structure;
     public Room room = null;
     public World world;

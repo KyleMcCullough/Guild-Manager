@@ -95,6 +95,20 @@ public static class Data
         return new StructureData();
     }
 
+    public static TileData GetTileData(string name)
+    {
+        foreach (TileData item in tiles.tiles)
+        {
+            if (item.name == name)
+            {
+                return item;
+            }
+        }
+
+        UnityEngine.Debug.LogError("No '" + name + "' has been found in the structure data array.");
+        return new TileData();
+    }
+
     public static Category GetItemCategory(int id)
     {
         foreach (Category item in structures.categories)
@@ -105,6 +119,19 @@ public static class Data
             }
         }
         UnityEngine.Debug.LogError("No id of '" + id + "' has been found in the Category data array.");
+        return null;
+    }
+
+        public static Category GetTileCategory(int id)
+    {
+        foreach (Category item in tiles.categories)
+        {
+            if (item.id == id)
+            {
+                return item;
+            }
+        }
+        UnityEngine.Debug.LogError("No category with name of '" + id + "' has been found in the Category data array.");
         return null;
     }
 

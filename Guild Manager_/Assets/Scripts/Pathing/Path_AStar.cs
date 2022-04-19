@@ -115,6 +115,18 @@ public class Path_AStar
     {
         // We can make assumptions since we are on a grid.
 
+        // Weighted values for path category.
+        if (b.data.category.id == 2) {
+            if (Mathf.Abs((a.data.x - b.data.x) + (a.data.y - b.data.y)) == 1)
+            {
+                return .8f;
+            }
+            if (Mathf.Abs((a.data.x - b.data.x) * (a.data.y - b.data.y)) == 1) 
+            {
+                return 1.2f;
+            }
+        }
+
         if (Mathf.Abs((a.data.x - b.data.x) + (a.data.y - b.data.y)) == 1)
         {
             return 1f;
