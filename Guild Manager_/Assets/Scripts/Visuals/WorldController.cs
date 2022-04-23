@@ -138,6 +138,11 @@ public class WorldController : MonoBehaviour
         this.World.npcManager.SpawnQuestGiver();
     }
 
+    public void CreateQuestTaker()
+    {
+        this.World.npcManager.SpawnQuestTaker();
+    }
+
     public void CreatePasserby()
     {
         this.World.npcManager.SpawnPasserBy();
