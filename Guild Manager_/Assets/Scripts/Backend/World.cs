@@ -742,7 +742,7 @@ public class World : IXmlSerializable
                         c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.TakeQuest(c), JobType.QuestTaking, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
                         break;
                     case SaveableJob.Questing:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.EnterMap(), JobType.Questing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Spawn(), JobType.Questing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
                         break;
                     case SaveableJob.HandingInQuest:
                         c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.CompleteQuest(), JobType.HandingInQuest, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
