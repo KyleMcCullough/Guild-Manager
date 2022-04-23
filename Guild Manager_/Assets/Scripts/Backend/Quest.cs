@@ -5,15 +5,16 @@ public class Quest
 {
     public string title, description;
     public int id;
-    float timeToSolve;
+    public float minTimeToSolve, maxTimeToSolve;
     AdventurerRank requiredRank;
 
-    public Quest(string title, string description, float timeToSolve, AdventurerRank requiredRank, int id)
+    public Quest(string title, string description, float minTimeToSolve, float maxTimeToSolve, AdventurerRank requiredRank, int id)
     {
         this.id = id;
         this.title = title;
         this.description = description;
-        this.timeToSolve = timeToSolve;
+        this.minTimeToSolve = minTimeToSolve;
+        this.maxTimeToSolve = maxTimeToSolve;
         this.requiredRank = requiredRank;
     }
 }

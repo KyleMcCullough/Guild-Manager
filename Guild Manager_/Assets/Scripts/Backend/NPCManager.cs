@@ -28,7 +28,25 @@ public class NPCManager
 
         // Create jobs to deliver quest, and head to the border of the map and delete itself.
         c.prioritizedJobs.Enqueue(new Job(jobBoard.parent, (job) => SubmitQuest(), JobType.QuestGiving, null, 2f));
-        c.prioritizedJobs.Enqueue(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Destroy(), JobType.Exiting, null, 0f));
+        c.prioritizedJobs.Enqueue(new Job(spawnpoint, (job) => c.Despawn(), JobType.Exiting, null, 0f));
+    }
+
+    public void SpawnQuestTaker()
+    {
+        if (jobBoards.Count == 0 || outOfMapSpawnpoints.Count == 0) return;
+
+        // Select random spawnpoint on path and random job board.
+        Tile spawnpoint = outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)];
+        Structure jobBoard = jobBoards[Random.Range(0, jobBoards.Count)];
+        
+        Character c = world.CreateCharacter(spawnpoint);
+
+        // Create jobs to accept quest, exit map and do it, then return to hand it in, and finally delete itself after exiting the map again.
+        c.prioritizedJobs.Enqueue(new Job(jobBoard.parent, (job) => TakeQuest(c), JobType.QuestTaking, null, 2f));
+        c.prioritizedJobs.Enqueue(new Job(spawnpoint, (job) => c.Despawn(), JobType.Exiting, null, 0f));
+        c.prioritizedJobs.Enqueue(new Job(spawnpoint, (job) => c.Spawn(), JobType.Questing, null));
+        c.prioritizedJobs.Enqueue(new Job(jobBoard.parent, (job) => CompleteQuest(), JobType.HandingInQuest, null, 2f));
+        c.prioritizedJobs.Enqueue(new Job(spawnpoint, (job) => c.Despawn(), JobType.Exiting, null, 0f));
     }
 
     public void SpawnPasserBy()
@@ -47,6 +65,31 @@ public class NPCManager
     public void SubmitQuest()
     {
         quests.Add(Data.questTemplates[Random.Range(0, Data.questTemplates.Count)]);
+    }
+
+    public void TakeQuest(Character c)
+    {
+        //TODO: Make logical decisions for which quests the npc can handle based on skill set.
+
+        if (quests.Count > 0) {
+            int num = Random.Range(0, quests.Count);
+
+            c.quest = quests[num];
+            quests.RemoveAt(num);
+        }
+
+        // If there are no quests to take, tell character to leave map and delete itself.
+        else {
+            c.prioritizedJobs.Clear();
+            c.prioritizedJobs.Enqueue(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Despawn(), JobType.Exiting, null, 0f));
+        }
+
+    }
+
+    public void CompleteQuest()
+    {
+        //TODO: Add monetary, xp and other rewards on completion.
+        Debug.Log("Character handed in quest.");
     }
 
 }

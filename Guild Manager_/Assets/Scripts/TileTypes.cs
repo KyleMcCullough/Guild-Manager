@@ -25,14 +25,17 @@ public enum State
 public enum JobType
 {
     Construction,
-    Demolition,
-    QuestGiving,
-    Exiting,
-    Hauling,
-    Sleeping,
     Consuming,
-    Waiting,
-    Passing
+    Demolition,
+    Exiting,
+    HandingInQuest,
+    Hauling,
+    Passing,
+    QuestGiving,
+    QuestTaking,
+    Questing,
+    Sleeping,
+    Waiting
 }
 
 // Jobs that will be saved
@@ -40,10 +43,20 @@ public enum SaveableJob
 {
     Construction,
     Demolition,
-    QuestGiving,
     Exiting,
-    Waiting,
-    Passing
+    HandingInQuest,
+    Passing,
+    QuestGiving,
+    QuestTaking,
+    Questing,
+    Waiting
+}
+
+public enum QueueingJob
+{
+    HandingInQuest,
+    QuestGiving,
+    QuestTaking
 }
 
 public enum StructureCategory
