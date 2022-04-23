@@ -23,7 +23,7 @@ public class CharacterSpriteController : MonoBehaviour
     {
 
         GameObject obj = new GameObject();
-        obj.name = "Character-" + character.id;
+        obj.name = "Character";
         obj.transform.position = new Vector3(character.x, character.y, 0);
         obj.transform.SetParent(this.transform, true);
 
@@ -49,15 +49,6 @@ public class CharacterSpriteController : MonoBehaviour
         }
 
         GameObject characterObject = characterGameObjects[character];
-
-        if (!character.spawned) {
-            characterObject.SetActive(false);
-        }
-
-        else if (!characterObject.activeInHierarchy) {
-            characterObject.SetActive(true);
-        }
-
         characterObject.transform.position = new Vector3(character.x, character.y, 0);
     }
 

@@ -164,9 +164,9 @@ public class World : IXmlSerializable
     }
 
     // This version takes away safety checks. This is only meant for loading.
-    Character CreateCharacter(Tile tile, int id, bool spawned)
+    Character CreateCharacter(Tile tile, int id)
     {
-        Character c = new Character(tile, id, spawned);
+        Character c = new Character(tile, id);
         characters.Add(c);
         nextID++;
 
@@ -680,13 +680,7 @@ public class World : IXmlSerializable
 
 			int x = int.Parse(reader.GetAttribute("x"));
 			int y = int.Parse(reader.GetAttribute("y"));
-			Character c = CreateCharacter(tiles[x,y], int.Parse(reader.GetAttribute("id")), Boolean.Parse(reader.GetAttribute("spawned")));
-
-            // Get quest template if the character had one
-            if (reader.GetAttribute("questId") != null) {
-                c.quest = Data.GetQuestTemplateById(int.Parse(reader.GetAttribute("questId")));
-            }
-
+			Character c = CreateCharacter(tiles[x,y], int.Parse(reader.GetAttribute("id")));
 			c.ReadXml(reader);
 		}
 	}
@@ -701,8 +695,6 @@ public class World : IXmlSerializable
 
             int x = int.Parse(reader.GetAttribute("x"));
 			int y = int.Parse(reader.GetAttribute("y"));
-            bool manuallySetJobTime = Boolean.Parse(reader.GetAttribute("hasSetJobTime"));
-
             Tile tile = tiles[x, y];
 
             // Loads saved building materials
@@ -727,25 +719,16 @@ public class World : IXmlSerializable
                 switch (Enum.Parse(typeof(SaveableJob), reader.GetAttribute("jobType")))
                 {
                     case SaveableJob.Exiting:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Despawn(), JobType.Exiting, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Destroy(), JobType.Exiting, null, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
                     case SaveableJob.QuestGiving:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.SubmitQuest(), JobType.QuestGiving, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.SubmitQuest(), JobType.QuestGiving, null, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
                     case SaveableJob.Waiting:
-                        c.prioritizedJobs.Enqueue(new Job(tile, null, JobType.Waiting, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        c.prioritizedJobs.Enqueue(new Job(tile, null, JobType.Waiting, null, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
                     case SaveableJob.Passing:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Destroy(), JobType.Passing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
-                        break;
-                    case SaveableJob.QuestTaking:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.TakeQuest(c), JobType.QuestTaking, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
-                        break;
-                    case SaveableJob.Questing:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.EnterMap(), JobType.Questing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
-                        break;
-                    case SaveableJob.HandingInQuest:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.CompleteQuest(), JobType.HandingInQuest, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Destroy(), JobType.Passing, null, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
                 }
             }
@@ -779,6 +762,7 @@ public class World : IXmlSerializable
                 npcManager.quests.Add(Data.GetQuestTemplateById(int.Parse(reader.GetAttribute("id"))));
             }
         }
+        Debug.Log(npcManager.quests.Count);
     }
 
     public void WriteXml(XmlWriter writer)

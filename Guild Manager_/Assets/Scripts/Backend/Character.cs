@@ -41,8 +41,6 @@ public class Character : IXmlSerializable
     Tile destTile;
     float movementPercent;
     float speed = 2f;
-    public bool spawned {get; private set;}
-    public Quest quest;
     buildingRequirement haulingRequirement;
     Action<Character> characterChanged;
     Action<Character> characterDeleted;
@@ -52,11 +50,10 @@ public class Character : IXmlSerializable
 
     #endregion
 
-    public Character(Tile tile, int id, bool spawned = true)
+    public Character(Tile tile, int id)
     {
         currTile = destTile = nextTile = tile;
         this.id = id;
-        this.spawned = spawned;
     }
 
     void Update_DoJob(float deltaTime)
@@ -170,20 +167,10 @@ public class Character : IXmlSerializable
             }
         }
 
-        // For when character is off the map.
-        if (!spawned) {
-            if (currentJob != null && currentJob.jobType == JobType.Questing) {
-
-                if (!currentJob.manuallySetJobTime) {
-                    currentJob.SetJobTime(UnityEngine.Random.Range(quest.minTimeToSolve, quest.maxTimeToSolve));
-                }
-                currentJob.DoWork(deltaTime);
-            }
-            return;
-        }
+        // if (jobInQueue != null && jobInQueue.jobType != JobType.QuestGiving) Debug.LogError("Job with type " + jobInQueue.jobType + " is wrongly in jobInQueue.");
 
         // Checks if there is a nearby queue for the job tile. If there is, join it.
-        if (currentJob != null && Enum.IsDefined(typeof(QueueingJob), currentJob.jobType.ToString()) && this.state != State.Queueing && (currentJob.tile.structure.UsedByCharacterID != this.id && currentJob.tile.structure.UsedByCharacterID != -1) && QueueForTileExists())
+        if (currentJob != null && currentJob.jobType == JobType.QuestGiving && this.state != State.Queueing && (currentJob.tile.structure.UsedByCharacterID != this.id && currentJob.tile.structure.UsedByCharacterID != -1) && QueueForTileExists())
         {
             AssignWaitingJob();
         }
@@ -191,8 +178,8 @@ public class Character : IXmlSerializable
         if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && (currentJob.jobType != JobType.Exiting || currentJob.jobType != JobType.Passing))
         {
 
-            // If the job has queueing enabled, check that it isn't being used.
-            if (currentJob != null && !Enum.IsDefined(typeof(QueueingJob), currentJob.jobType.ToString()) || currentJob != null && Enum.IsDefined(typeof(QueueingJob), currentJob.jobType.ToString()) && (currentJob.tile.structure.UsedByCharacterID == this.id || currentJob.tile.structure.UsedByCharacterID == -1))
+            // If the job is questgiving, check that it isn't being used.
+            if (currentJob != null && currentJob.jobType != JobType.QuestGiving || currentJob != null && currentJob.jobType == JobType.QuestGiving && (currentJob.tile.structure.UsedByCharacterID == this.id || currentJob.tile.structure.UsedByCharacterID == -1))
             {
                 this.state = State.Working;
 
@@ -203,7 +190,7 @@ public class Character : IXmlSerializable
             }
 
             // If a character has reserved the current tile, begin a queue.
-            else if (currentJob != null && Enum.IsDefined(typeof(QueueingJob), currentJob.jobType.ToString()) && currentJob.tile.structure.UsedByCharacterID != this.id)
+            else if (currentJob != null && currentJob.jobType == JobType.QuestGiving && currentJob.tile.structure.UsedByCharacterID != this.id)
             {
                 AssignWaitingJob();
             }
@@ -369,17 +356,8 @@ public class Character : IXmlSerializable
     public void Update(float deltaTime)
     {
 
-        // If a character is despawned and has no jobs, destroy them.
-        if (!spawned && prioritizedJobs.Count == 0 && this.currentJob == null && this.parentJob == null) {
-            this.Destroy();
-        }
-
         Update_DoJob(deltaTime);
-
-        // Only allow movement if character is spawned in map.
-        if (spawned) {
-            Update_HandleMovement(deltaTime);
-        }
+        Update_HandleMovement(deltaTime);
 
         if (characterChanged != null) characterChanged(this);
     }
@@ -449,19 +427,6 @@ public class Character : IXmlSerializable
         characterDeleted += callback;
     }
 
-    // Visually remove the character.
-    public void Despawn()
-    {
-        this.spawned = false;
-    }
-
-    // Visually add the character
-    public void EnterMap()
-    {
-        this.spawned = true;
-    }
-
-    // Remove all references to the character.
     public void Destroy()
     {
         if (characterDeleted != null)
@@ -515,11 +480,6 @@ public class Character : IXmlSerializable
 		writer.WriteAttributeString("x", currTile.x.ToString());
 		writer.WriteAttributeString("y", currTile.y.ToString());
         writer.WriteAttributeString("id", this.id.ToString());
-        writer.WriteAttributeString("spawned", this.spawned.ToString());
-
-        if (quest != null) {
-            writer.WriteAttributeString("questId", this.quest.id.ToString());
-        }
 	}
 
 	public void ReadXml(XmlReader reader) 

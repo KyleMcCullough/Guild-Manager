@@ -46,9 +46,4 @@ public class JobQueue
     {
         return new List<Job>(jobQueue.ToArray());
     }
-
-    public void Clear()
-    {
-        jobQueue = new Queue<Job>();
-    }
 }

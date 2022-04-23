@@ -62,7 +62,7 @@ public static class Data
 
         foreach (QuestData data in Data.quests.quests)
         {
-            questTemplates.Add(new Quest(data.title, data.description, data.minTimeToSolve, data.maxTimeToSolve, (AdventurerRank) data.requiredRank, data.id));
+            questTemplates.Add(new Quest(data.title, data.description, data.timeToSolve, (AdventurerRank) data.requiredRank, data.id));
         }
 
         Sprite[] sprites = Resources.LoadAll<Sprite>("Images/");

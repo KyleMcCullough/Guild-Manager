@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 public class QuestData
 {
     public string title, description;
-    public float minTimeToSolve, maxTimeToSolve;
+    public float timeToSolve;
     public int requiredRank, id;
 }
 

@@ -10,19 +10,18 @@ using System.Xml.Serialization;
 public class Job : IXmlSerializable
 {
     public Tile tile {get; protected set;}
-    public float jobTime {get; private set;}
-    public bool manuallySetJobTime {get; private set;}
+    float jobTime;
+
     Action<Job> jobFinished;
     Action<Job> jobCancelled;
     public List<buildingRequirement> requiredMaterials;
     public JobType jobType {private set; get; }
 
-    public Job(Tile tile, Action<Job> jobFinished, JobType jobType, List<buildingRequirement> requiredMaterials = null, float jobTime = 0.1f, bool manuallySetJobTime = false) {
+    public Job(Tile tile, Action<Job> jobFinished, JobType jobType, List<buildingRequirement> requiredMaterials = null, float jobTime = 0.1f) {
         this.tile = tile;
         this.jobFinished += jobFinished;
         this.jobTime = jobTime;
         this.jobType = jobType;
-        this.manuallySetJobTime = manuallySetJobTime;
 
         if (requiredMaterials != null)
         {
@@ -92,12 +91,6 @@ public class Job : IXmlSerializable
         return amount;
     }
 
-    public void SetJobTime(float time)
-    {
-        this.jobTime = time;
-        this.manuallySetJobTime = true;
-    }
-
     public bool HasNoRequirements()
     {
         return requiredMaterials == null || requiredMaterials.Count == 0;
@@ -137,7 +130,6 @@ public class Job : IXmlSerializable
 		writer.WriteAttributeString("y", tile.y.ToString());
         writer.WriteAttributeString("jobTime", this.jobTime.ToString());
         writer.WriteAttributeString("jobType", this.jobType.ToString());
-        writer.WriteAttributeString("hasSetJobTime", this.manuallySetJobTime.ToString());
 
         if (requiredMaterials == null) return;
         
