@@ -27,8 +27,8 @@ public class NPCManager
         Character c = world.CreateCharacter(spawnpoint);
 
         // Create jobs to deliver quest, and head to the border of the map and delete itself.
-        c.prioritizedJobs.Enqueue(new Job(jobBoard.parent, (job) => SubmitQuest(), JobType.QuestGiving, null, 2f));
-        c.prioritizedJobs.Enqueue(new Job(spawnpoint, (job) => c.Despawn(), JobType.Exiting, null, 0f));
+        c.prioritizedJobs.AddLast(new Job(jobBoard.parent, (job) => SubmitQuest(), JobType.QuestGiving, null, 2f));
+        c.prioritizedJobs.AddLast(new Job(spawnpoint, (job) => c.Despawn(), JobType.Exiting, null, 0f));
     }
 
     public void SpawnQuestTaker()
@@ -42,11 +42,11 @@ public class NPCManager
         Character c = world.CreateCharacter(spawnpoint);
 
         // Create jobs to accept quest, exit map and do it, then return to hand it in, and finally delete itself after exiting the map again.
-        c.prioritizedJobs.Enqueue(new Job(jobBoard.parent, (job) => TakeQuest(c), JobType.QuestTaking, null, 2f));
-        c.prioritizedJobs.Enqueue(new Job(spawnpoint, (job) => c.Despawn(), JobType.Exiting, null, 0f));
-        c.prioritizedJobs.Enqueue(new Job(spawnpoint, (job) => c.Spawn(), JobType.Questing, null));
-        c.prioritizedJobs.Enqueue(new Job(jobBoard.parent, (job) => CompleteQuest(), JobType.HandingInQuest, null, 2f));
-        c.prioritizedJobs.Enqueue(new Job(spawnpoint, (job) => c.Despawn(), JobType.Exiting, null, 0f));
+        c.prioritizedJobs.AddLast(new Job(jobBoard.parent, (job) => TakeQuest(c), JobType.QuestTaking, null, 2f));
+        c.prioritizedJobs.AddLast(new Job(spawnpoint, (job) => c.Despawn(), JobType.Exiting, null, 0f));
+        c.prioritizedJobs.AddLast(new Job(spawnpoint, (job) => c.Spawn(), JobType.Questing, null));
+        c.prioritizedJobs.AddLast(new Job(jobBoard.parent, (job) => CompleteQuest(), JobType.HandingInQuest, null, 2f));
+        c.prioritizedJobs.AddLast(new Job(spawnpoint, (job) => c.Despawn(), JobType.Exiting, null, 0f));
     }
 
     public void SpawnPasserBy()
@@ -59,7 +59,7 @@ public class NPCManager
         Character c = world.CreateCharacter(spawnpoint);
 
         // Create jobs to travel to the opposite side of map and delete itself.
-        c.prioritizedJobs.Enqueue(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Destroy(), JobType.Passing, null, 0f));
+        c.prioritizedJobs.AddLast(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Despawn(), JobType.Passing, null, 0f));
     }
 
     public void SubmitQuest()
@@ -81,7 +81,7 @@ public class NPCManager
         // If there are no quests to take, tell character to leave map and delete itself.
         else {
             c.prioritizedJobs.Clear();
-            c.prioritizedJobs.Enqueue(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Despawn(), JobType.Exiting, null, 0f));
+            c.prioritizedJobs.AddLast(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Despawn(), JobType.Exiting, null, 0f));
         }
 
     }

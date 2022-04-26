@@ -6,24 +6,38 @@ using System;
 public class JobQueue
 {
 
-    Queue<Job> jobQueue;
+    LinkedList<Job> jobList;
     Action<Job> jobCreated;
-    public int Count {private set; get; } = 0;
+    public int Count {private set{} get {
+        return jobList.Count;
+    }}
 
     public JobQueue()
     {
-        jobQueue = new Queue<Job>();
+        jobList = new LinkedList<Job>();
     }
 
-    public void Enqueue(Job job) 
+    public void AddLast(Job job) 
     {
-        
-        if (jobQueue.Contains(job))
+
+        if (jobList.Contains(job))
         {
             return;
         }
-        jobQueue.Enqueue(job);
-        Count++;
+        jobList.AddLast(job);
+
+        if (jobCreated != null) {
+            jobCreated(job);
+        }
+    }
+
+    public void AddFirst(Job job)
+    {
+        if (jobList.Contains(job))
+        {
+            return;
+        }
+        jobList.AddFirst(job);
 
         if (jobCreated != null) {
             jobCreated(job);
@@ -36,19 +50,24 @@ public class JobQueue
 
     public Job Dequeue() {
 
-        if (jobQueue.Count == 0) return null;
+        if (jobList.Count == 0) return null;
 
-        Count--;
-        return jobQueue.Dequeue();
+        Job j = jobList.First.Value;
+        jobList.RemoveFirst();
+        return j;
+    }
+
+    public Job Peek() {
+        return jobList.First.Value;
     }
 
     public List<Job> ToArray()
     {
-        return new List<Job>(jobQueue.ToArray());
+        return new List<Job>(jobList);
     }
 
     public void Clear()
     {
-        jobQueue = new Queue<Job>();
+        jobList.Clear();
     }
 }

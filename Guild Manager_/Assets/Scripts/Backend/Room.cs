@@ -90,7 +90,7 @@ public class Room
     {
         foreach (Job job in unreachableJobs)
         {
-            jobQueue.Enqueue(job);
+            jobQueue.AddLast(job);
         }
 
         unreachableJobs = new List<Job>();

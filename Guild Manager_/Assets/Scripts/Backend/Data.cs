@@ -210,6 +210,19 @@ public static class Data
         return false;
     }
 
+    public static int GetCategoryId(string name)
+    {
+        foreach (Category c in tiles.categories)
+        {
+            if (c.name.ToLower() == name.ToLower())
+            {
+                return c.id;
+            }
+        }
+
+        return -1;
+    }
+
     public static List<buildingRequirement> GetbuildingRequirement(string type)
     {
 

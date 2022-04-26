@@ -29,6 +29,7 @@ public class Character : IXmlSerializable
     #region Character variables
     public Inventory inventory = new Inventory(Data.MaxInventory);
     public int id;
+    public float thirst {get; private set;}
 
     #endregion
 
@@ -42,21 +43,24 @@ public class Character : IXmlSerializable
     float movementPercent;
     float speed = 2f;
     public bool spawned {get; private set;}
+    bool waterJobSet;
     public Quest quest;
     buildingRequirement haulingRequirement;
     Action<Character> characterChanged;
     Action<Character> characterDeleted;
-    public Job parentJob {get; private set;}
+    public Job parentJob {get; set;}
     public Job currentJob;
     static Thread tileGraphThread = null;
 
     #endregion
 
-    public Character(Tile tile, int id, bool spawned = true)
+    public Character(Tile tile, int id, bool spawned = true, float thirst = 100, bool waterJobSet = false)
     {
         currTile = destTile = nextTile = tile;
         this.id = id;
         this.spawned = spawned;
+        this.thirst = thirst;
+        this.waterJobSet = waterJobSet;
     }
 
     void Update_DoJob(float deltaTime)
@@ -66,6 +70,21 @@ public class Character : IXmlSerializable
             // Gets new job.
             if (parentJob == null)
             {
+
+                // Check if a need job is required and attempt to generate it. If the required need is not found, skip for now.
+                if (spawned && prioritizedJobs != null && (prioritizedJobs.Count == 0 || prioritizedJobs.Count > 0 && prioritizedJobs.Peek().jobType != JobType.Passing)) {
+
+                    if (!waterJobSet && thirst < 80) {
+                        waterJobSet = true;
+
+                        Tile t = Tile.FindClosestTileCategory(currTile, "Water");
+
+                        if (t != null) {
+                            this.prioritizedJobs.AddFirst(new Job(t, (job) => DrinkingOnComplete(), JobType.Drinking, null, 2f));
+                        }
+                    }
+
+                }
                 
                 if (prioritizedJobs != null && prioritizedJobs.Count > 0)
                 {
@@ -366,12 +385,23 @@ public class Character : IXmlSerializable
         }
     }
 
+    public void Update_Needs(float deltaTime)
+    {
+        if (thirst > 0) {
+            thirst -= 1 * deltaTime;
+        }
+    }
+
     public void Update(float deltaTime)
     {
 
         // If a character is despawned and has no jobs, destroy them.
-        if (!spawned && prioritizedJobs.Count == 0 && this.currentJob == null && this.parentJob == null) {
+        if (!spawned && prioritizedJobs.Count == 0 && this.currentJob == null && this.parentJob == null || !spawned && prioritizedJobs.Count == 1 && prioritizedJobs.Peek().jobType == JobType.Drinking) {
             this.Destroy();
+        }
+
+        if (spawned) {
+            Update_Needs(deltaTime);
         }
 
         Update_DoJob(deltaTime);
@@ -382,16 +412,6 @@ public class Character : IXmlSerializable
         }
 
         if (characterChanged != null) characterChanged(this);
-    }
-
-    public void SetDestination(Tile tile)
-    {
-        if (currTile.IsNeighbour(tile) == false)
-        {
-            Debug.Log("Characer::SetDestination - Desination is not beside current tile.");
-        }
-
-        destTile = tile;
     }
 
     public void HaulingOnComplete()
@@ -406,6 +426,12 @@ public class Character : IXmlSerializable
             destTile.room.RemoveItemFromRoom(destTile.item.Type, destTile.item.CurrentStackAmount);
             this.inventory.AddItemFromTile(ref destTile.item);
         }
+    }
+
+    public void DrinkingOnComplete()
+    {
+        thirst += 30;
+        waterJobSet = false;
     }
 
     public void HaulToConstructionComplete()
@@ -516,6 +542,9 @@ public class Character : IXmlSerializable
 		writer.WriteAttributeString("y", currTile.y.ToString());
         writer.WriteAttributeString("id", this.id.ToString());
         writer.WriteAttributeString("spawned", this.spawned.ToString());
+        writer.WriteAttributeString("thirst", this.thirst.ToString());
+        writer.WriteAttributeString("waterJobSet", this.waterJobSet.ToString());
+
 
         if (quest != null) {
             writer.WriteAttributeString("questId", this.quest.id.ToString());

@@ -164,9 +164,9 @@ public class World : IXmlSerializable
     }
 
     // This version takes away safety checks. This is only meant for loading.
-    Character CreateCharacter(Tile tile, int id, bool spawned)
+    Character CreateCharacter(Tile tile, int id, bool spawned, float thirst, bool waterJobSet)
     {
-        Character c = new Character(tile, id, spawned);
+        Character c = new Character(tile, id, spawned, thirst, waterJobSet);
         characters.Add(c);
         nextID++;
 
@@ -680,7 +680,7 @@ public class World : IXmlSerializable
 
 			int x = int.Parse(reader.GetAttribute("x"));
 			int y = int.Parse(reader.GetAttribute("y"));
-			Character c = CreateCharacter(tiles[x,y], int.Parse(reader.GetAttribute("id")), Boolean.Parse(reader.GetAttribute("spawned")));
+			Character c = CreateCharacter(tiles[x,y], int.Parse(reader.GetAttribute("id")), Boolean.Parse(reader.GetAttribute("spawned")), float.Parse(reader.GetAttribute("thirst")), Boolean.Parse(reader.GetAttribute("waterJobSet")));
 
             // Get quest template if the character had one
             if (reader.GetAttribute("questId") != null) {
@@ -723,44 +723,65 @@ public class World : IXmlSerializable
             if (reader.GetAttribute("characterID") != null)
             {
                 Character c = GetCharacterByID(int.Parse(reader.GetAttribute("characterID")));
+                Job j = null;
 
                 switch (Enum.Parse(typeof(SaveableJob), reader.GetAttribute("jobType")))
                 {
                     case SaveableJob.Exiting:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Despawn(), JobType.Exiting, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        j = new Job(tile, (job) => c.Despawn(), JobType.Exiting, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
                         break;
                     case SaveableJob.QuestGiving:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.SubmitQuest(), JobType.QuestGiving, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
-                        break;
-                    case SaveableJob.Waiting:
-                        c.prioritizedJobs.Enqueue(new Job(tile, null, JobType.Waiting, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        j =(new Job(tile, (job) => npcManager.SubmitQuest(), JobType.QuestGiving, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
                         break;
                     case SaveableJob.Passing:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Destroy(), JobType.Passing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        j = new Job(tile, (job) => c.Destroy(), JobType.Passing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
                         break;
                     case SaveableJob.QuestTaking:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.TakeQuest(c), JobType.QuestTaking, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        j = new Job(tile, (job) => npcManager.TakeQuest(c), JobType.QuestTaking, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
                         break;
                     case SaveableJob.Questing:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => c.Spawn(), JobType.Questing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        j = new Job(tile, (job) => c.Spawn(), JobType.Questing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
                         break;
                     case SaveableJob.HandingInQuest:
-                        c.prioritizedJobs.Enqueue(new Job(tile, (job) => npcManager.CompleteQuest(), JobType.HandingInQuest, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
+                        j = new Job(tile, (job) => npcManager.CompleteQuest(), JobType.HandingInQuest, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
+                        break;
+                    case SaveableJob.Drinking:
+                        j = new Job(tile, (job) => c.DrinkingOnComplete(), JobType.Drinking, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
+                        break;
+                    case SaveableJob.Construction:
+                        j = new Job(tile, (theJob) => tile.structure.CompleteStructure(), JobType.Construction, items, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
+                        break;
+                    case SaveableJob.Demolition:
+                        j = new Job(tile, (theJob) => tile.structure.RemoveStructure(), JobType.Demolition, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
                         break;
                 }
+
+                if (j != null) {
+
+                    // If parentJob is null assign the first job to it, this will ensure this job is completed before any needs (food, water, etc).
+                    if (c.parentJob == null) {
+                        c.parentJob = j;
+                    }
+
+                    else {
+                        c.prioritizedJobs.AddLast(j);
+                    }
+                }
+
             }
 
             // Assigns job to room the tile is assigned in
+            //FIXME: Character may leave in the middle of the jobs below after a save for water.
             else
             {
                 // For all generic queued jobs
                 switch (Enum.Parse(typeof(SaveableJob), reader.GetAttribute("jobType")))
                 {
                     case SaveableJob.Construction:
-                        tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.CompleteStructure(), JobType.Construction, items, float.Parse(reader.GetAttribute("jobTime"))));
+                        tile.room.jobQueue.AddLast(new Job(tile, (theJob) => tile.structure.CompleteStructure(), JobType.Construction, items, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
                     case SaveableJob.Demolition:
-                        tile.room.jobQueue.Enqueue(new Job(tile, (theJob) => tile.structure.RemoveStructure(), JobType.Demolition, null, float.Parse(reader.GetAttribute("jobTime"))));
+                        tile.room.jobQueue.AddLast(new Job(tile, (theJob) => tile.structure.RemoveStructure(), JobType.Demolition, null, float.Parse(reader.GetAttribute("jobTime"))));
                         break;
                 }
             }

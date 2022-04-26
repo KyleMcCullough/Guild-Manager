@@ -72,38 +72,8 @@ public class Tile : IXmlSerializable
         tileChangedEvent += callback;
     }
 
-    public Tile FindNearestItem(string item)
-    {
-        int radius = 1;
-
-        if (this.item != null && this.item.Type == item)
-        {
-            return this;
-        }
-
-        for (int x = this.x - radius; x < this.x + radius; x++)
-        {
-            for (int y = this.y - radius; y < this.x + radius; y++)
-            {
-                Tile t = world.GetTile(x, y);
-                if (!t.structure.canCreateRooms && item != null && t.item.Type == item)
-                {
-                    // Tries to create a path to see if it can be reached.
-                    if (new Path_AStar(world, this, t).Length() != 0) return t;
-                }
-            }
-
-            radius ++;
-        }
-
-        // This means the required item is not on the map.
-        Debug.Log("FindNearestItem - " + item + " is not on the map or cannot be found.");
-        return null;
-    }
-
     public bool IsNeighbour(Tile tile, bool diagonals = false)
     {
-
 		return 
 			Mathf.Abs( this.x - tile.x ) + Mathf.Abs( this.y - tile.y ) == 1 ||  // Check hori/vert adjacency
 			( diagonals && ( Mathf.Abs( this.x - tile.x ) == 1 && Mathf.Abs( this.y - tile.y ) == 1 ) ) // Check diag adjacency
@@ -234,6 +204,49 @@ public class Tile : IXmlSerializable
 
     }
 
+    public static Tile FindClosestTileCategory(Tile starting, string targetCategory)
+    {
+        List<Tile> checkedTiles = new List<Tile>();
+        Queue<Tile> tilesToCheck = new Queue<Tile>();
+        
+        tilesToCheck.Enqueue(starting);
+
+        while (tilesToCheck.Count > 0)
+        {
+            Tile t = null;
+            while (tilesToCheck.Count > 0)
+            {
+                t = tilesToCheck.Dequeue();
+
+                if (checkedTiles.Contains(t)) continue;
+
+                break;
+            }
+            
+            if (t == null && tilesToCheck.Count == 0) return null;
+
+            checkedTiles.Add(t);
+
+            if (t != null && t.category.id == Data.GetCategoryId(targetCategory)) return t;
+
+            Tile[] ns = t.GetNeighbors();
+            foreach (Tile t2 in ns)
+            {
+                if (checkedTiles.Contains(t2))
+                {
+                    continue;
+                }
+
+                if (t2 != null)
+                {
+                    tilesToCheck.Enqueue(t2);
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static Tile GetSafePlaceForPlayerSpawning(Tile starting)
     {
         List<Tile> checkedTiles = new List<Tile>();
@@ -260,9 +273,7 @@ public class Tile : IXmlSerializable
                 {
                     return null;
                 }
-
-                // We know t2 is not null nor is it an empty tile, so just make sure it
-                // hasn't already been processed and isn't a "wall" type tile.
+                
                 if (!checkedTiles.Contains(t2))
                 {
                     tilesToCheck.Enqueue(t2);

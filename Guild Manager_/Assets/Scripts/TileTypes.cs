@@ -25,8 +25,9 @@ public enum State
 public enum JobType
 {
     Construction,
-    Consuming,
     Demolition,
+    Drinking,
+    Eating,
     Exiting,
     HandingInQuest,
     Hauling,
@@ -35,7 +36,7 @@ public enum JobType
     QuestTaking,
     Questing,
     Sleeping,
-    Waiting
+    Waiting,
 }
 
 // Jobs that will be saved
@@ -43,13 +44,14 @@ public enum SaveableJob
 {
     Construction,
     Demolition,
+    Drinking,
+    Eating,
     Exiting,
     HandingInQuest,
     Passing,
     QuestGiving,
     QuestTaking,
     Questing,
-    Waiting
 }
 
 public enum QueueingJob

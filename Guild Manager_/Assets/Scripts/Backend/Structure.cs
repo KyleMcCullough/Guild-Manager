@@ -268,7 +268,6 @@ public class Structure : IXmlSerializable
 
         if (this.structureCategory == StructureCategory.QuestBoard)
         {
-            Debug.Log("Added");
             this.parent.world.npcManager.jobBoards.Add(this);
         }
 
