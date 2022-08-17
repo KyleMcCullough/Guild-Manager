@@ -28,28 +28,28 @@ public class Character : IXmlSerializable
 
     #region Character variables
     public Inventory inventory = new Inventory(Data.MaxInventory);
-    public int id;
     public float thirst {get; private set;}
+    public int id;
 
     #endregion
 
     #region Pathing variables
-    public Tile currTile;
-    public JobQueue prioritizedJobs = new JobQueue();
-    public State state = State.Working;
-    Tile nextTile;
-    Path_AStar pathing;
-    Tile destTile;
-    float movementPercent;
-    float speed = 2f;
-    public bool spawned {get; private set;}
-    bool waterJobSet;
-    public Quest quest;
-    buildingRequirement haulingRequirement;
     Action<Character> characterChanged;
     Action<Character> characterDeleted;
-    public Job parentJob {get; set;}
+    Path_AStar pathing;
+    Tile destTile;
+    Tile nextTile;
+    bool waterJobSet;
+    buildingRequirement haulingRequirement;
+    float movementPercent;
+    float speed = 2f;
     public Job currentJob;
+    public Job parentJob {get; set;}
+    public JobQueue prioritizedJobs = new JobQueue();
+    public Quest quest;
+    public State state = State.Working;
+    public Tile currTile;
+    public bool spawned {get; private set;}
     static Thread tileGraphThread = null;
 
     #endregion
@@ -61,6 +61,30 @@ public class Character : IXmlSerializable
         this.spawned = spawned;
         this.thirst = thirst;
         this.waterJobSet = waterJobSet;
+    }
+
+    #region Update
+
+    public void Update(float deltaTime)
+    {
+
+        // If a character is despawned and has no jobs, destroy them.
+        if (!spawned && prioritizedJobs.Count == 0 && this.currentJob == null && this.parentJob == null || !spawned && prioritizedJobs.Count == 1 && prioritizedJobs.Peek().jobType == JobType.Drinking) {
+            this.Destroy();
+        }
+
+        if (spawned) {
+            Update_Needs(deltaTime);
+        }
+
+        Update_DoJob(deltaTime);
+
+        // Only allow movement if character is spawned in map.
+        if (spawned) {
+            Update_HandleMovement(deltaTime);
+        }
+
+        if (characterChanged != null) characterChanged(this);
     }
 
     void Update_DoJob(float deltaTime)
@@ -229,46 +253,6 @@ public class Character : IXmlSerializable
         }
     }
 
-    bool QueueForTileExists()
-    {
-        if (currTile.world.characters.Count == 1) return false;
-
-        foreach (Character c in currTile.world.characters.ToArray())
-        {
-            if (c == this) continue;
-
-            if (c.currentJob != null && currentJob != null && currTile.IsNeighbour(c.currTile, true) && (c.currentJob.tile == currentJob.tile || c.parentJob != null && c.parentJob.tile == currentJob.tile) && (c.currentJob.jobType == JobType.Waiting || c.state == State.Queueing) 
-            || currentJob != null && currTile.IsNeighbour(c.currTile, true) && currentJob.tile.structure.UsedByCharacterID == c.id)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void AbandonJob()
-    {
-        nextTile = destTile = currTile;
-        pathing = null;
-
-        // Add unreachable job to List. Will be added back once the tilegraph is refreshed to try again.
-        if (currentJob != null && parentJob == null)
-        {
-            currentJob.UnregisterJobCancelCallback(OnJobEnded);
-            currentJob.UnregisterJobCompleteCallback(OnJobEnded);
-            currTile.room.unreachableJobs.Add(currentJob);
-            currentJob = null;
-        }
-
-        // If there is a parent job assigned, add the parentJob to the list and delete the current job. It will be regenerated later.
-        else if (parentJob != null)
-        {
-            if (currTile.room != null) currTile.room.unreachableJobs.Add(parentJob);
-            currentJob = null;
-            parentJob = null;
-        }
-    }
-
     void Update_HandleMovement(float deltatime)
     {
 
@@ -388,35 +372,39 @@ public class Character : IXmlSerializable
     public void Update_Needs(float deltaTime)
     {
         if (thirst > 0) {
-            thirst -= 1 * deltaTime;
+            thirst -= .3f * deltaTime;
         }
     }
+    #endregion
 
-    public void Update(float deltaTime)
+    #region Jobs
+
+    public void AbandonJob()
     {
+        nextTile = destTile = currTile;
+        pathing = null;
 
-        // If a character is despawned and has no jobs, destroy them.
-        if (!spawned && prioritizedJobs.Count == 0 && this.currentJob == null && this.parentJob == null || !spawned && prioritizedJobs.Count == 1 && prioritizedJobs.Peek().jobType == JobType.Drinking) {
-            this.Destroy();
+        // Add unreachable job to List. Will be added back once the tilegraph is refreshed to try again.
+        if (currentJob != null && parentJob == null)
+        {
+            currentJob.UnregisterJobCancelCallback(OnJobEnded);
+            currentJob.UnregisterJobCompleteCallback(OnJobEnded);
+            currTile.room.unreachableJobs.Add(currentJob);
+            currentJob = null;
         }
 
-        if (spawned) {
-            Update_Needs(deltaTime);
+        // If there is a parent job assigned, add the parentJob to the list and delete the current job. It will be regenerated later.
+        else if (parentJob != null)
+        {
+            if (currTile.room != null) currTile.room.unreachableJobs.Add(parentJob);
+            currentJob = null;
+            parentJob = null;
         }
-
-        Update_DoJob(deltaTime);
-
-        // Only allow movement if character is spawned in map.
-        if (spawned) {
-            Update_HandleMovement(deltaTime);
-        }
-
-        if (characterChanged != null) characterChanged(this);
     }
 
     public void HaulingOnComplete()
     {
-        if (destTile.structure != null && destTile.structure.structureCategory == StructureCategory.Storage && destTile.structure.inventory != null)
+        if (destTile.structure != null && destTile.structure.category.id == Data.GetCategoryId("Storage") && destTile.structure.inventory != null)
         {
             destTile.structure.inventory.TransferItem(this.inventory, haulingRequirement.material, haulingRequirement.amount);
         }
@@ -453,50 +441,6 @@ public class Character : IXmlSerializable
         }
     }
 
-    static void Thread_GenerateNewTileGraph()
-    {
-        WorldController.Instance.World.tileGraph = new Path_TileGraph(WorldController.Instance.World);
-        tileGraphThread = null;
-    }
-
-    public void RegisterOnChangedCallback(Action<Character> callback)
-    {
-        characterChanged += callback;
-    }
-
-    public void UnregisterOnChangedCallback(Action<Character> callback)
-    {
-        characterChanged -= callback;
-    }
-
-    
-    public void RegisterOnDeletedCallback(Action<Character> callback)
-    {
-        characterDeleted += callback;
-    }
-
-    // Visually add the character
-    public void Spawn()
-    {
-        this.spawned = true;
-    }
-
-    // Visually remove the character.
-    public void Despawn()
-    {
-        this.spawned = false;
-    }
-
-    // Remove all references to the character.
-    public void Destroy()
-    {
-        if (characterDeleted != null)
-        {
-            currTile.world.characters.Remove(this);
-            characterDeleted(this);
-        }
-    }
-
     private void AssignWaitingJob(float time = 1f)
     {
         this.state = State.Queueing;
@@ -530,6 +474,69 @@ public class Character : IXmlSerializable
         currentJob.tile.structure.UsedByCharacterID = -1;
         state = State.Idling;
         currentJob = null;
+    }
+
+    #endregion
+
+    bool QueueForTileExists()
+    {
+        if (currTile.world.characters.Count == 1) return false;
+
+        foreach (Character c in currTile.world.characters.ToArray())
+        {
+            if (c == this) continue;
+
+            if (c.currentJob != null && currentJob != null && currTile.IsNeighbour(c.currTile, true) && (c.currentJob.tile == currentJob.tile || c.parentJob != null && c.parentJob.tile == currentJob.tile) && (c.currentJob.jobType == JobType.Waiting || c.state == State.Queueing) 
+            || currentJob != null && currTile.IsNeighbour(c.currTile, true) && currentJob.tile.structure.UsedByCharacterID == c.id)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Visually add the character
+    public void Spawn()
+    {
+        this.spawned = true;
+    }
+
+    // Visually remove the character.
+    public void Despawn()
+    {
+        this.spawned = false;
+    }
+
+    // Remove all references to the character.
+    public void Destroy()
+    {
+        if (characterDeleted != null)
+        {
+            currTile.world.characters.Remove(this);
+            characterDeleted(this);
+        }
+    }
+
+    static void Thread_GenerateNewTileGraph()
+    {
+        WorldController.Instance.World.tileGraph = new Path_TileGraph(WorldController.Instance.World);
+        tileGraphThread = null;
+    }
+
+    public void RegisterOnChangedCallback(Action<Character> callback)
+    {
+        characterChanged += callback;
+    }
+
+    public void UnregisterOnChangedCallback(Action<Character> callback)
+    {
+        characterChanged -= callback;
+    }
+
+    
+    public void RegisterOnDeletedCallback(Action<Character> callback)
+    {
+        characterDeleted += callback;
     }
     
     #region Saving/Loading

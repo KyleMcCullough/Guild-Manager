@@ -9,13 +9,13 @@ using System.Xml.Serialization;
 
 public class Job : IXmlSerializable
 {
-    public Tile tile {get; protected set;}
-    public float jobTime {get; private set;}
-    public bool manuallySetJobTime {get; private set;}
-    Action<Job> jobFinished;
     Action<Job> jobCancelled;
-    public List<buildingRequirement> requiredMaterials;
+    Action<Job> jobFinished;
     public JobType jobType {private set; get; }
+    public List<buildingRequirement> requiredMaterials;
+    public Tile tile {get; protected set;}
+    public bool manuallySetJobTime {get; private set;}
+    public float jobTime {get; private set;}
 
     public Job(Tile tile, Action<Job> jobFinished, JobType jobType, List<buildingRequirement> requiredMaterials = null, float jobTime = 0.1f, bool manuallySetJobTime = false) {
         this.tile = tile;
@@ -34,22 +34,6 @@ public class Job : IXmlSerializable
         {
             this.requiredMaterials = null;
         }
-    }
-
-    public void RegisterJobCompleteCallback(Action<Job> callback) {
-        this.jobFinished += callback;
-    }
-
-    public void RegisterJobCancelCallback(Action<Job> callback) {
-        this.jobCancelled += callback;
-    }
-
-    public void UnregisterJobCompleteCallback(Action<Job> callback) {
-        this.jobFinished -= callback;
-    }
-
-    public void UnregisterJobCancelCallback(Action<Job> callback) {
-        this.jobCancelled -= callback;
     }
 
     public void DoWork(float workTime) {
@@ -119,6 +103,22 @@ public class Job : IXmlSerializable
         if (jobCancelled != null) {
             jobCancelled(this);
         }
+    }
+
+    public void RegisterJobCompleteCallback(Action<Job> callback) {
+        this.jobFinished += callback;
+    }
+
+    public void RegisterJobCancelCallback(Action<Job> callback) {
+        this.jobCancelled += callback;
+    }
+
+    public void UnregisterJobCompleteCallback(Action<Job> callback) {
+        this.jobFinished -= callback;
+    }
+
+    public void UnregisterJobCancelCallback(Action<Job> callback) {
+        this.jobCancelled -= callback;
     }
 
     public XmlSchema GetSchema()

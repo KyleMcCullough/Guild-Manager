@@ -61,16 +61,6 @@ public enum QueueingJob
     QuestTaking
 }
 
-public enum StructureCategory
-{
-    None,
-    Wall,
-    Furniture,
-    Door,
-    QuestBoard,
-    Storage
-}
-
 public enum AdventurerRank
 {
     F,

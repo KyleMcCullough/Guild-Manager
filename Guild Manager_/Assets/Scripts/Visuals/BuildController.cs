@@ -7,14 +7,14 @@ using UnityEngine.Tilemaps;
 public class BuildController : MonoBehaviour
 {
 
-    string buildTile = "Dirt";
-    public string buildObject = ObjectType.Empty;
-    bool buildMode = false;
-    public int buildType = 0;
-    int buildWidth = 1;
-    int buildHeight = 1;
-    public Facing buildDirection = Facing.East;
     PreviewSpriteController previewSpriteController;
+    bool buildMode = false;
+    int buildHeight = 1;
+    int buildWidth = 1;
+    public Facing buildDirection = Facing.East;
+    public int buildType = 0;
+    public string buildObject = ObjectType.Empty;
+    string buildTile = "Dirt";
 
     private void Start()
     {

@@ -3,9 +3,9 @@ using System.Runtime.Serialization;
 [System.Serializable]
 public class QuestData
 {
-    public string title, description;
     public float minTimeToSolve, maxTimeToSolve;
     public int requiredRank, id;
+    public string title, description;
 }
 
 [System.Serializable]

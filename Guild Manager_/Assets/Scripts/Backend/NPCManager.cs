@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 public class NPCManager
 {
+    World world;
+    public List<Quest> quests;
     public List<Structure> jobBoards;
     public List<Tile> outOfMapSpawnpoints;
-    public List<Quest> quests;
-    World world;
 
     public NPCManager(World world)
     {

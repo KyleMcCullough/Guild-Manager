@@ -17,20 +17,6 @@ public class JobQueue
         jobList = new LinkedList<Job>();
     }
 
-    public void AddLast(Job job) 
-    {
-
-        if (jobList.Contains(job))
-        {
-            return;
-        }
-        jobList.AddLast(job);
-
-        if (jobCreated != null) {
-            jobCreated(job);
-        }
-    }
-
     public void AddFirst(Job job)
     {
         if (jobList.Contains(job))
@@ -44,8 +30,18 @@ public class JobQueue
         }
     }
 
-    public void RegisterJobCreationCallback(Action<Job> callback) {
-        jobCreated += callback;
+    public void AddLast(Job job) 
+    {
+
+        if (jobList.Contains(job))
+        {
+            return;
+        }
+        jobList.AddLast(job);
+
+        if (jobCreated != null) {
+            jobCreated(job);
+        }
     }
 
     public Job Dequeue() {
@@ -69,5 +65,9 @@ public class JobQueue
     public void Clear()
     {
         jobList.Clear();
+    }
+
+    public void RegisterJobCreationCallback(Action<Job> callback) {
+        jobCreated += callback;
     }
 }

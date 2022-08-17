@@ -268,7 +268,7 @@ public class Item : IXmlSerializable
 
             checkedTiles.Add(t);
 
-            if (t.item != null && t.item.Type == type || t.structure.structureCategory == StructureCategory.Storage && t.structure.inventory.ContainsItem(type)) return t;
+            if (t.item != null && t.item.Type == type || t.structure.category.id == Data.GetCategoryId("Storage") && t.structure.inventory.ContainsItem(type)) return t;
 
             Tile[] ns = t.GetNeighbors();
             foreach (Tile t2 in ns)

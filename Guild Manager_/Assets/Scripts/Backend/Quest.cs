@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 public class Quest
 {
-    public string title, description;
-    public int id;
-    public float minTimeToSolve, maxTimeToSolve;
     AdventurerRank requiredRank;
+    public float minTimeToSolve, maxTimeToSolve;
+    public int id;
+    public string title, description;
 
     public Quest(string title, string description, float minTimeToSolve, float maxTimeToSolve, AdventurerRank requiredRank, int id)
     {

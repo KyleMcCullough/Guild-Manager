@@ -12,7 +12,7 @@ public class World : IXmlSerializable
     // Day, month, year.
     float worldTime = 0;
     int nextID = 0;
-    int[] date;
+    DateTime date;
     public NPCManager npcManager;
     public int height;
     public int width;
@@ -33,8 +33,8 @@ public class World : IXmlSerializable
     public List<Structure> storageStructures;
     public List<Structure> structures;
     public List<Structure> updatingStructures;
-    public Path_TileGraph tileGraph;
     public Path_AStar mainRoadPath {get; private set;}
+    public Path_TileGraph tileGraph;
     #endregion
 
     public World(int width, int height)
@@ -42,6 +42,8 @@ public class World : IXmlSerializable
         SetupWorld(width, height);
     }
 
+
+    #region World Setup
     void SetupWorld(int width, int height, bool generateWorld = true)
     {
         this.npcManager = new NPCManager(this);
@@ -59,7 +61,7 @@ public class World : IXmlSerializable
         this.width = width;
         this.nextID = 0;
 
-        date = new int[] { 1, 1, 1253 };
+        date = new DateTime(1253, 1, 1);
         tiles = new Tile[width, height];
         structurePrototypes = new Dictionary<string, Structure>();
         rooms.Add(new Room());
@@ -84,164 +86,6 @@ public class World : IXmlSerializable
             GenerateWorld(UnityEngine.Random.Range(1, 10000).GetHashCode());
             CreateCharacter(GetTile(width / 2, height / 2));
         }
-    }
-
-    public void Update(float deltaTime)
-    {
-        worldTime += (1 * deltaTime);
-
-        foreach (Character c in characters.ToArray())
-        {
-            c.Update(deltaTime);
-        }
-
-        foreach (Structure structure in updatingStructures)
-        {
-            structure.Update(deltaTime);
-        }
-
-        if (worldTime >= Data.DayLength)
-        {
-            UpdateDate();
-            worldTime = 0f;
-        }
-    }
-
-    public bool IsDayTime()
-    {
-        return worldTime <= (Data.DayLength * (1 - ((float)Data.NightRatio / 100)));
-    }
-
-    public void UpdateDate()
-    {
-        date[0]++;
-
-        if (date[0] >= 30)
-        {
-            date[0] = 0;
-            date[1]++;
-        }
-
-        if (date[1] > 6)
-        {
-            date[1] = 0;
-            date[2]++;
-        }
-    }
-
-    public void CreateNewStructureAtTile(Tile t)
-    {
-        t.structure = new Structure(t);
-        t.structure.RegisterObjectChangedDelegate(OnStructureChanged);
-    }
-
-    public Character CreateCharacter(Tile tile)
-    {
-
-        Tile t = Tile.GetSafePlaceForPlayerSpawning(tile);
-
-        if (t == null)
-        {
-            t = tile;
-        }
-
-        Character c = new Character(t, nextID);
-        characters.Add(c);
-        nextID++;
-
-        if (characterCreated != null)
-        {
-            characterCreated(c);
-        }
-
-        // If Character cannot be visually created, add it to the queue to create once ready.
-        else
-        {
-            queuedCharactersToCreate.Add(c);
-        }
-
-        return c;
-    }
-
-    // This version takes away safety checks. This is only meant for loading.
-    Character CreateCharacter(Tile tile, int id, bool spawned, float thirst, bool waterJobSet)
-    {
-        Character c = new Character(tile, id, spawned, thirst, waterJobSet);
-        characters.Add(c);
-        nextID++;
-
-        
-        if (characterCreated != null)
-        {
-            characterCreated(c);
-        }
-
-        // If Character cannot be visually created, add it to the queue to create once ready.
-        else
-        {
-            queuedCharactersToCreate.Add(c);
-        }
-
-        return c;
-    }
-    
-    public Path_AStar GetMainPath()
-    {
-        Stack<Tile> path = new Stack<Tile>();
-        List<Tile> checkedTiles = new List<Tile>();
-        Tile activeTile = null;
-        Tile previousTile = null;
-
-        // Loop through all tiles on the left border to find the start of the path
-        for (int y = 0; y < this.height; y++)
-        {
-            if (tiles[0, y] != null && tiles[0, y].Type == "Path") {
-                activeTile = tiles[0, y];
-                break;
-            }
-        }
-
-        if (activeTile == null) {
-            for (int x = 0; x < this.width; x++)
-            {
-                if (tiles[x, 0] != null && tiles[x, 0].Type == "Path") {
-                    activeTile = tiles[x, 0];
-                    break;
-                }
-            }
-        }
-
-        // If no starting border tile was found return
-        if (activeTile == null) return null;
-
-        // Add starting path tile.
-        this.npcManager.outOfMapSpawnpoints.Add(activeTile);
-
-        while (activeTile != null) {
-            path.Push(activeTile);
-
-            // This means there is no complete path.
-            if (activeTile == previousTile) break;
-
-            previousTile = activeTile;
-
-            // Parse all directions
-            foreach (var tile in activeTile.GetNeighbors(true))
-            {
-                if (tile != null && tile.Type == "Path" && !checkedTiles.Contains(tile)) {
-                    checkedTiles.Add(tile);
-                    activeTile = tile;
-                    break;
-                }
-            }
-
-            if (path.Count > 1 && (activeTile.x == width - 1 || activeTile.y == height - 1)) break;
-        }
-
-        // Add ending path tile.
-        this.npcManager.outOfMapSpawnpoints.Add(activeTile);
-
-        return new Path_AStar(path);
     }
 
     public void GenerateWorld(int seed)
@@ -400,7 +244,7 @@ public class World : IXmlSerializable
             {
                 if (func != null)
                 {
-                    structure.updateActions += (Action<Structure, float>)Delegate.CreateDelegate(typeof(Action<Structure, float>), StructureBehaviours.GetMethodInfo(func));
+                    structure.updateActions += (Action<Structure, float>)Delegate.CreateDelegate(typeof(Action<Structure, float>), StructureBehavior.GetMethodInfo(func));
                 }
             }
 
@@ -427,6 +271,106 @@ public class World : IXmlSerializable
             }
             structurePrototypes.Add(type, structure);
         }
+    }
+    #endregion
+
+    public void Update(float deltaTime)
+    {
+        worldTime += (1 * deltaTime);
+
+        foreach (Character c in characters.ToArray())
+        {
+            c.Update(deltaTime);
+        }
+
+        foreach (Structure structure in updatingStructures)
+        {
+            structure.Update(deltaTime);
+        }
+
+        if (worldTime >= Data.DayLength)
+        {
+            UpdateDate();
+            worldTime = 0f;
+        }
+    }
+
+    public bool IsDayTime()
+    {
+        return worldTime <= (Data.DayLength * (1 - ((float)Data.NightRatio / 100)));
+    }
+
+    public void UpdateDate()
+    {
+        date = date.AddDays(1);
+
+        if (date.Day >= 30)
+        {
+            date = new DateTime(date.Year, date.Month + 1, 1);
+        }
+
+        if (date.Month > 8)
+        {
+            date = new DateTime(date.Year + 1, 1, 1);
+        }
+    }
+
+    #region Tile, Character, and Structure methods
+
+    public void CreateNewStructureAtTile(Tile t)
+    {
+        t.structure = new Structure(t);
+        t.structure.RegisterObjectChangedDelegate(OnStructureChanged);
+    }
+
+    public Character CreateCharacter(Tile tile)
+    {
+
+        Tile t = Tile.GetSafePlaceForPlayerSpawning(tile);
+
+        if (t == null)
+        {
+            t = tile;
+        }
+
+        Character c = new Character(t, nextID);
+        characters.Add(c);
+        nextID++;
+
+        if (characterCreated != null)
+        {
+            characterCreated(c);
+        }
+
+        // If Character cannot be visually created, add it to the queue to create once ready.
+        else
+        {
+            queuedCharactersToCreate.Add(c);
+        }
+
+        return c;
+    }
+
+    // This version takes away safety checks. This is only meant for loading.
+    Character CreateCharacter(Tile tile, int id, bool spawned, float thirst, bool waterJobSet)
+    {
+        Character c = new Character(tile, id, spawned, thirst, waterJobSet);
+        characters.Add(c);
+        nextID++;
+
+        
+        if (characterCreated != null)
+        {
+            characterCreated(c);
+        }
+
+        // If Character cannot be visually created, add it to the queue to create once ready.
+        else
+        {
+            queuedCharactersToCreate.Add(c);
+        }
+
+        return c;
     }
 
     public Tile GetTile(int x, int y)
@@ -556,7 +500,68 @@ public class World : IXmlSerializable
 
         return tile.structure;
     }
+    #endregion
 
+    
+    public Path_AStar GetMainPath()
+    {
+        Stack<Tile> path = new Stack<Tile>();
+        List<Tile> checkedTiles = new List<Tile>();
+        Tile activeTile = null;
+        Tile previousTile = null;
+
+        // Loop through all tiles on the left border to find the start of the path
+        for (int y = 0; y < this.height; y++)
+        {
+            if (tiles[0, y] != null && tiles[0, y].Type == "Path") {
+                activeTile = tiles[0, y];
+                break;
+            }
+        }
+
+        if (activeTile == null) {
+            for (int x = 0; x < this.width; x++)
+            {
+                if (tiles[x, 0] != null && tiles[x, 0].Type == "Path") {
+                    activeTile = tiles[x, 0];
+                    break;
+                }
+            }
+        }
+
+        // If no starting border tile was found return
+        if (activeTile == null) return null;
+
+        // Add starting path tile.
+        this.npcManager.outOfMapSpawnpoints.Add(activeTile);
+
+        while (activeTile != null) {
+            path.Push(activeTile);
+
+            // This means there is no complete path.
+            if (activeTile == previousTile) break;
+
+            previousTile = activeTile;
+
+            // Parse all directions
+            foreach (var tile in activeTile.GetNeighbors(true))
+            {
+                if (tile != null && tile.Type == "Path" && !checkedTiles.Contains(tile)) {
+                    checkedTiles.Add(tile);
+                    activeTile = tile;
+                    break;
+                }
+            }
+
+            if (path.Count > 1 && (activeTile.x == width - 1 || activeTile.y == height - 1)) break;
+        }
+
+        // Add ending path tile.
+        this.npcManager.outOfMapSpawnpoints.Add(activeTile);
+
+        return new Path_AStar(path);
+    }
+    
     #region Rooms
     public void InvalidateTileGraph()
     {
@@ -734,7 +739,7 @@ public class World : IXmlSerializable
                         j =(new Job(tile, (job) => npcManager.SubmitQuest(), JobType.QuestGiving, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime));
                         break;
                     case SaveableJob.Passing:
-                        j = new Job(tile, (job) => c.Destroy(), JobType.Passing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
+                        j = new Job(tile, (job) => c.Despawn(), JobType.Passing, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
                         break;
                     case SaveableJob.QuestTaking:
                         j = new Job(tile, (job) => npcManager.TakeQuest(c), JobType.QuestTaking, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
@@ -904,4 +909,3 @@ public class World : IXmlSerializable
     }
     #endregion
 }
-

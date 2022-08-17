@@ -29,7 +29,6 @@ public class WorldController : MonoBehaviour
         if (loadingWorld)
         {
             loadingWorld = false;
-            // paused = true;
             LoadSaveFile();
         }
 
@@ -90,15 +89,12 @@ public class WorldController : MonoBehaviour
     public void RegenerateWorld()
     {
         World.GenerateWorld(UnityEngine.Random.Range(1, 10000000).GetHashCode());
-        StructureSpriteController structureSpriteController = GetComponent<StructureSpriteController>();
-
-        structureSpriteController.RefreshAllStructures();
+        GetComponent<StructureSpriteController>().RefreshAllStructures();
     }
 
     public void RefreshStructures()
     {
-        StructureSpriteController structureSpriteController = GetComponent<StructureSpriteController>();
-        structureSpriteController.RefreshAllStructures();
+        GetComponent<StructureSpriteController>().RefreshAllStructures();
     }
 
 	public void SaveWorld() {

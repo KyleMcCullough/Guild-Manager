@@ -8,13 +8,13 @@ using UnityEngine.Tilemaps;
 
 public class PreviewSpriteController : MonoBehaviour
 {
-    public Tilemap tilemap;
-    MouseController mouseController;
     BuildController buildController;
-    Tile lastPreviewTile = null;
     Facing lastPreviewDirection = Facing.None;
-    public bool dragging {get; private set;} = false;
+    MouseController mouseController;
+    Tile lastPreviewTile = null;
     Vector3 lastMousePosition;
+    public Tilemap tilemap;
+    public bool dragging {get; private set;} = false;
 
 
     World world

@@ -11,21 +11,20 @@ public class Structure : IXmlSerializable
 {
     #region variables
     public Tile parent;
-    public StructureCategory structureCategory
-    {
-        get
-        {
-            return (StructureCategory) Data.structureData[Type].category;
+
+    public Category category {
+        get {
+            return Data.GetStructureCategory(Data.GetStructureData(type).category);
         }
     }
-    public Structure parentStructure = null;
+
+    String type = ObjectType.Empty;
+    int usedByCharacterID = -1;
+    public Action<Structure, float> updateActions = null;
+    public Dictionary<string, object> optionalParameters = new Dictionary<string, object>();
     public Facing facingDirection = Facing.East;
     public List<Tile> overlappedStructureTiles;
-    String type = ObjectType.Empty;
-
-    public Dictionary<string, object> optionalParameters = new Dictionary<string, object>();
-    public Action<Structure, float> updateActions = null;
-    int usedByCharacterID = -1;
+    public Structure parentStructure = null;
     public int UsedByCharacterID
     {
         get
@@ -86,10 +85,10 @@ public class Structure : IXmlSerializable
 
     // Multiplyer, a value of 2 is twice as slow as 1. These can be combined with tile movementCost and other modifiers.
     // If the movementCost is 0, then it cannot be passed through.
-    public float movementCost { get; protected set; }
-    public int width = 1;
-    public int height = 1;
     public bool linksToNeighbour { get; set; }
+    public float movementCost { get; protected set; }
+    public int height = 1;
+    public int width = 1;
 
     // Func<Tile, bool> positionValidation;
 
@@ -125,6 +124,8 @@ public class Structure : IXmlSerializable
     {
         return Data.GetStructureData(type);
     }
+
+    #region CRUD
 
     public bool PlaceStructure(Structure prototype, int width, int height, Facing buildDirection, bool constructed = true, bool addOptionalParameters = true)
     {
@@ -189,7 +190,108 @@ public class Structure : IXmlSerializable
         return true;
     }
 
-    public void AssignActions(Action<Structure, float> newActions)
+    public void CompleteStructure(bool loading = false)
+    {
+        this.IsConstructed = true;
+
+        if (this.canCreateRooms && !loading)
+        {
+            Thread UpdateRoomThread = new Thread(new ThreadStart(this.Thread_UpdateRooms_Creation));
+            UpdateRoomThread.Start();
+        }
+
+        if (this.category.id == Data.GetCategoryId("QuestBoard"))
+        {
+            this.parent.world.npcManager.jobBoards.Add(this);
+        }
+
+        if (this.inventory != null)
+        {
+            this.parent.world.storageStructures.Add(this);
+        }
+
+        if (this.movementCost != 1)
+        {
+            parent.world.InvalidateTileGraph();
+        }
+
+
+        if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
+    }
+
+    public void RemoveStructure()
+    {
+
+        // If this tile is part of a parent structure, call the remove structure on it and return.
+        if (this.parentStructure != null)
+        {
+            this.parentStructure.RemoveStructure();
+            return;
+        }
+
+        this.parent.world.structures.Remove(this);
+        Structure prototype = this.parent.world.structurePrototypes[ObjectType.Empty];
+
+        if (this.updateActions != null)
+        {
+            this.RemoveActions();
+        }
+
+        if (this.category.id == Data.GetCategoryId("QuestBoard"))
+        {
+            this.parent.world.npcManager.jobBoards.Remove(this);
+        }
+
+        this.optionalParameters = prototype.optionalParameters;
+        this.linksToNeighbour = prototype.linksToNeighbour;
+        this.movementCost = prototype.movementCost;
+        this.canCreateRooms = prototype.canCreateRooms;
+        this.parent.world.GetOutSideRoom().AssignTile(this.parent);
+
+        Thread UpdateRoomThread = new Thread(new ThreadStart(this.Thread_UpdateRooms_Deletion));
+        UpdateRoomThread.Start();
+
+        if (this.overlappedStructureTiles != null && this.overlappedStructureTiles.Count > 0)
+        {
+            this.ReleaseRequiredTiles();
+        }
+
+        // Drop items from the destruction if built
+        if (this.IsConstructed)
+        {
+            foreach (buildingRequirement item in this.GetTypeData(this.Type).itemsToDropOnDestroy)
+            {
+                Debug.Log(item.material + item.amount);
+                Item.CreateNewItem(this.parent, item.material, item.amount);
+            }
+        }
+
+        this.Type = prototype.Type;
+
+        foreach (Tile tile in this.parent.GetNeighbors())
+        {
+            tile.structure.structureChangedEvent(tile.structure);
+        }
+
+        if (this.parent.world.structures.Contains(this))
+        {
+            this.parent.world.structures.Remove(this);
+        }
+
+        if (this.inventory != null)
+        {
+            foreach (Item item in this.inventory.items)
+            {
+                Item.CreateNewItem(this.parent, item.type, item.CurrentStackAmount);
+            }
+
+            this.parent.world.storageStructures.Remove(this);
+        }
+
+        if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
+    }
+
+        public void AssignActions(Action<Structure, float> newActions)
     {
         this.updateActions = newActions;
         this.parent.world.updatingStructures.Add(this);
@@ -255,107 +357,7 @@ public class Structure : IXmlSerializable
         }
         this.overlappedStructureTiles = null;
     }
-
-    public void CompleteStructure(bool loading = false)
-    {
-        this.IsConstructed = true;
-
-        if (this.canCreateRooms && !loading)
-        {
-            Thread UpdateRoomThread = new Thread(new ThreadStart(this.Thread_UpdateRooms_Creation));
-            UpdateRoomThread.Start();
-        }
-
-        if (this.structureCategory == StructureCategory.QuestBoard)
-        {
-            this.parent.world.npcManager.jobBoards.Add(this);
-        }
-
-        if (this.inventory != null)
-        {
-            this.parent.world.storageStructures.Add(this);
-        }
-
-        if (this.movementCost != 1)
-        {
-            parent.world.InvalidateTileGraph();
-        }
-
-
-        if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
-    }
-
-    public void RemoveStructure()
-    {
-
-        // If this tile is part of a parent structure, call the remove structure on it and return.
-        if (this.parentStructure != null)
-        {
-            this.parentStructure.RemoveStructure();
-            return;
-        }
-
-        this.parent.world.structures.Remove(this);
-        Structure prototype = this.parent.world.structurePrototypes[ObjectType.Empty];
-
-        if (this.updateActions != null)
-        {
-            this.RemoveActions();
-        }
-
-        if (this.structureCategory == StructureCategory.QuestBoard)
-        {
-            this.parent.world.npcManager.jobBoards.Remove(this);
-        }
-
-        this.optionalParameters = prototype.optionalParameters;
-        this.linksToNeighbour = prototype.linksToNeighbour;
-        this.movementCost = prototype.movementCost;
-        this.canCreateRooms = prototype.canCreateRooms;
-        this.parent.world.GetOutSideRoom().AssignTile(this.parent);
-
-        Thread UpdateRoomThread = new Thread(new ThreadStart(this.Thread_UpdateRooms_Deletion));
-        UpdateRoomThread.Start();
-
-        if (this.overlappedStructureTiles != null && this.overlappedStructureTiles.Count > 0)
-        {
-            this.ReleaseRequiredTiles();
-        }
-
-        // Drop items from the destruction if built
-        if (this.IsConstructed)
-        {
-            foreach (buildingRequirement item in this.GetTypeData(this.Type).itemsToDropOnDestroy)
-            {
-                Debug.Log(item.material + item.amount);
-                Item.CreateNewItem(this.parent, item.material, item.amount);
-            }
-        }
-
-        this.Type = prototype.Type;
-
-        foreach (Tile tile in this.parent.GetNeighbors())
-        {
-            tile.structure.structureChangedEvent(tile.structure);
-        }
-
-        if (this.parent.world.structures.Contains(this))
-        {
-            this.parent.world.structures.Remove(this);
-        }
-
-        if (this.inventory != null)
-        {
-            foreach (Item item in this.inventory.items)
-            {
-                Item.CreateNewItem(this.parent, item.type, item.CurrentStackAmount);
-            }
-
-            this.parent.world.storageStructures.Remove(this);
-        }
-
-        if (this.parent.room != null) this.parent.room.ResetUnreachableJobs();
-    }
+    #endregion
 
     static public Structure CreatePrototype(String type, float movementCost = 1f, int width = 1, int height = 1, bool linksToNeighbour = false, bool canCreateRooms = false)
     {
@@ -367,7 +369,6 @@ public class Structure : IXmlSerializable
         obj.height = height;
         obj.linksToNeighbour = linksToNeighbour;
         obj.canCreateRooms = canCreateRooms;
-        // obj.positionValidation = obj.IsValidPosition;
 
         return obj;
     }
@@ -419,7 +420,7 @@ public class Structure : IXmlSerializable
     #region Door Methods
     public bool IsDoor()
     {
-        return this.structureCategory == StructureCategory.Door;
+        return this.category.id == Data.GetCategoryId("Door");
     }
 
     public bool IsDoorOpen()
@@ -463,17 +464,6 @@ public class Structure : IXmlSerializable
     }
 
     #endregion
-
-    public void SwitchParentStructure(Structure structure)
-    {
-        if (structure.parentStructure == null) return;
-
-        this.overlappedStructureTiles = structure.parentStructure.overlappedStructureTiles;
-        this.overlappedStructureTiles.Add(structure.parent);
-
-        structure.parentStructure = this;
-        structure.overlappedStructureTiles = null;
-    }
 
     #region Saving/Loading
     public XmlSchema GetSchema()

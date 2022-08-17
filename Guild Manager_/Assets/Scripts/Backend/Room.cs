@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 public class Room
 {
-    float temperature;
-    List<Tile> tiles;
     IDictionary<string, int> itemsInRoom;
+    List<Tile> tiles;
+    float temperature;
     public JobQueue jobQueue;
     public List<Job> unreachableJobs;
 
@@ -77,8 +77,6 @@ public class Room
                 itemsInRoom.Remove(type);
             }
         }
-
-        // PrintDictionary();
     }
 
     public bool ContainsItem(string type)
@@ -94,14 +92,6 @@ public class Room
         }
 
         unreachableJobs = new List<Job>();
-    }
-
-    void PrintDictionary()
-    {
-        foreach (KeyValuePair<string, int> line in itemsInRoom)
-        {
-            Debug.Log(line.Key + " " + line.Value);
-        }
     }
 
     public void UnassignAllTiles()
@@ -243,12 +233,7 @@ public class Room
             // At this point, oldRoom shouldn't have any more tiles left in it,
             // so in practice this "DeleteRoom" should mostly only need
             // to remove the room from the world's list.
-
-            // if (oldRoom != null && oldRoom.tiles.Contains(source.parent))
-            // {
-            //     oldRoom.tiles.Remove(source.parent);
-            // }
-
+            
             if (oldRoom != null && oldRoom.itemsInRoom.Count > 0)
             {
                 foreach (var entry in oldRoom.itemsInRoom)
@@ -413,7 +398,7 @@ public class Room
 
             checkedTiles.Add(t);
 
-            if (t.structure != null && t.structure.structureCategory == StructureCategory.Storage)
+            if (t.structure != null && t.structure.category.id == Data.GetCategoryId("Storage"))
             {
                 return t.structure;
             }

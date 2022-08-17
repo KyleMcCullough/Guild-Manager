@@ -144,6 +144,7 @@ public class Inventory : IXmlSerializable
         }
     }
 
+    #region Saving/Loading
     public XmlSchema GetSchema()
     {
         return null;
@@ -168,4 +169,5 @@ public class Inventory : IXmlSerializable
         writer.WriteAttributeString("items", itemString);
         writer.WriteAttributeString("amounts", amounts);
     }
+    #endregion
 }

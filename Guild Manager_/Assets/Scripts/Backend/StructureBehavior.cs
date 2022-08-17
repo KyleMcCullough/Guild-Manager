@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public static class StructureBehaviours
+public static class StructureBehavior
 {
 
 
@@ -27,7 +27,7 @@ public static class StructureBehaviours
 
     public static MethodInfo GetMethodInfo(string methodName)
     {
-        MethodInfo method = typeof(StructureBehaviours).GetMethod(methodName);
+        MethodInfo method = typeof(StructureBehavior).GetMethod(methodName);
 
         if (method != null)
         {

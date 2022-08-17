@@ -122,7 +122,7 @@ public static class Data
         return null;
     }
 
-        public static Category GetTileCategory(int id)
+    public static Category GetTileCategory(int id)
     {
         foreach (Category item in tiles.categories)
         {
@@ -131,7 +131,20 @@ public static class Data
                 return item;
             }
         }
-        UnityEngine.Debug.LogError("No category with name of '" + id + "' has been found in the Category data array.");
+        UnityEngine.Debug.LogError("No category with id of '" + id + "' has been found in the Category data array.");
+        return null;
+    }
+
+    public static Category GetStructureCategory(int id)
+    {
+        foreach (Category item in structures.categories)
+        {
+            if (item.id == id)
+            {
+                return item;
+            }
+        }
+        UnityEngine.Debug.LogError("No category with id of '" + id + "' has been found in the Category data array.");
         return null;
     }
 
@@ -212,7 +225,12 @@ public static class Data
 
     public static int GetCategoryId(string name)
     {
-        foreach (Category c in tiles.categories)
+        List<Category> idList = new List<Category>();
+        idList.AddRange(tiles.categories);
+        idList.AddRange(structures.categories);
+        idList.AddRange(items.categories);
+
+        foreach (Category c in idList)
         {
             if (c.name.ToLower() == name.ToLower())
             {
@@ -246,5 +264,13 @@ public static class Data
     public static bool ContainsSprite(string type)
     {
         return sprites.ContainsKey(type);
+    }
+
+    public static void PrintDictionary<T>(List<T> list)
+    {
+        foreach (var line in list)
+        {
+            Debug.Log(line.ToString());
+        }
     }
 }

@@ -8,14 +8,14 @@ using UnityEngine.EventSystems;
 public class MouseController : MonoBehaviour
 {
 
-    Vector3 lastMousePosition;
-    Vector3 dragStartPosition;
-    public Vector3 mousePosition;
-    List<GameObject> dragPreviewArea;
-    public float CameraMoveSpeed = 10f;
     BuildController buildController;
+    List<GameObject> dragPreviewArea;
     PreviewSpriteController previewSpriteController;
+    Vector3 dragStartPosition;
+    Vector3 lastMousePosition;
     bool allowDragging = true;
+    public Vector3 mousePosition;
+    public float CameraMoveSpeed = 10f;
 
     // Start is called before the first frame update
     void Start()
@@ -25,6 +25,7 @@ public class MouseController : MonoBehaviour
         previewSpriteController = FindObjectOfType<PreviewSpriteController>();
     }
 
+    //TODO: Update to new unity input system
     // Update is called once per frame
     void Update()
     {
@@ -134,7 +135,7 @@ public class MouseController : MonoBehaviour
         Camera.main.transform.position += updatedMovement;
     }
 
-    //TODO: Set a max area for tile to optimize performance.
+    //TODO: Set a max area for tile to ensure performance.
     void UpdateTileDragging()
     {
 

@@ -8,8 +8,8 @@ using System.Xml.Serialization;
 
 public class Tile : IXmlSerializable
 {
-    public int x, y;
     Action<Tile> tileChangedEvent;
+    public int x, y;
     string type = ObjectType.Empty;
     public Category category {
         get {
@@ -83,44 +83,31 @@ public class Tile : IXmlSerializable
     #region Neighbor Methods
     public Tile[] GetNeighbors(bool diagonals = false)
     {
-        Tile[] neighbours;
+        Tile[] neighbors;
 
         if (!diagonals)
         {
-            neighbours = new Tile[4];
+            neighbors = new Tile[4];
         }
         else
         {
-            neighbours = new Tile[8];
+            neighbors = new Tile[8];
         }
 
-        Tile n;
-
-        n = world.GetTile(x, y + 1);
-        neighbours[0] = n;
-
-        n = world.GetTile(x + 1, y);
-        neighbours[1] = n;
-
-        n = world.GetTile(x, y - 1);
-        neighbours[2] = n;
-
-        n = world.GetTile(x - 1, y);
-        neighbours[3] = n;
+        neighbors[0] = North();
+        neighbors[1] = East();
+        neighbors[2] = South();
+        neighbors[3] = West();
 
         if (diagonals)
         {
-            n = world.GetTile(x + 1, y + 1);
-            neighbours[4] = n;
-            n = world.GetTile(x + 1, y - 1);
-            neighbours[5] = n;
-            n = world.GetTile(x - 1, y - 1);
-            neighbours[6] = n;
-            n = world.GetTile(x - 1, y + 1);
-            neighbours[7] = n;
+            neighbors[4] = NorthEast();
+            neighbors[5] = SouthEast();
+            neighbors[6] = SouthWest();
+            neighbors[7] = NorthWest();
         }
 
-        return neighbours;
+        return neighbors;
     }
 
     // Gets closest available neighbor.
@@ -273,7 +260,7 @@ public class Tile : IXmlSerializable
                 {
                     return null;
                 }
-                
+
                 if (!checkedTiles.Contains(t2))
                 {
                     tilesToCheck.Enqueue(t2);
@@ -306,7 +293,7 @@ public class Tile : IXmlSerializable
 
     public Tile NorthEast()
     {
-        return world.GetTile(x - 1, y + 1);
+        return world.GetTile(x + 1, y + 1);
     }
 
     public Tile NorthWest()

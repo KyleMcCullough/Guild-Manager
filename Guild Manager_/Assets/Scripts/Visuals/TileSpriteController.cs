@@ -21,17 +21,7 @@ public class TileSpriteController : MonoBehaviour
         RefreshAllTiles();
     }
 
-    void OnTileChanged(Tile tile)
-    {
-
-        // TileBase mapTile = tilemap.GetTile(new Vector3Int(tile.x, tile.y, 0);
-
-        // Trys to get the tile object from the tile data. Continues if it can sucessfully find and assign it.
-        // if (tileGameObjects.TryGetValue(tile, out GameObject tileObject)) {
-
-        UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
-        AssignSprite(tile);
-    }
+    void OnTileChanged(Tile tile) => AssignSprite(tile);
     public void AssignSprite(Tile obj)
     {
         UnityEngine.Tilemaps.Tile t = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
