@@ -463,9 +463,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69900b3afd6bdbd478fcd78a5ca9f66e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buildObject: Empty
-  buildType: 0
   buildDirection: 1
+  buildType: 0
+  buildObject: Empty
 --- !u!114 &109443276
 MonoBehaviour:
   m_ObjectHideFlags: 0

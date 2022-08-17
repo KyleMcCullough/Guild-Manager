@@ -59,7 +59,7 @@ public class WorldController : MonoBehaviour
 
     private void FixedUpdate() {
         //FIXME: This is for testing, this rate will later be calculated by renown and others.
-        if (UnityEngine.Random.Range(0, 100) == 99) {
+        if (!paused && UnityEngine.Random.Range(0, 100) == 99) {
             CreatePasserby();
         }
     }

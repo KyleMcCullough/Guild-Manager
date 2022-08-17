@@ -23,7 +23,7 @@ public class CharacterSpriteController : MonoBehaviour
     {
 
         GameObject obj = new GameObject();
-        obj.name = "Character-" + character.id;
+        obj.name = "Character-" + character.name + "-" + character.id;
         obj.transform.position = new Vector3(character.x, character.y, 0);
         obj.transform.SetParent(this.transform, true);
 
@@ -33,7 +33,20 @@ public class CharacterSpriteController : MonoBehaviour
         SpriteRenderer sprite = obj.AddComponent<SpriteRenderer>();
         sprite.sprite = Data.GetSprite("character_front");
         sprite.sortingOrder = 3;
-        
+
+        // Create a child gameobject for the name label.
+        GameObject trailingName = new GameObject();
+        trailingName.transform.SetParent(obj.transform, true);
+        trailingName.name = "TextMesh";
+
+        TextMesh textMesh = trailingName.AddComponent<TextMesh>();
+        textMesh.text = character.name;
+        textMesh.fontSize = 64;
+        textMesh.alignment = TextAlignment.Center;
+        textMesh.anchor = TextAnchor.MiddleCenter;
+
+        //FIXME: Name goes under structure objects.
+
         // Registers callback.
         character.RegisterOnChangedCallback(OnCharacterChanged);
         character.RegisterOnDeletedCallback(OnCharacterDeleted);
@@ -52,13 +65,26 @@ public class CharacterSpriteController : MonoBehaviour
 
         if (!character.spawned) {
             characterObject.SetActive(false);
+            characterObject.GetComponentInChildren<TextMesh>().gameObject.SetActive(false);
         }
 
         else if (!characterObject.activeInHierarchy) {
             characterObject.SetActive(true);
+            characterObject.GetComponentInChildren<TextMesh>().gameObject.SetActive(true);
         }
 
         characterObject.transform.position = new Vector3(character.x, character.y, 0);
+        TextMesh text = characterObject.GetComponentInChildren<TextMesh>();
+
+        // Try relocating the name label. This may fail in the same frame the character leaves the scene.
+        try
+        {
+            text.transform.position = new Vector3(character.x, character.y + 1f, -.25f);
+            text.transform.localScale = new Vector3(.06f, .06f, 1);
+        }
+        catch (System.Exception)
+        {}
+
     }
 
     private void OnCharacterDeleted(Character character)

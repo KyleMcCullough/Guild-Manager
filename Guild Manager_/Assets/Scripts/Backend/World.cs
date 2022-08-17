@@ -333,7 +333,7 @@ public class World : IXmlSerializable
             t = tile;
         }
 
-        Character c = new Character(t, nextID);
+        Character c = new Character(t, Data.GenerateCharacterName(), nextID);
         characters.Add(c);
         nextID++;
 
@@ -352,9 +352,9 @@ public class World : IXmlSerializable
     }
 
     // This version takes away safety checks. This is only meant for loading.
-    Character CreateCharacter(Tile tile, int id, bool spawned, float thirst, bool waterJobSet)
+    Character CreateCharacter(Tile tile, string name, int id, bool spawned, float thirst, bool waterJobSet)
     {
-        Character c = new Character(tile, id, spawned, thirst, waterJobSet);
+        Character c = new Character(tile, name, id, spawned, thirst, waterJobSet);
         characters.Add(c);
         nextID++;
 
@@ -685,7 +685,7 @@ public class World : IXmlSerializable
 
 			int x = int.Parse(reader.GetAttribute("x"));
 			int y = int.Parse(reader.GetAttribute("y"));
-			Character c = CreateCharacter(tiles[x,y], int.Parse(reader.GetAttribute("id")), Boolean.Parse(reader.GetAttribute("spawned")), float.Parse(reader.GetAttribute("thirst")), Boolean.Parse(reader.GetAttribute("waterJobSet")));
+			Character c = CreateCharacter(tiles[x,y], reader.GetAttribute("name"), int.Parse(reader.GetAttribute("id")), Boolean.Parse(reader.GetAttribute("spawned")), float.Parse(reader.GetAttribute("thirst")), Boolean.Parse(reader.GetAttribute("waterJobSet")));
 
             // Get quest template if the character had one
             if (reader.GetAttribute("questId") != null) {

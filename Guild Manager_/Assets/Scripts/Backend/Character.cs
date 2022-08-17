@@ -28,6 +28,7 @@ public class Character : IXmlSerializable
 
     #region Character variables
     public Inventory inventory = new Inventory(Data.MaxInventory);
+    public String name;
     public float thirst {get; private set;}
     public int id;
 
@@ -54,10 +55,12 @@ public class Character : IXmlSerializable
 
     #endregion
 
-    public Character(Tile tile, int id, bool spawned = true, float thirst = 100, bool waterJobSet = false)
+    public Character(Tile tile, String name, int id, bool spawned = true, float thirst = 100, bool waterJobSet = false)
     {
+        Debug.Log(name);
         currTile = destTile = nextTile = tile;
         this.id = id;
+        this.name = name;
         this.spawned = spawned;
         this.thirst = thirst;
         this.waterJobSet = waterJobSet;
@@ -548,6 +551,7 @@ public class Character : IXmlSerializable
 		writer.WriteAttributeString("x", currTile.x.ToString());
 		writer.WriteAttributeString("y", currTile.y.ToString());
         writer.WriteAttributeString("id", this.id.ToString());
+        writer.WriteAttributeString("name", this.name);
         writer.WriteAttributeString("spawned", this.spawned.ToString());
         writer.WriteAttributeString("thirst", this.thirst.ToString());
         writer.WriteAttributeString("waterJobSet", this.waterJobSet.ToString());

@@ -19,6 +19,8 @@ public static class Data
     public static List<Quest> questTemplates = new List<Quest>();
     public static List<string> tileTypes = new List<string>();
     public static List<string> itemTypes = new List<string>();
+    static List<string> firstNames = new List<string>();
+    static List<string> lastNames = new List<string>();
 
     static StructureDataArray structures;
     static TileDataArray tiles;
@@ -78,7 +80,8 @@ public static class Data
             Data.sprites[sprite.name] = s;
         }
 
-
+        firstNames.AddRange(File.ReadAllText(Application.dataPath + "/Resources/FirstNames.txt").Split("\n"));
+        lastNames.AddRange(File.ReadAllText(Application.dataPath + "/Resources/LastNames.txt").Split("\n"));
     }
 
     public static StructureData GetStructureData(string name)
@@ -179,6 +182,11 @@ public static class Data
         }
 
         return value;
+    }
+
+    public static String GenerateCharacterName()
+    {
+        return firstNames[UnityEngine.Random.Range(0, firstNames.Count)] + " " + lastNames[UnityEngine.Random.Range(0, lastNames.Count)];
     }
 
     public static int GetStackLimit(string type)
