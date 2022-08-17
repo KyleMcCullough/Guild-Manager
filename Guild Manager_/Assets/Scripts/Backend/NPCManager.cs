@@ -53,13 +53,16 @@ public class NPCManager
     {
         if (world.mainRoadPath == null || world.mainRoadPath.Length() == 0 || outOfMapSpawnpoints.Count == 0) return;
 
-        // Select random spawnpoint
-        Tile spawnpoint = outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)];
-        
+
+        List<Tile> spawnPoints = new List<Tile>();
+        spawnPoints.AddRange(outOfMapSpawnpoints);
+
+        Tile spawnpoint = spawnPoints[Random.Range(0, spawnPoints.Count)];
         Character c = world.CreateCharacter(spawnpoint);
+        spawnPoints.Remove(spawnpoint);
 
         // Create jobs to travel to the opposite side of map and delete itself.
-        c.prioritizedJobs.AddLast(new Job(outOfMapSpawnpoints[Random.Range(0, outOfMapSpawnpoints.Count)], (job) => c.Despawn(), JobType.Passing, null, 0f));
+        c.prioritizedJobs.AddLast(new Job(spawnPoints[Random.Range(0, spawnPoints.Count)], (job) => c.Despawn(), JobType.Passing, null, 0f));
     }
 
     public void SubmitQuest()

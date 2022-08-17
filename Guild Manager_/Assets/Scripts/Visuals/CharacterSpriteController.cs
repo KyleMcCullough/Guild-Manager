@@ -79,7 +79,7 @@ public class CharacterSpriteController : MonoBehaviour
         // Try relocating the name label. This may fail in the same frame the character leaves the scene.
         try
         {
-            text.transform.position = new Vector3(character.x, character.y + 1f, -.25f);
+            text.transform.position = new Vector3(character.x, character.y + .7f, -.25f);
             text.transform.localScale = new Vector3(.06f, .06f, 1);
         }
         catch (System.Exception)

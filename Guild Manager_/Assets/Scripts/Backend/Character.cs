@@ -57,7 +57,6 @@ public class Character : IXmlSerializable
 
     public Character(Tile tile, String name, int id, bool spawned = true, float thirst = 100, bool waterJobSet = false)
     {
-        Debug.Log(name);
         currTile = destTile = nextTile = tile;
         this.id = id;
         this.name = name;
