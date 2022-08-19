@@ -22,6 +22,12 @@ public static class Data
     static List<string> firstNames = new List<string>();
     static List<string> lastNames = new List<string>();
 
+    // Jobs that require character directly over the destination tiles
+    public static List<JobType> directDestinationJobs = new List<JobType> {
+        JobType.Passing,
+        JobType.Exiting
+    };
+
     static StructureDataArray structures;
     static TileDataArray tiles;
     static ItemDataArray items;

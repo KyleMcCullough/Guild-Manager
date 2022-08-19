@@ -233,7 +233,7 @@ public class Character : IXmlSerializable
             AssignWaitingJob();
         }
 
-        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && (currentJob.jobType != JobType.Exiting || currentJob.jobType != JobType.Passing))
+        if (currentJob != null && Data.directDestinationJobs.Contains(currentJob.jobType) && currTile == destTile || currentJob != null && !Data.directDestinationJobs.Contains(currentJob.jobType) && (currTile.IsNeighbour(destTile, true) || currTile == destTile))
         {
 
             // If the job has queueing enabled, check that it isn't being used.
@@ -258,7 +258,7 @@ public class Character : IXmlSerializable
     void Update_HandleMovement(float deltatime)
     {
 
-        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && currentJob != null && (currentJob.jobType != JobType.Exiting))
+        if (currTile == destTile || currTile.IsNeighbour(destTile, true) && !Data.directDestinationJobs.Contains(currentJob.jobType))
         {
             pathing = null;
             return;
