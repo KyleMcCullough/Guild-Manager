@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class UIController : MonoBehaviour
 {
@@ -13,16 +14,21 @@ public class UIController : MonoBehaviour
     UnityEngine.UI.Text tileDetails;
     [SerializeField]
     MouseController mouseController;
+    [SerializeField]
+    GameObject console;
+    [SerializeField]
+    TextMeshProUGUI consoleOutput;
+    [SerializeField]
+    Scrollbar verticalScrollbar;
+
     World world
     {
         get { return WorldController.Instance.World; }
     }
 
-
-    // Start is called before the first frame update
-    void Start()
+    void Start() 
     {
-        this.mouseController = FindObjectOfType<MouseController>();
+        DebugConsole.ConsoleUpdated += RefreshConsole;
     }
 
     void Update()
@@ -57,5 +63,46 @@ public class UIController : MonoBehaviour
 
             tileDetails.text = text;
         }
+
+        ManageConsole();
+    }
+
+    public void ManageConsole()
+    {
+
+        if (Input.GetKeyDown(KeyCode.Backslash)) {
+            console.SetActive(!console.activeInHierarchy);
+        }
+
+        if (Input.GetKeyDown(KeyCode.P)) {
+            DebugConsole.WriteInfo("logging");
+            DebugConsole.WriteWarning("warning");
+            DebugConsole.WriteError("erroring");
+        }
+
+        if (Input.GetKeyDown(KeyCode.O)) {
+            DebugConsole.Dump();
+        }
+    }
+
+    public void RefreshConsole(string tag, string content)
+    {
+
+        switch(tag){
+            case "Info": {
+                consoleOutput.text += content + "\n";
+                break;
+            }
+            case "Warning": {
+                consoleOutput.text += "<color=yellow>" + content + "</color> \n";
+                break;
+            }
+            case "Error": {
+                consoleOutput.text += "<color=red>" + content + "</color> \n";
+                break;
+            }
+        }
+
+        verticalScrollbar.value = 0;
     }
 }

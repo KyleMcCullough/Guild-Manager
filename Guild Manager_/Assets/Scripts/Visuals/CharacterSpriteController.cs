@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class CharacterSpriteController : MonoBehaviour
 {
@@ -39,11 +40,12 @@ public class CharacterSpriteController : MonoBehaviour
         trailingName.transform.SetParent(obj.transform, true);
         trailingName.name = "TextMesh";
 
-        TextMesh textMesh = trailingName.AddComponent<TextMesh>();
+        TextMeshPro textMesh = trailingName.AddComponent<TextMeshPro>();
         textMesh.text = character.name;
-        textMesh.fontSize = 64;
-        textMesh.alignment = TextAlignment.Center;
-        textMesh.anchor = TextAnchor.MiddleCenter;
+        textMesh.text = textMesh.text.Replace("\r", "");
+        textMesh.alignment = TMPro.TextAlignmentOptions.Center;
+        textMesh.autoSizeTextContainer = true;
+        textMesh.fontSize = 48;
 
         //FIXME: Name goes under structure objects.
 
@@ -65,16 +67,16 @@ public class CharacterSpriteController : MonoBehaviour
 
         if (!character.spawned) {
             characterObject.SetActive(false);
-            characterObject.GetComponentInChildren<TextMesh>().gameObject.SetActive(false);
+            characterObject.GetComponentInChildren<TextMeshPro>().gameObject.SetActive(false);
         }
 
         else if (!characterObject.activeInHierarchy) {
             characterObject.SetActive(true);
-            characterObject.GetComponentInChildren<TextMesh>().gameObject.SetActive(true);
+            characterObject.GetComponentInChildren<TextMeshPro>().gameObject.SetActive(true);
         }
 
         characterObject.transform.position = new Vector3(character.x, character.y, 0);
-        TextMesh text = characterObject.GetComponentInChildren<TextMesh>();
+        TextMeshPro text = characterObject.GetComponentInChildren<TextMeshPro>();
 
         // Try relocating the name label. This may fail in the same frame the character leaves the scene.
         try
