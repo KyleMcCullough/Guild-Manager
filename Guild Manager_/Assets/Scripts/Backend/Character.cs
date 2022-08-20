@@ -29,7 +29,7 @@ public class Character : IXmlSerializable
     #region Character variables
     public Inventory inventory = new Inventory(Data.MaxInventory);
     public String name;
-    public float thirst {get; private set;}
+    Dictionary<string, float> needs;
     public int id;
 
     #endregion
@@ -40,7 +40,7 @@ public class Character : IXmlSerializable
     Path_AStar pathing;
     Tile destTile;
     Tile nextTile;
-    bool waterJobSet;
+    bool activeNeedsJob;
     buildingRequirement haulingRequirement;
     float movementPercent;
     float speed = 2f;
@@ -55,14 +55,27 @@ public class Character : IXmlSerializable
 
     #endregion
 
-    public Character(Tile tile, String name, int id, bool spawned = true, float thirst = 100, bool waterJobSet = false)
+    public Character(Tile tile, String name, int id, Dictionary<string, float> needs = null, bool spawned = true, bool activeNeedsJob = false)
     {
         currTile = destTile = nextTile = tile;
         this.id = id;
         this.name = name;
         this.spawned = spawned;
-        this.thirst = thirst;
-        this.waterJobSet = waterJobSet;
+
+        if (needs == null) {
+            this.needs = new Dictionary<string, float>();
+
+            foreach (var item in Data.characterNeeds)
+            {
+                this.needs[item] = 100;
+            }
+        } 
+        
+        else {
+            this.needs = needs;
+        }
+
+        this.activeNeedsJob = activeNeedsJob;
     }
 
     #region Update
@@ -98,18 +111,52 @@ public class Character : IXmlSerializable
             {
 
                 // Check if a need job is required and attempt to generate it. If the required need is not found, skip for now.
-                if (spawned && prioritizedJobs != null && (prioritizedJobs.Count == 0 || prioritizedJobs.Count > 0 && prioritizedJobs.Peek().jobType != JobType.Passing)) {
+                if (!activeNeedsJob && spawned && prioritizedJobs != null && (prioritizedJobs.Count == 0 || prioritizedJobs.Count > 0 && prioritizedJobs.Peek().jobType != JobType.Passing)) {
 
-                    if (!waterJobSet && thirst < 80) {
-                        waterJobSet = true;
+                    string lowestNeedName = "";
+                    float lowestNeedValue = 100f;
 
-                        Tile t = Tile.FindClosestTileCategory(currTile, "Water");
-
-                        if (t != null) {
-                            this.prioritizedJobs.AddFirst(new Job(t, (job) => DrinkingOnComplete(), JobType.Drinking, null, 2f));
+                    // Get lowest need value
+                    foreach (var item in needs.Keys.ToArray())
+                    {
+                        if (needs[item] < lowestNeedValue) {
+                            lowestNeedName = item;
+                            lowestNeedValue = needs[item];
                         }
                     }
 
+                    // If the lowest need value is below threshold, create a job.
+                    if (lowestNeedValue < Data.needsThreshold)
+                    {
+                        activeNeedsJob = true;
+
+                        switch (lowestNeedName)
+                        {
+                            case "thirst": {
+                                Tile t = Tile.FindClosestTileCategory(currTile, "Water");
+
+                                if (t != null) {
+                                    this.prioritizedJobs.AddFirst(new Job(t, (job) => DrinkingOnComplete(), JobType.Drinking, null, 2f));
+                                }
+                                
+                                break;
+                            }
+
+                            case "hygiene": {
+                                Tile t = Tile.FindClosestTileCategory(currTile, "Water");
+                                DebugConsole.WriteInfo("Hygiene");
+
+                                if (t != null) {
+                                    this.prioritizedJobs.AddFirst(new Job(t, (job) => HygieneOnComplete(), JobType.Hygiene, null, 10f));
+                                }
+                                
+                                break;
+                            }
+
+                            default:
+                                break;
+                        }
+                    }
                 }
                 
                 if (prioritizedJobs != null && prioritizedJobs.Count > 0)
@@ -373,8 +420,11 @@ public class Character : IXmlSerializable
 
     public void Update_Needs(float deltaTime)
     {
-        if (thirst > 0) {
-            thirst -= .3f * deltaTime;
+        foreach (string need in needs.Keys.ToArray())
+        {
+            if (needs[need] > 0) {
+                needs[need] -= .3f * deltaTime;
+            }
         }
     }
     #endregion
@@ -418,10 +468,17 @@ public class Character : IXmlSerializable
         }
     }
 
+    //TODO: Merge needs compleition functions together once their increment amount can be modified elsewhere.
     public void DrinkingOnComplete()
     {
-        thirst += 30;
-        waterJobSet = false;
+        needs["thirst"] += 30;
+        activeNeedsJob = false;
+    }
+
+    public void HygieneOnComplete()
+    {
+        needs["hygiene"] += 50;
+        activeNeedsJob = false;
     }
 
     public void HaulToConstructionComplete()
@@ -552,9 +609,19 @@ public class Character : IXmlSerializable
         writer.WriteAttributeString("id", this.id.ToString());
         writer.WriteAttributeString("name", this.name);
         writer.WriteAttributeString("spawned", this.spawned.ToString());
-        writer.WriteAttributeString("thirst", this.thirst.ToString());
-        writer.WriteAttributeString("waterJobSet", this.waterJobSet.ToString());
+        writer.WriteAttributeString("activeNeedsJob", this.activeNeedsJob.ToString());
 
+        string _needs = "";
+        string values = "";
+
+        foreach (var need in needs.Keys)
+        {
+            _needs += need + "/";
+            values += needs[need] + "/";
+        }
+
+        writer.WriteAttributeString("needs", _needs);
+        writer.WriteAttributeString("values", values);
 
         if (quest != null) {
             writer.WriteAttributeString("questId", this.quest.id.ToString());

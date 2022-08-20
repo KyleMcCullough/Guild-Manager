@@ -333,7 +333,7 @@ public class World : IXmlSerializable
             t = tile;
         }
 
-        Character c = new Character(t, Data.GenerateCharacterName(), nextID);
+        Character c = new Character(t, Data.GenerateCharacterName(), nextID, null);
         characters.Add(c);
         nextID++;
 
@@ -352,9 +352,9 @@ public class World : IXmlSerializable
     }
 
     // This version takes away safety checks. This is only meant for loading.
-    Character CreateCharacter(Tile tile, string name, int id, bool spawned, float thirst, bool waterJobSet)
+    Character CreateCharacter(Tile tile, string name, int id, bool spawned, Dictionary<string, float> needs, bool activeNeedsJob)
     {
-        Character c = new Character(tile, name, id, spawned, thirst, waterJobSet);
+        Character c = new Character(tile, name, id, needs, spawned, activeNeedsJob);
         characters.Add(c);
         nextID++;
 
@@ -685,7 +685,22 @@ public class World : IXmlSerializable
 
 			int x = int.Parse(reader.GetAttribute("x"));
 			int y = int.Parse(reader.GetAttribute("y"));
-			Character c = CreateCharacter(tiles[x,y], reader.GetAttribute("name"), int.Parse(reader.GetAttribute("id")), Boolean.Parse(reader.GetAttribute("spawned")), float.Parse(reader.GetAttribute("thirst")), Boolean.Parse(reader.GetAttribute("waterJobSet")));
+            Dictionary<string, float> needs = new Dictionary<string, float>();
+
+            if (reader.GetAttribute("needs") != null && reader.GetAttribute("values") != null)
+            {
+                string[] _needs = reader.GetAttribute("needs").Split('/');
+                string[] values = reader.GetAttribute("values").Split('/');
+
+                for (int i = 0; i < _needs.Length; i++)
+                {
+                    if (_needs[i] == "") continue;
+
+                    needs[_needs[i]] = float.Parse(values[i]);
+                }
+            }
+
+			Character c = CreateCharacter(tiles[x,y], reader.GetAttribute("name"), int.Parse(reader.GetAttribute("id")), Boolean.Parse(reader.GetAttribute("spawned")), needs, Boolean.Parse(reader.GetAttribute("activeNeedsJob")));
 
             // Get quest template if the character had one
             if (reader.GetAttribute("questId") != null) {
@@ -752,6 +767,9 @@ public class World : IXmlSerializable
                         break;
                     case SaveableJob.Drinking:
                         j = new Job(tile, (job) => c.DrinkingOnComplete(), JobType.Drinking, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
+                        break;
+                    case SaveableJob.Hygiene:
+                        j = new Job(tile, (job) => c.HygieneOnComplete(), JobType.Hygiene, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
                         break;
                     case SaveableJob.Construction:
                         j = new Job(tile, (theJob) => tile.structure.CompleteStructure(), JobType.Construction, items, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);

@@ -25,8 +25,16 @@ public static class Data
     // Jobs that require character directly over the destination tiles
     public static List<JobType> directDestinationJobs = new List<JobType> {
         JobType.Passing,
-        JobType.Exiting
+        JobType.Exiting,
+        JobType.Hygiene
     };
+
+    public static List<string> characterNeeds = new List<string> {
+        "thirst",
+        "hygiene"
+    };
+
+    public static int needsThreshold = 80;
 
     static StructureDataArray structures;
     static TileDataArray tiles;
