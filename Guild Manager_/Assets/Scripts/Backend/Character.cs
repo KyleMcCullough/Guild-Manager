@@ -144,17 +144,44 @@ public class Character : IXmlSerializable
 
                             case "hygiene": {
                                 Tile t = Tile.FindClosestTileCategory(currTile, "Water");
-                                DebugConsole.WriteInfo("Hygiene");
 
                                 if (t != null) {
-                                    this.prioritizedJobs.AddFirst(new Job(t, (job) => HygieneOnComplete(), JobType.Hygiene, null, 10f));
+                                    this.prioritizedJobs.AddFirst(new Job(t, (job) => HygieneOnComplete(), JobType.Hygiene, null, 3f));
                                 }
                                 
                                 break;
                             }
 
-                            default:
+                            case "sleep": {
+                                //FIXME: Should characters automatically look for enclosed spaces to sleep?
+                                
+                                Tile t = null;
+
+                                // Checks all rooms for sleep category structures
+                                foreach (var room in currTile.world.rooms)
+                                {
+                                    if (room.ContainsStructure("Sleep"))
+                                    {
+                                        t = Tile.FindClosestStructureType(currTile, "Sleep");
+                                    }
+                                }
+
+                                // If there is no sleeping object, get a random tile and sleep there.
+                                if (t != null) {
+                                    DebugConsole.Log("Sleeping at object.");
+                                    this.prioritizedJobs.AddFirst(new Job(t, (job) => SleepingOnComplete(), JobType.Sleep, null, 10f));
+                                } else {
+                                    DebugConsole.Log("Sleeping at tile.");
+                                    this.prioritizedJobs.AddFirst(new Job(Tile.GetRandomNearbyTile(currTile, 5), (job) => SleepingOnComplete(), JobType.Sleep, null, 10f));
+                                }
+                                
                                 break;
+                            }
+
+                            default: {
+                                DebugConsole.Log($"Character needs - {lowestNeedName} is not a valid need.");
+                                break;
+                            }
                         }
                     }
                 }
@@ -170,25 +197,12 @@ public class Character : IXmlSerializable
                     int itemsInWorld = Room.GetCountOfAllItemsInWorld(currTile.world);
                 
                     // If there are no more tasks, check if items need hauling to storage.
-                    if (currentJob == null && Room.GetCountOfAvailableStorages(currTile.world) > 0)
+                    if (currentJob == null && (itemsInWorld > 0 || inventory.items.Count > 0) && Room.GetCountOfAvailableStorages(currTile.world) > 0)
                     {
 
-                        Structure closestStorage = Room.GetClosestAvailableStorage(currTile);
-
-                        // If the character's inventory isn't full and there are items, get the closest item and create a job.
-                        if (closestStorage != null && !this.inventory.isFull && itemsInWorld > 0)
-                        {
-                            Tile searchedTile = Item.GetClosestItem(currTile);
-                            if (searchedTile != null)
-                            {
-                                this.currentJob = new Job(searchedTile, (theJob) => this.HaulingOnComplete(), JobType.Hauling, null);
-                            }
-                        }
-
-                        else if (closestStorage != null && this.inventory.items.Count > 0)
-                        {
-                            this.currentJob = new Job(closestStorage.parent, (job) => this.HaulToStorageComplete(), JobType.Hauling, null);
-                        }
+                        // Assign a temporary job as a placeholder, and generate using a new thread.
+                        currentJob = new Job(currTile, null, JobType.Temporary, null, 5f);
+                        new Thread(new ThreadStart(AssignHaulingJob)).Start();
                     }
                 }
 
@@ -466,6 +480,7 @@ public class Character : IXmlSerializable
             destTile.room.RemoveItemFromRoom(destTile.item.Type, destTile.item.CurrentStackAmount);
             this.inventory.AddItemFromTile(ref destTile.item);
         }
+        currTile.room.ResetUnreachableJobs();
     }
 
     //TODO: Merge needs compleition functions together once their increment amount can be modified elsewhere.
@@ -478,6 +493,12 @@ public class Character : IXmlSerializable
     public void HygieneOnComplete()
     {
         needs["hygiene"] += 50;
+        activeNeedsJob = false;
+    }
+
+    public void SleepingOnComplete()
+    {
+        needs["sleep"] += 80;
         activeNeedsJob = false;
     }
 
@@ -511,6 +532,28 @@ public class Character : IXmlSerializable
         this.destTile = this.nextTile = this.currTile;
         currentJob.RegisterJobCancelCallback(OnJobEnded);
         currentJob.RegisterJobCompleteCallback(OnJobEnded);
+    }
+
+    void AssignHaulingJob()
+    {
+        Structure closestStorage = Room.GetClosestAvailableStorage(currTile);
+
+        // If the character's inventory isn't full and there are items, get the closest item and create a job.
+        if (closestStorage != null && !this.inventory.isFull && Room.GetCountOfAllItemsInWorld(currTile.world) > 0)
+        {
+            Tile searchedTile = Item.GetClosestItem(currTile);
+            
+            if (searchedTile != null)
+            {
+                prioritizedJobs.AddFirst(new Job(searchedTile, (theJob) => this.HaulingOnComplete(), JobType.Hauling, null));
+            }
+        }
+
+        else if (closestStorage != null && this.inventory.items.Count > 0)
+        {
+            prioritizedJobs.AddFirst(new Job(closestStorage.parent, (job) => this.HaulToStorageComplete(), JobType.Hauling, null));
+        }
+        currentJob = null;
     }
 
     void OnJobEnded(Job job)

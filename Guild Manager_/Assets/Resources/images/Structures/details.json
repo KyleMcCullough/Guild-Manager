@@ -29,6 +29,11 @@
         {
             "name": "Storage",
             "id": 5
+        },
+
+        {
+            "name": "Sleep",
+            "id": 6
         }
     ],
 

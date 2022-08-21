@@ -28,6 +28,7 @@ public enum JobType
     Demolition,
     Drinking,
     Hygiene,
+    Sleep,
     Eating,
     Exiting,
     HandingInQuest,
@@ -36,8 +37,8 @@ public enum JobType
     QuestGiving,
     QuestTaking,
     Questing,
-    Sleeping,
     Waiting,
+    Temporary
 }
 
 // Jobs that will be saved
@@ -48,6 +49,7 @@ public enum SaveableJob
     Drinking,
     Hygiene,
     Eating,
+    Sleep,
     Exiting,
     HandingInQuest,
     Passing,

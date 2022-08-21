@@ -98,7 +98,6 @@ public class Item : IXmlSerializable
             {
                 amount = tile.item.TryAddingToStack(amount, type, tile);
                 
-                Debug.Log(amount);
                 if (amount > 0)
                 {
                     tile.item.SendItemsToNeighbour(amount, type, tile);

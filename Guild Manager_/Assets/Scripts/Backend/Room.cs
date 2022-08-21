@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class Room
 {
     IDictionary<string, int> itemsInRoom;
+    IDictionary<string, int> structuresInRoom;
     List<Tile> tiles;
     float temperature;
     public JobQueue jobQueue;
@@ -70,7 +71,7 @@ public class Room
         
         if (itemsInRoom.ContainsKey(type))
         {
-            itemsInRoom[type] = itemsInRoom[type] - amount;
+            itemsInRoom[type] += amount;
         
             if (itemsInRoom[type] <= 0)
             {
@@ -81,7 +82,56 @@ public class Room
 
     public bool ContainsItem(string type)
     {
+        if (itemsInRoom == null) return false;
+
         return itemsInRoom.ContainsKey(type);
+    }
+
+    public void AssignStructureToRoom(string type, int amount = 1)
+    {
+        if (type == "") return;
+
+        if (structuresInRoom == null)
+        {
+            structuresInRoom = new Dictionary<string, int>();
+        }
+        
+        if (structuresInRoom.ContainsKey(type))
+        {
+            structuresInRoom[type] = 1;
+        }
+
+        else
+        {
+            structuresInRoom.Add(type, 1);
+        }
+
+        // PrintDictionary();
+    }
+
+    public void RemoveStructureFromRoom(string type)
+    {
+        if (structuresInRoom == null)
+        {
+            structuresInRoom = new Dictionary<string, int>();
+        }
+        
+        if (structuresInRoom.ContainsKey(type))
+        {
+            structuresInRoom[type] -= 1;
+        
+            if (structuresInRoom[type] <= 0)
+            {
+                structuresInRoom.Remove(type);
+            }
+        }
+    }
+
+    public bool ContainsStructure(string type)
+    {
+        if (structuresInRoom == null) return false;
+
+        return structuresInRoom.ContainsKey(type);
     }
 
     public void ResetUnreachableJobs()
@@ -145,6 +195,11 @@ public class Room
                     outsideRoom.AssignItemToRoom(entry.Key, entry.Value);
                 }
 
+                foreach (var entry in oldRoom.structuresInRoom)
+                {
+                    outsideRoom.AssignStructureToRoom(entry.Key, entry.Value);
+                }
+
                     source.parent.world.DestroyRoom(oldRoom);
                 }
             }
@@ -180,6 +235,11 @@ public class Room
                 foreach (var entry in room.itemsInRoom)
                 {
                     oldRoom.AssignItemToRoom(entry.Key, entry.Value);
+                }
+
+                foreach (var entry in room.structuresInRoom)
+                {
+                    oldRoom.AssignStructureToRoom(entry.Key, entry.Value);
                 }
 
                 source.parent.world.DestroyRoom(room);
@@ -239,6 +299,11 @@ public class Room
                 foreach (var entry in oldRoom.itemsInRoom)
                 {
                     source.parent.room.AssignItemToRoom(entry.Key, entry.Value);
+                }
+
+                foreach (var entry in oldRoom.structuresInRoom)
+                {
+                    source.parent.room.AssignStructureToRoom(entry.Key, entry.Value);
                 }
             }
 
@@ -377,6 +442,7 @@ public class Room
         }
 
         if (availableStorages.Count == 0) return null;
+        if (availableStorages.Count == 1) return availableStorages[0];
 
         List<Tile> checkedTiles = new List<Tile>();
         List<Room> checkedRooms = new List<Room>();

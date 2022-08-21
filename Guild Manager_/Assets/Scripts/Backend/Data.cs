@@ -31,7 +31,8 @@ public static class Data
 
     public static List<string> characterNeeds = new List<string> {
         "thirst",
-        "hygiene"
+        "hygiene",
+        "sleep"
     };
 
     public static int needsThreshold = 80;

@@ -75,9 +75,9 @@ public class UIController : MonoBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.P)) {
-            DebugConsole.WriteInfo("logging");
-            DebugConsole.WriteWarning("warning");
-            DebugConsole.WriteError("erroring");
+            DebugConsole.Log("logging");
+            DebugConsole.LogWarning("warning");
+            DebugConsole.LogError("erroring");
         }
 
         if (Input.GetKeyDown(KeyCode.O)) {

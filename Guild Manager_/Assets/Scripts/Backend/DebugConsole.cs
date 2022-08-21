@@ -8,19 +8,19 @@ public static class DebugConsole
     public static List<string> output = new List<string>();
     public static Action<string, string> ConsoleUpdated;
 
-    public static void WriteInfo(string line)
+    public static void Log(string line)
     {
         output.Add(DateTime.Now + "-Log " + line);
         ConsoleUpdated.Invoke("Info", DateTime.Now + "-Info " + line);
     }
 
-    public static void WriteWarning(string line)
+    public static void LogWarning(string line)
     {
         output.Add(DateTime.Now + "-Warning " + line);
         ConsoleUpdated.Invoke("Warning", DateTime.Now + "-Warning " + line);
     }
 
-    public static void WriteError(string line)
+    public static void LogError(string line)
     {
         output.Add(DateTime.Now + "-Error " + line);
         ConsoleUpdated.Invoke("Error", DateTime.Now + "-Error " + line);

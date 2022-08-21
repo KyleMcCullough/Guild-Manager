@@ -234,6 +234,71 @@ public class Tile : IXmlSerializable
         return null;
     }
 
+    public static Tile FindClosestStructureType(Tile starting, string targetCategory)
+    {
+        List<Tile> checkedTiles = new List<Tile>();
+        Queue<Tile> tilesToCheck = new Queue<Tile>();
+        
+        tilesToCheck.Enqueue(starting);
+
+        while (tilesToCheck.Count > 0)
+        {
+            Tile t = null;
+            while (tilesToCheck.Count > 0)
+            {
+                t = tilesToCheck.Dequeue();
+
+                if (checkedTiles.Contains(t)) continue;
+
+                break;
+            }
+            
+            if (t == null && tilesToCheck.Count == 0) return null;
+
+            checkedTiles.Add(t);
+
+            if (t != null && t.structure.category.name == targetCategory) return t;
+
+            Tile[] ns = t.GetNeighbors();
+            foreach (Tile t2 in ns)
+            {
+                if (checkedTiles.Contains(t2))
+                {
+                    continue;
+                }
+
+                if (t2 != null)
+                {
+                    tilesToCheck.Enqueue(t2);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static Tile GetRandomNearbyTile(Tile starting, int radius)
+    {
+        int[] limits = {starting.x - (radius - 2), starting.y - (radius - 2), starting.x + (radius - 2), starting.y + (radius - 2)};
+        Tile t;
+        int attempts = 0;
+
+        while (true)
+        {
+            t = starting.world.GetTile(UnityEngine.Random.Range(limits[0], limits[2]), UnityEngine.Random.Range(limits[1], limits[3]));
+
+            if (starting != t && !Data.CheckIfTileIsWater(t.category.name)) break;
+
+            attempts += 1;
+
+            if (attempts > 6) {
+                radius += 2;
+                attempts = 0;
+            }
+        }
+
+        return t;
+    }
     public static Tile GetSafePlaceForPlayerSpawning(Tile starting)
     {
         List<Tile> checkedTiles = new List<Tile>();

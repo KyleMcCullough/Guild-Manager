@@ -193,6 +193,7 @@ public class Structure : IXmlSerializable
     public void CompleteStructure(bool loading = false)
     {
         this.IsConstructed = true;
+        parent.room.AssignStructureToRoom(this.category.name);
 
         if (this.canCreateRooms && !loading)
         {
