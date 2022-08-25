@@ -87,6 +87,18 @@ public class Room
         return itemsInRoom.ContainsKey(type);
     }
 
+    public bool ContainsItemCategory(int category)
+    {
+        foreach (var item in itemsInRoom)
+        {
+            if (Data.itemData[item.Key].category == category) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void AssignStructureToRoom(string type, int amount = 1)
     {
         if (type == "") return;

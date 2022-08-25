@@ -32,7 +32,8 @@ public static class Data
     public static List<string> characterNeeds = new List<string> {
         "thirst",
         "hygiene",
-        "sleep"
+        "sleep",
+        "hunger"
     };
 
     public static int needsThreshold = 80;
@@ -127,19 +128,6 @@ public static class Data
         return new TileData();
     }
 
-    public static Category GetItemCategory(int id)
-    {
-        foreach (Category item in structures.categories)
-        {
-            if (item.id == id)
-            {
-                return item;
-            }
-        }
-        UnityEngine.Debug.LogError("No id of '" + id + "' has been found in the Category data array.");
-        return null;
-    }
-
     public static Category GetTileCategory(int id)
     {
         foreach (Category item in tiles.categories)
@@ -163,19 +151,6 @@ public static class Data
             }
         }
         UnityEngine.Debug.LogError("No category with id of '" + id + "' has been found in the Category data array.");
-        return null;
-    }
-
-    public static Quest GetQuestTemplateById(int id)
-    {
-        foreach (Quest q in questTemplates)
-        {
-            if (q.id == id)
-            {
-                return q;
-            }
-        }
-
         return null;
     }
 
@@ -273,6 +248,19 @@ public static class Data
         }
 
         Debug.LogError("GetbuildingRequirement - An invalid type was given.");
+        return null;
+    }
+
+    public static Quest GetQuestTemplateById(int id)
+    {
+        foreach (Quest q in questTemplates)
+        {
+            if (q.id == id)
+            {
+                return q;
+            }
+        }
+
         return null;
     }
 

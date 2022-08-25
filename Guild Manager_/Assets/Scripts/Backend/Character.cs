@@ -138,7 +138,6 @@ public class Character : IXmlSerializable
                                 if (t != null) {
                                     this.prioritizedJobs.AddFirst(new Job(t, (job) => DrinkingOnComplete(), JobType.Drinking, null, 2f));
                                 }
-                                
                                 break;
                             }
 
@@ -147,8 +146,7 @@ public class Character : IXmlSerializable
 
                                 if (t != null) {
                                     this.prioritizedJobs.AddFirst(new Job(t, (job) => HygieneOnComplete(), JobType.Hygiene, null, 3f));
-                                }
-                                
+                                }                                
                                 break;
                             }
 
@@ -168,18 +166,36 @@ public class Character : IXmlSerializable
 
                                 // If there is no sleeping object, get a random tile and sleep there.
                                 if (t != null) {
-                                    DebugConsole.Log("Sleeping at object.");
                                     this.prioritizedJobs.AddFirst(new Job(t, (job) => SleepingOnComplete(), JobType.Sleep, null, 10f));
                                 } else {
-                                    DebugConsole.Log("Sleeping at tile.");
                                     this.prioritizedJobs.AddFirst(new Job(Tile.GetRandomNearbyTile(currTile, 5), (job) => SleepingOnComplete(), JobType.Sleep, null, 10f));
                                 }
                                 
                                 break;
                             }
 
+                            case "hunger": {
+
+                                Tile t = null;
+
+                                // Checks all rooms for sleep category structures
+                                foreach (var room in currTile.world.rooms)
+                                {
+                                    if (room.ContainsItemCategory(1))
+                                    {
+                                        t = Tile.FindClosestItemByCategory(currTile, 1);
+                                    }
+                                }
+
+                                if (t != null) {
+                                    this.prioritizedJobs.AddFirst(new Job(t, (job) => EatingOnComplete(), JobType.Eating, null, 5f));
+                                }
+
+                                break;
+                            }
+
                             default: {
-                                DebugConsole.Log($"Character needs - {lowestNeedName} is not a valid need.");
+                                DebugConsole.LogError($"Character needs - {lowestNeedName} is not a valid need.");
                                 break;
                             }
                         }
@@ -500,6 +516,13 @@ public class Character : IXmlSerializable
     {
         needs["sleep"] += 80;
         activeNeedsJob = false;
+    }
+
+    public void EatingOnComplete()
+    {
+        needs["hunger"] += 50;
+        activeNeedsJob = false;
+        destTile.item.CurrentStackAmount -= 1;
     }
 
     public void HaulToConstructionComplete()

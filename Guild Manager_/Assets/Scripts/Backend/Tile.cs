@@ -13,7 +13,7 @@ public class Tile : IXmlSerializable
     string type = ObjectType.Empty;
     public Category category {
         get {
-            return Data.GetTileCategory(Data.GetTileData(type).category);
+            return Data.GetTileCategory(Data.GetTileData(Type).category);
         }
     }
     public Structure structure;
@@ -215,6 +215,49 @@ public class Tile : IXmlSerializable
             checkedTiles.Add(t);
 
             if (t != null && t.category.id == Data.GetCategoryId(targetCategory)) return t;
+
+            Tile[] ns = t.GetNeighbors();
+            foreach (Tile t2 in ns)
+            {
+                if (checkedTiles.Contains(t2))
+                {
+                    continue;
+                }
+
+                if (t2 != null)
+                {
+                    tilesToCheck.Enqueue(t2);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static Tile FindClosestItemByCategory(Tile starting, int categoryId)
+    {
+        List<Tile> checkedTiles = new List<Tile>();
+        Queue<Tile> tilesToCheck = new Queue<Tile>();
+        
+        tilesToCheck.Enqueue(starting);
+
+        while (tilesToCheck.Count > 0)
+        {
+            Tile t = null;
+            while (tilesToCheck.Count > 0)
+            {
+                t = tilesToCheck.Dequeue();
+
+                if (checkedTiles.Contains(t)) continue;
+
+                break;
+            }
+            
+            if (t == null && tilesToCheck.Count == 0) return null;
+
+            checkedTiles.Add(t);
+
+            if (t != null && t.item != null && Data.itemData[t.item.Type].category == categoryId) return t;
 
             Tile[] ns = t.GetNeighbors();
             foreach (Tile t2 in ns)

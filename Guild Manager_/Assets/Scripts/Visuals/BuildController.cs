@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ public class BuildController : MonoBehaviour
     public Facing buildDirection = Facing.East;
     public int buildType = 0;
     public string buildObject = ObjectType.Empty;
+    string itemType = "";
+    int itemAmount = 1;
     string buildTile = "Dirt";
 
     private void Start()
@@ -76,7 +79,10 @@ public class BuildController : MonoBehaviour
         }
         else if (buildType == 2)
         {
-            Item.CreateNewItem(tile, "Wood", 150);
+            if (itemType == "") return;
+
+            // Item.CreateNewItem(tile, "Wood", 150);
+            Item.CreateNewItem(tile, itemType, itemAmount);
         }
 
         else {
@@ -200,9 +206,15 @@ public class BuildController : MonoBehaviour
         this.buildHeight = Data.structureData[objectType].height;
     }
 
-    public void SetMode_PutItem(string itemType)
+    public void SetMode_PutItem(string itemInfo)
     {
+        string[] itemData = itemInfo.Split("/");
         buildType = 2;
+        this.itemType = itemData[0];
+        this.itemAmount = int.Parse(itemData[1]);
+
+        DebugConsole.Log(itemType);
+        DebugConsole.Log(itemAmount.ToString());
     }
 
     public void SetMode_BuildTable()

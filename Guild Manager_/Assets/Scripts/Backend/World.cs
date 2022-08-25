@@ -768,6 +768,9 @@ public class World : IXmlSerializable
                     case SaveableJob.Drinking:
                         j = new Job(tile, (job) => c.DrinkingOnComplete(), JobType.Drinking, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
                         break;
+                    case SaveableJob.Eating:
+                        j = new Job(tile, (job) => c.EatingOnComplete(), JobType.Eating, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
+                        break;
                     case SaveableJob.Hygiene:
                         j = new Job(tile, (job) => c.HygieneOnComplete(), JobType.Hygiene, null, float.Parse(reader.GetAttribute("jobTime")), manuallySetJobTime);
                         break;

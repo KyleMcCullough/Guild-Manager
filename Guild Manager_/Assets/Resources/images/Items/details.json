@@ -4,6 +4,11 @@
         {
             "name": "Nature",
             "id": 0
+        },
+
+        {
+            "name": "Food",
+            "id": 1
         }
     ],
 
@@ -18,6 +23,12 @@
             "name": "Empty",
             "category": 0,
             "maxStackSize": 0
+        },
+
+        {
+            "name": "Carrot",
+            "category": 1,
+            "maxStackSize": 3
         }
     ]
 }
